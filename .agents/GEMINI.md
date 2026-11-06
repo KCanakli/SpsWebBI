@@ -16,6 +16,10 @@ Bu dosya, `c:\Projeler\SpsWebBI` projesinde alınan tüm mimari, siber güvenlik
 - **`A`:** Şifre/PIN `1234` (`allow_passwordless = 1`, Token: `UT1_Pk9kKv_b7FwpHEwEjPV1s6QRKxsC7mXooD0n8k2TD8Y6fCQnaFxX1J2RAKM`)
 - **Hazır Dashboard'lar:** `DASH_SIPARIS` (`DS_SIPARIS` - Satış & Sipariş) ve `DASH_STOK` (`DS_STOK` - Depo & Stok Durum).
 
-## 4. Referans Dosyalar
+## 4. Tasarım Stüdyosu (`designer.html`) ve İzleme Ekranı (`app.html`) Grafik/Format Hafızası
+- **Formatlama ve Hizalama:** `columnFormats` (sayı/tarih maskeleri) ve `columnAlignments` / `w.align` (Excel tarzı Sola/Ortaya/Sağa SVG hizalama) tüm grafik, KPI, tablo (`<tbody>`/`<tfoot>`) ve pivot hücrelerinde ortaktır.
+- **Grafik Aileleri ve 39 Alt Varyant (`CHART_SUBTYPE_CATALOG`):** 18 ana bileşen tipi (`bar`, `stackedBar`, `horizontalBar`, `line`, `area`, `pie`, `donut`, `gauge`, `treemap`, `sunburst`, `sankey`, `funnel`, `radar`, `scatter`, `heatmap`, `kpi`, `pivot`, `table`) ve `w.subType` üzerinde çalışan 39 alt ECharts varyantı + `getVariantSlotPolicy(w)` akıllı veri yuvası kuralları hem `designer.html` hem de `app.html` içinde senkronize çalışır.
+
+## 5. Referans Dosyalar
 - Detaylı adım özeti: `c:\Projeler\SpsWebBI\PROJE_DURUMU.md`
 - Tam sohbet geçmişi: `c:\Projeler\SpsWebBI\Sohbet_Gecmisi_2026-11-05.txt` ve `c:\Projeler\SpsWebBI\Sohbet_Gecmisi_2026-11-05.pdf`

@@ -1,6 +1,6 @@
 # SpsWebBI - Geliştirme Durumu ve Mimari Hafıza
 
-**Son Güncelleme:** 2026-11-06
+**Son Güncelleme:** 2026-11-07
 **Proje Yolu:** `c:\Projeler\SpsWebBI`
 
 ---
@@ -76,6 +76,31 @@
   - Tablolarda hizalama yalnızca veri hücrelerine (`<tbody> <td>`) ve alt toplamlara (`<tfoot> <td>`) uygulanır; tablo başlıkları (`<thead> <th>`) sabit kalır.
 - **Tüm Bileşenlerde Yuva Temizleme ve Kolon Listesi (`✓`) Senkronizasyonu:**
   - Tablo, Grafik, KPI, İbre ve Pivot nesnelerinde `Temizle` ve `✕` butonları ile kolonlar sıfırlandığında otomatik kolon ataması engellendi ve `3. Kolonlar (A-Z)` listesindeki `✓` işaretlerinin anında güncellenmesi sağlandı.
+
+---
+
+### [x] Adım 11: Zengin ECharts Grafik Aileleri, 39 Alt Varyant Stili (`CHART_SUBTYPE_CATALOG`) ve Akıllı Veri Yuvası Kuralları (2026-11-07)
+- **5 Yeni Ana Grafik Ailesi (`TOOLBOX_ITEMS` & `Görsel Tipi`):**
+  - `sunburst` (☀️ Güneş Patlaması - Hiyerarşik Halkalar)
+  - `sankey` (🔀 Sankey Akış Diyagramı - Kaynak ➔ Hedef)
+  - `funnel` (🌪️ Huni / Piramit Grafiği)
+  - `radar` (🕸️ Çokgen / Dairesel / Dolgulu Radar Grafiği)
+  - `scatter` (🫧 Nokta Dağılım / Değer Büyüklüğüne Göre Baloncuk / Dalgalı `effectScatter`)
+- **8 Grafik Ailesinde 39 Alt Grafik Varyantı (`w.subType` & `CHART_SUBTYPE_CATALOG`):**
+  - **Sütun (`bar`, `stackedBar`, `horizontalBar` - 10 Stil):** `basic`, `background`, `stacked`, `stacked100` (%100 Oransal), `horizontal`, `horizontalStacked`, `waterfall` (Şelale/Kümülatif), `polarRadial` (Radyal Kutup), `polarTangential` (Teğetsel Halka), `pictorialDotted` (Kesikli Dijital).
+  - **Çizgi & Alan (`line`, `area` - 7 Stil):** `smooth`, `basic`, `stackedLine`, `step` (Basamaklı), `area`, `stackedArea`, `gradientArea` (Gradyan Dolgulu & Nokta Vurgulu).
+  - **Pasta & Halka (`pie`, `donut` - 6 Stil):** `pie`, `donut` (Yuvarlatılmış), `halfDonut` (Yarım Halka 180°), `roseArea` (Nightingale Alan), `roseRadius` (Nightingale Yarıçap), `nested` (İç İçe 2 Kırılımlı Pasta/Halka).
+  - **İbre (`gauge` - 4 Stil):** `progress`, `classic`, `ring` (Tam Halka), `grade` (Kırmızı-Sarı-Yeşil Performans Bölgeli).
+  - **Hiyerarşi & Akış (`treemap`, `sunburst`, `sankey` - 3 Stil):** `treemap`, `sunburst`, `sankey`.
+  - **Huni (`funnel` - 3 Stil):** `descending`, `ascending`, `sharp`.
+  - **Radar (`radar` - 3 Stil):** `polygon`, `circle`, `filled`.
+  - **Dağılım (`scatter` - 3 Stil):** `scatter`, `bubble`, `effect`.
+- **Varyanta Duyarlı Akıllı Veri Yuvası Politikası (`getVariantSlotPolicy`):**
+  - Tekil değer gerektiren varyantlarda (`waterfall`, `polarRadial`, `polarTangential`, `pie`, `funnel`, `treemap`, `sunburst`, `sankey`, `heatmap`, `gauge`) Değer yuvası otomatik olarak 1 ölçüme sınırlandırılır.
+  - Çoklu katman/boyut gerektiren varyantlarda (`stacked`, `stacked100`, `stackedLine`, `stackedArea`, `nested` pasta, `sankey`, `sunburst`, `heatmap`) kullanıcıya dinamik rol etiketleri (`İç Halka`/`Dış Halka`, `Kaynak`/`Hedef`, `X Ekseni`/`Y Ekseni`) ve akıllı ipucu kutuları gösterilir.
+- **Hızlı Görsel Anahtarları ve İzleme Ekranı (`app.html`) Senkronizasyonu:**
+  - `123 Değerler` (`w.showLabel`), `⎯ Ortalama` (`w.showMarkLine`) ve `📍 Min/Maks` (`w.showMarkPoint`) butonları hem `wwwroot/designer.html` hem de `wwwroot/app.html` üzerinde tüm grafik aileleriyle tam uyumlu hale getirildi.
+
 
 
 

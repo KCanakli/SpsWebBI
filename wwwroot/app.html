@@ -961,6 +961,64 @@
             renderChartWidget(w, rows, activeDimension, container);
         }
 
+        function getChartFamily(w) {
+            if (!w || !w.type) return null;
+            if (w.type === 'bar' || w.type === 'stackedBar' || w.type === 'horizontalBar') return 'bar';
+            if (w.type === 'line' || w.type === 'area') return 'line';
+            if (w.type === 'pie' || w.type === 'donut') return 'pie';
+            if (w.type === 'gauge') return 'gauge';
+            if (w.type === 'treemap' || w.type === 'sunburst' || w.type === 'sankey') return 'hierarchy';
+            if (w.type === 'funnel') return 'funnel';
+            if (w.type === 'radar') return 'radar';
+            if (w.type === 'scatter') return 'scatter';
+            return null;
+        }
+
+        function getEffectiveChartSubType(w) {
+            if (!w) return 'basic';
+            if (w.subType) return w.subType;
+            if (w.type === 'stackedBar') return 'stacked';
+            if (w.type === 'horizontalBar') return 'horizontal';
+            if (w.type === 'bar') return 'basic';
+            if (w.type === 'line') return 'smooth';
+            if (w.type === 'area') return 'area';
+            if (w.type === 'pie') return 'pie';
+            if (w.type === 'donut') return 'donut';
+            if (w.type === 'gauge') return 'progress';
+            if (w.type === 'treemap') return 'treemap';
+            if (w.type === 'sunburst') return 'sunburst';
+            if (w.type === 'sankey') return 'sankey';
+            if (w.type === 'funnel') return 'descending';
+            if (w.type === 'radar') return 'polygon';
+            if (w.type === 'scatter') return 'scatter';
+            return 'basic';
+        }
+
+        function attachAppChartInteractions(chart, w, mode, hierarchy, activeDimension, rows) {
+            let clickTimer = null;
+            chart.on('click', params => {
+                if (!params || !params.name) return;
+                if (clickTimer) clearTimeout(clickTimer);
+                clickTimer = setTimeout(() => {
+                    const clickedVal = params.name;
+                    const filterDim = (mode === 'combined' && hierarchy.length > 1) ? hierarchy[0] : activeDimension;
+                    const filterVal = (mode === 'combined' && hierarchy.length > 1 && String(clickedVal).includes(' / '))
+                        ? String(clickedVal).split(' / ')[0]
+                        : clickedVal;
+                    toggleCrossFilter(filterDim, filterVal);
+                }, 230);
+            });
+
+            chart.on('dblclick', params => {
+                if (!params || !params.name) return;
+                if (clickTimer) {
+                    clearTimeout(clickTimer);
+                    clickTimer = null;
+                }
+                handleChartDoubleClick(w, activeDimension, params.name, rows);
+            });
+        }
+
         function renderChartWidget(w, rows, activeDimension, container) {
             if (typeof echarts === 'undefined') {
                 container.innerHTML = '<div style="color:#94a3b8;padding:12px;">Grafik kütüphanesi yüklenemedi.</div>';
@@ -987,22 +1045,69 @@
             const legendTextColor = isLight ? '#1e293b' : '#cbd5e1';
             const splitLineColor = isLight ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.06)';
             const palette = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f43f5e', '#84cc16'];
+            const fam = getChartFamily(w);
+            const sub = getEffectiveChartSubType(w);
 
             // 1. İBRE (GAUGE)
             if (w.type === 'gauge') {
                 const val = Math.round(computeAggregate(rows, primaryMetric.field, primaryMetric.agg) * 100) / 100;
+                const maxGauge = val > 0 ? Math.ceil(val * 1.25) : 100;
+
+                let gaugeSeries = {
+                    name: w.title || primaryMetric.field,
+                    type: 'gauge',
+                    max: maxGauge,
+                    progress: { show: sub !== 'classic' && sub !== 'grade', width: 12 },
+                    axisLine: { lineStyle: { width: 12 } },
+                    detail: { valueAnimation: true, formatter: v => formatValueByColumn(v, primaryMetric.field, 'number'), color: '#38bdf8', fontSize: 16 },
+                    data: [{ value: val, name: primaryMetric.field || 'Değer' }]
+                };
+
+                if (sub === 'ring') {
+                    gaugeSeries = {
+                        name: w.title || primaryMetric.field,
+                        type: 'gauge',
+                        startAngle: 90,
+                        endAngle: -270,
+                        max: maxGauge,
+                        pointer: { show: false },
+                        progress: { show: true, overlap: false, roundCap: true, clip: false, itemStyle: { color: '#0ea5e9' } },
+                        axisLine: { lineStyle: { width: 16, color: [[1, isLight ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.08)']] } },
+                        splitLine: { show: false },
+                        axisTick: { show: false },
+                        axisLabel: { show: false },
+                        title: { fontSize: 11, color: axisTextColor, offsetCenter: [0, '-18%'] },
+                        detail: { valueAnimation: true, fontSize: 18, fontWeight: 800, color: '#38bdf8', offsetCenter: [0, '12%'], formatter: v => formatValueByColumn(v, primaryMetric.field, 'number') },
+                        data: [{ value: val, name: primaryMetric.field || 'Değer' }]
+                    };
+                } else if (sub === 'grade') {
+                    gaugeSeries = {
+                        name: w.title || primaryMetric.field,
+                        type: 'gauge',
+                        max: maxGauge,
+                        axisLine: {
+                            lineStyle: {
+                                width: 14,
+                                color: [
+                                    [0.33, '#ef4444'],
+                                    [0.67, '#f59e0b'],
+                                    [1, '#10b981']
+                                ]
+                            }
+                        },
+                        pointer: { itemStyle: { color: 'auto' } },
+                        axisTick: { distance: -14, length: 5, lineStyle: { color: '#fff', width: 1 } },
+                        splitLine: { distance: -14, length: 14, lineStyle: { color: '#fff', width: 2 } },
+                        axisLabel: { color: axisTextColor, distance: 18, fontSize: 9, formatter: v => formatValueByColumn(Math.round(v), primaryMetric.field, 'number') },
+                        detail: { valueAnimation: true, formatter: v => formatValueByColumn(v, primaryMetric.field, 'number'), color: 'auto', fontSize: 15, offsetCenter: [0, '68%'] },
+                        data: [{ value: val, name: primaryMetric.field || 'Değer' }]
+                    };
+                }
+
                 chart.setOption({
                     backgroundColor: 'transparent',
                     tooltip: { formatter: p => `${escapeHtml(p.seriesName)}<br/>${escapeHtml(p.name)}: <strong>${escapeHtml(formatValueByColumn(p.value, primaryMetric.field, 'number'))}</strong>` },
-                    series: [{
-                        name: w.title || primaryMetric.field,
-                        type: 'gauge',
-                        max: val > 0 ? Math.ceil(val * 1.25) : 100,
-                        progress: { show: true, width: 12 },
-                        axisLine: { lineStyle: { width: 12 } },
-                        detail: { valueAnimation: true, formatter: v => formatValueByColumn(v, primaryMetric.field, 'number'), color: '#38bdf8', fontSize: 16 },
-                        data: [{ value: val, name: primaryMetric.field || 'Değer' }]
-                    }]
+                    series: [gaugeSeries]
                 });
                 return;
             }
@@ -1029,36 +1134,185 @@
                     backgroundColor: 'transparent',
                     tooltip: { position: 'top', formatter: p => `${escapeHtml(xKeys[p.value[0]] || '')} / ${escapeHtml(yKeys[p.value[1]] || '')}: <strong>${escapeHtml(formatValueByColumn(p.value[2], primaryMetric.field, 'number'))}</strong>` },
                     grid: { left: 12, right: 20, top: 20, bottom: 28, containLabel: true },
-                    xAxis: { type: 'category', data: xKeys, splitArea: { show: true } },
-                    yAxis: { type: 'category', data: yKeys, splitArea: { show: true } },
+                    xAxis: { type: 'category', data: xKeys, splitArea: { show: true }, axisLabel: { color: axisTextColor } },
+                    yAxis: { type: 'category', data: yKeys, splitArea: { show: true }, axisLabel: { color: axisTextColor } },
                     visualMap: { min: 0, max: maxVal || 100, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, itemWidth: 10, itemHeight: 60 },
-                    series: [{ type: 'heatmap', data: heatData, label: { show: xKeys.length <= 10, formatter: p => formatValueByColumn(p.value[2], primaryMetric.field, 'number') } }]
+                    series: [{ type: 'heatmap', data: heatData, label: { show: w.showLabel !== undefined ? !!w.showLabel : (xKeys.length <= 10), formatter: p => formatValueByColumn(p.value[2], primaryMetric.field, 'number') } }]
                 });
                 return;
             }
 
-            // 3. TREEMAP
-            if (w.type === 'treemap') {
+            // 3. HİYERARŞİ & AKIŞ (TREEMAP / SUNBURST / SANKEY)
+            if (fam === 'hierarchy') {
+                if (w.type === 'sankey' || sub === 'sankey') {
+                    const dim0 = hierarchy[0] || w.dimension || '';
+                    const dim1 = hierarchy[1] || w.secondaryDimension || dim0;
+                    const stageCols = hierarchy.length >= 2 ? hierarchy.slice(0, 4) : [dim0, dim1];
+                    const linksMap = new Map();
+
+                    rows.forEach(r => {
+                        const rawVal = computeAggregate([r], primaryMetric.field, primaryMetric.agg);
+                        if (!rawVal || rawVal <= 0) return;
+                        for (let s = 0; s < stageCols.length - 1; s++) {
+                            const cSrc = stageCols[s];
+                            const cTgt = stageCols[s + 1];
+                            let srcName = formatDimensionValue(getRowValue(r, cSrc), cSrc);
+                            let tgtName = formatDimensionValue(getRowValue(r, cTgt), cTgt);
+                            if (stageCols.length > 2 || cSrc === cTgt || srcName === tgtName) {
+                                srcName = `${s + 1}. ${srcName}`;
+                                tgtName = `${s + 2}. ${tgtName}`;
+                            }
+                            if (srcName === tgtName) continue;
+                            const linkKey = `${srcName}|||${tgtName}`;
+                            linksMap.set(linkKey, (linksMap.get(linkKey) || 0) + rawVal);
+                        }
+                    });
+
+                    const sortedLinks = [...linksMap.entries()]
+                        .map(([k, v]) => {
+                            const [source, target] = k.split('|||');
+                            return { source, target, value: Math.round(v * 100) / 100 };
+                        })
+                        .sort((a, b) => b.value - a.value)
+                        .slice(0, 35);
+
+                    const usedNodeNames = new Set();
+                    sortedLinks.forEach(l => { usedNodeNames.add(l.source); usedNodeNames.add(l.target); });
+                    const nodesArr = [...usedNodeNames].map(n => ({ name: n }));
+
+                    chart.setOption({
+                        backgroundColor: 'transparent',
+                        color: palette,
+                        tooltip: {
+                            trigger: 'item',
+                            confine: true,
+                            formatter: p => p.dataType === 'edge'
+                                ? `${escapeHtml(p.data.source)} ➔ ${escapeHtml(p.data.target)}: <strong>${escapeHtml(formatValueByColumn(p.value, primaryMetric.field, 'number'))}</strong>`
+                                : `${escapeHtml(p.name)}: <strong>${escapeHtml(formatValueByColumn(p.value, primaryMetric.field, 'number'))}</strong>`
+                        },
+                        series: [{
+                            type: 'sankey',
+                            emphasis: { focus: 'adjacency' },
+                            nodeAlign: 'justify',
+                            data: nodesArr,
+                            links: sortedLinks,
+                            lineStyle: { color: 'gradient', curveness: 0.5, opacity: 0.45 },
+                            label: {
+                                color: legendTextColor,
+                                fontSize: 10,
+                                formatter: p => w.showLabel ? `${p.name} (${formatValueByColumn(p.value, primaryMetric.field, 'number')})` : p.name
+                            }
+                        }]
+                    });
+                    return;
+                }
+
+                if (w.type === 'sunburst' || sub === 'sunburst') {
+                    const sunDims = hierarchy.length > 0 ? hierarchy.slice(0, 3) : [activeDimension || w.dimension || ''];
+                    function buildSunburstTree(rowsSubset, depth) {
+                        const col = sunDims[depth];
+                        const grouped = groupAndAggregateComposite(rowsSubset, [col], primaryMetric.field, primaryMetric.agg, depth === 0 ? 12 : 8);
+                        return grouped.map(g => {
+                            const node = { name: g.key, value: g.value };
+                            if (depth + 1 < sunDims.length) {
+                                const childRows = rowsSubset.filter(r => formatDimensionValue(getRowValue(r, col), col) === g.key);
+                                const children = buildSunburstTree(childRows, depth + 1);
+                                if (children.length > 0) node.children = children;
+                            }
+                            return node;
+                        });
+                    }
+                    const treeData = buildSunburstTree(rows, 0);
+                    chart.setOption({
+                        backgroundColor: 'transparent',
+                        color: palette,
+                        tooltip: { confine: true, formatter: info => `${escapeHtml(info.name)}: <strong>${escapeHtml(formatValueByColumn(info.value, primaryMetric.field, 'number'))}</strong>` },
+                        series: [{
+                            type: 'sunburst',
+                            radius: ['14%', '88%'],
+                            data: treeData,
+                            itemStyle: { borderRadius: 5, borderWidth: 1.5, borderColor: isLight ? '#fff' : '#0f172a' },
+                            label: {
+                                rotate: 'radial',
+                                color: '#fff',
+                                fontSize: 10,
+                                formatter: p => w.showLabel ? `${p.name}\n${formatValueByColumn(p.value, primaryMetric.field, 'number')}` : p.name
+                            }
+                        }]
+                    });
+                    return;
+                }
+
                 const dimCols = (mode === 'combined' && hierarchy.length > 1) ? hierarchy : [activeDimension || ''];
                 const grouped = groupAndAggregateComposite(rows, dimCols, primaryMetric.field, primaryMetric.agg, w.topN || 25);
                 chart.setOption({
                     backgroundColor: 'transparent',
+                    color: palette,
                     tooltip: { formatter: info => `${escapeHtml(info.name)}: <strong>${escapeHtml(formatValueByColumn(info.value, primaryMetric.field, 'number'))}</strong>` },
                     series: [{
                         type: 'treemap',
                         roam: false,
                         breadcrumb: { show: false },
+                        label: {
+                            show: true,
+                            formatter: p => w.showLabel ? `${p.name}\n${formatValueByColumn(p.value, primaryMetric.field, 'number')}` : p.name
+                        },
                         data: grouped.map(g => ({ name: g.key, value: g.value }))
                     }]
                 });
+                attachAppChartInteractions(chart, w, mode, hierarchy, activeDimension, rows);
                 return;
             }
 
-            // 4. PASTA VE HALKA
-            const isPie = w.type === 'pie' || w.type === 'donut';
-            if (isPie) {
+            // 4. PASTA VE HALKA (PIE / DONUT / HALF-DONUT / ROSE / NESTED)
+            if (fam === 'pie') {
+                if (sub === 'nested') {
+                    const innerCol = hierarchy[0] || w.dimension || '';
+                    const outerCol = hierarchy[1] || w.secondaryDimension || innerCol;
+                    const innerGrouped = groupAndAggregateComposite(rows, [innerCol], primaryMetric.field, primaryMetric.agg, 10);
+                    const outerGrouped = groupAndAggregateComposite(rows, [outerCol], primaryMetric.field, primaryMetric.agg, 18);
+
+                    chart.setOption({
+                        backgroundColor: 'transparent',
+                        color: palette,
+                        tooltip: { trigger: 'item', confine: true, formatter: p => `${escapeHtml(p.seriesName)}<br/>${escapeHtml(p.name)}: <strong>${escapeHtml(formatValueByColumn(p.value, primaryMetric.field, 'number'))}</strong> (%${p.percent})` },
+                        legend: { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 10 } },
+                        series: [
+                            {
+                                name: innerCol,
+                                type: 'pie',
+                                selectedMode: 'single',
+                                radius: [0, '36%'],
+                                center: ['50%', '45%'],
+                                label: { position: 'inner', fontSize: 9, color: '#fff', formatter: p => w.showLabel ? `${p.name}\n%${p.percent}` : p.name },
+                                labelLine: { show: false },
+                                data: innerGrouped.map(g => ({ name: g.key, value: g.value }))
+                            },
+                            {
+                                name: outerCol,
+                                type: 'pie',
+                                radius: ['46%', '70%'],
+                                center: ['50%', '45%'],
+                                itemStyle: { borderRadius: 5, borderWidth: 1.5, borderColor: isLight ? '#fff' : '#0f172a' },
+                                label: {
+                                    color: legendTextColor,
+                                    fontSize: 10,
+                                    formatter: p => w.showLabel ? `${p.name}: ${formatValueByColumn(p.value, primaryMetric.field, 'number')} (%${p.percent})` : p.name
+                                },
+                                data: outerGrouped.map(g => ({ name: g.key, value: g.value }))
+                            }
+                        ]
+                    });
+                    attachAppChartInteractions(chart, w, mode, hierarchy, activeDimension, rows);
+                    return;
+                }
+
                 const dimCols = (mode === 'combined' && hierarchy.length > 1) ? hierarchy : [activeDimension || ''];
                 const grouped = groupAndAggregateComposite(rows, dimCols, primaryMetric.field, primaryMetric.agg, w.topN || 15);
+                const isHalf = sub === 'halfDonut';
+                const isRose = sub === 'roseArea' || sub === 'roseRadius';
+                const isDonutShape = sub === 'donut' || isHalf || w.type === 'donut';
+
                 chart.setOption({
                     backgroundColor: 'transparent',
                     color: palette,
@@ -1066,14 +1320,310 @@
                     legend: { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 11 } },
                     series: [{
                         type: 'pie',
-                        radius: w.type === 'donut' ? ['38%', '68%'] : '65%',
-                        center: ['50%', '45%'],
+                        roseType: isRose ? (sub === 'roseArea' ? 'area' : 'radius') : false,
+                        startAngle: isHalf ? 180 : 90,
+                        endAngle: isHalf ? 360 : 'auto',
+                        radius: isHalf ? ['42%', '78%'] : (isRose ? ['16%', '70%'] : (isDonutShape ? ['38%', '68%'] : '65%')),
+                        center: isHalf ? ['50%', '68%'] : ['50%', '45%'],
+                        itemStyle: (isDonutShape || isRose) ? { borderRadius: 6, borderWidth: 1.5, borderColor: isLight ? '#fff' : '#0f172a' } : undefined,
                         data: grouped.map(g => ({ name: g.key, value: g.value })),
-                        label: { color: legendTextColor, fontSize: 11 }
+                        label: {
+                            color: legendTextColor,
+                            fontSize: 11,
+                            formatter: p => w.showLabel ? `${p.name}: ${formatValueByColumn(p.value, primaryMetric.field, 'number')} (%${p.percent})` : p.name
+                        }
                     }]
                 });
-            } else if (mode === 'series' && hierarchy.length >= 2) {
-                // 5A. SERİ / RENK GRUPLAMA MODU
+                attachAppChartInteractions(chart, w, mode, hierarchy, activeDimension, rows);
+                return;
+            }
+
+            // 5. HUNİ (FUNNEL)
+            if (fam === 'funnel') {
+                const dimCols = (mode === 'combined' && hierarchy.length > 1) ? hierarchy : [activeDimension || ''];
+                const grouped = groupAndAggregateComposite(rows, dimCols, primaryMetric.field, primaryMetric.agg, w.topN || 12);
+                chart.setOption({
+                    backgroundColor: 'transparent',
+                    color: palette,
+                    tooltip: { trigger: 'item', confine: true, formatter: p => `${escapeHtml(p.name)}: <strong>${escapeHtml(formatValueByColumn(p.value, primaryMetric.field, 'number'))}</strong> (%${p.percent})` },
+                    legend: { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 11 } },
+                    series: [{
+                        name: primaryMetric.field,
+                        type: 'funnel',
+                        left: '10%',
+                        top: 16,
+                        bottom: 32,
+                        width: '80%',
+                        sort: sub === 'ascending' ? 'ascending' : 'descending',
+                        minSize: sub === 'sharp' ? '0%' : '16%',
+                        maxSize: '100%',
+                        gap: 3,
+                        funnelAlign: w.align === 'left' ? 'left' : (w.align === 'right' ? 'right' : 'center'),
+                        itemStyle: { borderColor: isLight ? '#fff' : '#0f172a', borderWidth: 1.5, borderRadius: 4 },
+                        label: {
+                            show: true,
+                            position: w.showLabel ? 'inside' : 'outside',
+                            color: w.showLabel ? '#fff' : legendTextColor,
+                            fontSize: 11,
+                            formatter: p => w.showLabel ? `${p.name}: ${formatValueByColumn(p.value, primaryMetric.field, 'number')}` : p.name
+                        },
+                        data: grouped.map(g => ({ name: g.key, value: g.value }))
+                    }]
+                });
+                attachAppChartInteractions(chart, w, mode, hierarchy, activeDimension, rows);
+                return;
+            }
+
+            // 6. RADAR
+            if (fam === 'radar') {
+                const activeDimCols = (mode === 'combined' && hierarchy.length > 1) ? hierarchy : [activeDimension || ''];
+                const effectiveMetrics = metrics.length > 0 ? metrics : [{ field: w.valueField || '', agg: w.agg || 'sum' }];
+                let indicatorKeys = [];
+                let radarDataItems = [];
+                let globalMax = 10;
+
+                if (mode === 'series' && hierarchy.length >= 2) {
+                    const indDim = hierarchy[0];
+                    const serDim = hierarchy[1];
+                    const topInd = groupAndAggregateComposite(rows, [indDim], primaryMetric.field, primaryMetric.agg, 8);
+                    indicatorKeys = topInd.map(g => g.key);
+                    const sKeys = [...new Set(rows.map(r => formatDimensionValue(getRowValue(r, serDim), serDim)))].slice(0, 6);
+                    radarDataItems = sKeys.map(sk => {
+                        const vals = indicatorKeys.map(ik => {
+                            const matched = rows.filter(r =>
+                                formatDimensionValue(getRowValue(r, indDim), indDim) === ik &&
+                                formatDimensionValue(getRowValue(r, serDim), serDim) === sk);
+                            const v = Math.round(computeAggregate(matched, primaryMetric.field, primaryMetric.agg) * 100) / 100;
+                            if (v > globalMax) globalMax = v;
+                            return v;
+                        });
+                        return { name: sk, value: vals };
+                    });
+                } else {
+                    const firstGrp = groupAndAggregateComposite(rows, activeDimCols, effectiveMetrics[0].field, effectiveMetrics[0].agg, 8);
+                    indicatorKeys = firstGrp.map(g => g.key);
+                    radarDataItems = effectiveMetrics.map((m, mIdx) => {
+                        const grp = mIdx === 0 ? firstGrp : groupAndAggregateComposite(rows, activeDimCols, m.field, m.agg, null);
+                        const vMap = new Map(grp.map(g => [g.key, g.value]));
+                        const vals = indicatorKeys.map(k => {
+                            const v = vMap.get(k) ?? 0;
+                            if (v > globalMax) globalMax = v;
+                            return v;
+                        });
+                        return { name: `${m.field} (${(m.agg || 'sum').toUpperCase()})`, value: vals };
+                    });
+                }
+
+                const maxIndVal = Math.ceil(globalMax * 1.15) || 100;
+                chart.setOption({
+                    backgroundColor: 'transparent',
+                    color: palette,
+                    tooltip: { trigger: 'item', confine: true },
+                    legend: radarDataItems.length > 1 ? { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 11 } } : undefined,
+                    radar: {
+                        shape: sub === 'circle' ? 'circle' : 'polygon',
+                        radius: '64%',
+                        center: ['50%', '48%'],
+                        axisName: { color: axisTextColor, fontSize: 10 },
+                        indicator: (indicatorKeys.length > 0 ? indicatorKeys : ['Veri']).map(k => ({ name: k, max: maxIndVal }))
+                    },
+                    series: [{
+                        type: 'radar',
+                        areaStyle: sub === 'filled' ? { opacity: 0.28 } : undefined,
+                        label: {
+                            show: !!w.showLabel,
+                            color: legendTextColor,
+                            fontSize: 9,
+                            formatter: p => formatValueByColumn(p.value, primaryMetric.field, 'number')
+                        },
+                        data: radarDataItems
+                    }]
+                });
+                return;
+            }
+
+            // 7. DAĞILIM & BALONCUK (SCATTER / BUBBLE / EFFECT)
+            if (fam === 'scatter') {
+                const activeDimCols = (mode === 'combined' && hierarchy.length > 1) ? hierarchy : [activeDimension || ''];
+                const effectiveMetrics = metrics.length > 0 ? metrics : [{ field: w.valueField || '', agg: w.agg || 'sum' }];
+                const firstGrouped = groupAndAggregateComposite(rows, activeDimCols, effectiveMetrics[0].field, effectiveMetrics[0].agg, w.topN || 25);
+                const categoryKeys = firstGrouped.map(g => g.key);
+                const maxScatterVal = Math.max(...firstGrouped.map(g => Math.abs(g.value)), 1);
+
+                const scatterSeries = effectiveMetrics.map((m, mIdx) => {
+                    const grp = mIdx === 0 ? firstGrouped : groupAndAggregateComposite(rows, activeDimCols, m.field, m.agg, null);
+                    const valMap = new Map(grp.map(g => [g.key, g.value]));
+                    const dataArr = categoryKeys.map(k => valMap.get(k) ?? 0);
+                    return {
+                        name: `${m.field} (${(m.agg || 'sum').toUpperCase()})`,
+                        type: sub === 'effect' ? 'effectScatter' : 'scatter',
+                        symbolSize: val => {
+                            if (sub === 'bubble') {
+                                const ratio = Math.min(1, Math.abs(Number(val) || 0) / maxScatterVal);
+                                return Math.round(10 + ratio * 34);
+                            }
+                            return 14;
+                        },
+                        label: w.showLabel ? {
+                            show: true,
+                            position: 'top',
+                            color: legendTextColor,
+                            fontSize: 10,
+                            formatter: p => formatValueByColumn(p.value, m.field, 'number')
+                        } : undefined,
+                        markLine: w.showMarkLine ? {
+                            data: [{ type: 'average', name: 'Ortalama' }],
+                            label: { formatter: p => `Ort: ${formatValueByColumn(p.value, m.field, 'number')}`, color: legendTextColor }
+                        } : undefined,
+                        markPoint: w.showMarkPoint ? {
+                            data: [{ type: 'max', name: 'Maks' }, { type: 'min', name: 'Min' }],
+                            label: { formatter: p => formatValueByColumn(p.value, m.field, 'number') }
+                        } : undefined,
+                        data: dataArr
+                    };
+                });
+
+                chart.setOption({
+                    backgroundColor: 'transparent',
+                    color: palette,
+                    tooltip: {
+                        trigger: 'axis',
+                        confine: true,
+                        formatter: params => {
+                            if (!Array.isArray(params) || params.length === 0) return '';
+                            let res = `<strong>${escapeHtml(params[0].axisValueLabel || params[0].name || '')}</strong>`;
+                            params.forEach((p, idx) => {
+                                const mCol = effectiveMetrics[idx]?.field || effectiveMetrics[0].field;
+                                res += `<br/>${p.marker || ''} ${escapeHtml(p.seriesName)}: <strong>${escapeHtml(formatValueByColumn(p.value, mCol, 'number'))}</strong>`;
+                            });
+                            return res;
+                        }
+                    },
+                    legend: effectiveMetrics.length > 1 ? { type: 'scroll', top: 0, left: w.align || 'auto', textStyle: { color: legendTextColor, fontSize: 11 } } : undefined,
+                    grid: { left: 12, right: 20, top: effectiveMetrics.length > 1 ? 34 : 28, bottom: 20, containLabel: true },
+                    xAxis: { type: 'category', data: categoryKeys, axisLabel: { color: axisTextColor, rotate: categoryKeys.length > 5 ? 20 : 0 }, splitLine: { show: true, lineStyle: { color: splitLineColor, type: 'dashed' } } },
+                    yAxis: { type: 'value', axisLabel: { color: axisTextColor, formatter: v => formatValueByColumn(v, effectiveMetrics[0].field, 'number') }, splitLine: { lineStyle: { color: splitLineColor } } },
+                    series: scatterSeries
+                });
+                attachAppChartInteractions(chart, w, mode, hierarchy, activeDimension, rows);
+                return;
+            }
+
+            const isBarFamily = fam === 'bar';
+            const barSubType = isBarFamily ? sub : 'basic';
+            const isLineFamily = fam === 'line';
+            const lineSubType = isLineFamily ? sub : 'smooth';
+
+            // 8A. ÖZEL SÜTUN VARYANTLARI (ŞELALE / RADYAL KUTUP / TEĞETSEL KUTUP)
+            if (isBarFamily && (barSubType === 'polarRadial' || barSubType === 'polarTangential' || barSubType === 'waterfall')) {
+                const activeDimCols = (mode === 'combined' && hierarchy.length > 1) ? hierarchy : [activeDimension || ''];
+                const grouped = groupAndAggregateComposite(rows, activeDimCols, primaryMetric.field, primaryMetric.agg, w.topN || 15);
+                const catKeys = grouped.map(g => g.key);
+                const rawVals = grouped.map(g => g.value);
+
+                if (barSubType === 'waterfall') {
+                    const baseArr = [];
+                    const valArr = [];
+                    let running = 0;
+                    rawVals.forEach(v => {
+                        baseArr.push(running);
+                        valArr.push(v);
+                        running = Math.round((running + v) * 100) / 100;
+                    });
+                    const wfCats = [...catKeys, 'TOPLAM'];
+                    baseArr.push(0);
+                    valArr.push(running);
+
+                    chart.setOption({
+                        backgroundColor: 'transparent',
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: { type: 'shadow' },
+                            confine: true,
+                            formatter: params => {
+                                const valParam = params.find(p => p.seriesIndex === 1) || params[0];
+                                if (!valParam) return '';
+                                return `<strong>${escapeHtml(valParam.name)}</strong><br/>${escapeHtml(primaryMetric.field)}: <strong>${escapeHtml(formatValueByColumn(valParam.value, primaryMetric.field, 'number'))}</strong>`;
+                            }
+                        },
+                        grid: { left: 12, right: 20, top: 28, bottom: 20, containLabel: true },
+                        xAxis: { type: 'category', data: wfCats, axisLabel: { color: axisTextColor, rotate: wfCats.length > 5 ? 20 : 0 } },
+                        yAxis: { type: 'value', axisLabel: { color: axisTextColor, formatter: v => formatValueByColumn(v, primaryMetric.field, 'number') }, splitLine: { lineStyle: { color: splitLineColor } } },
+                        series: [
+                            {
+                                name: 'Taban',
+                                type: 'bar',
+                                stack: 'waterfall',
+                                silent: true,
+                                itemStyle: { borderColor: 'transparent', color: 'transparent' },
+                                emphasis: { itemStyle: { borderColor: 'transparent', color: 'transparent' } },
+                                data: baseArr
+                            },
+                            {
+                                name: primaryMetric.field,
+                                type: 'bar',
+                                stack: 'waterfall',
+                                label: {
+                                    show: !!w.showLabel,
+                                    position: 'top',
+                                    color: legendTextColor,
+                                    fontSize: 10,
+                                    formatter: p => formatValueByColumn(p.value, primaryMetric.field, 'number')
+                                },
+                                itemStyle: {
+                                    color: p => p.dataIndex === wfCats.length - 1 ? '#10b981' : '#0ea5e9',
+                                    borderRadius: [4, 4, 0, 0]
+                                },
+                                data: valArr
+                            }
+                        ]
+                    });
+                    attachAppChartInteractions(chart, w, mode, hierarchy, activeDimension, rows);
+                    return;
+                }
+
+                const maxPolar = Math.max(...rawVals, 10) * 1.15;
+                chart.setOption({
+                    backgroundColor: 'transparent',
+                    color: palette,
+                    polar: { radius: ['18%', '78%'] },
+                    angleAxis: barSubType === 'polarRadial'
+                        ? { type: 'category', data: catKeys, startAngle: 75, axisLabel: { color: axisTextColor, fontSize: 10 } }
+                        : { max: maxPolar, startAngle: 75, axisLabel: { color: axisTextColor, fontSize: 10, formatter: v => formatValueByColumn(v, primaryMetric.field, 'number') } },
+                    radiusAxis: barSubType === 'polarRadial'
+                        ? { type: 'value', axisLabel: { color: axisTextColor, fontSize: 9, formatter: v => formatValueByColumn(v, primaryMetric.field, 'number') } }
+                        : { type: 'category', data: catKeys, axisLabel: { color: axisTextColor, fontSize: 10 } },
+                    tooltip: {
+                        confine: true,
+                        formatter: p => `<strong>${escapeHtml(p.name)}</strong><br/>${escapeHtml(primaryMetric.field)}: <strong>${escapeHtml(formatValueByColumn(p.value, primaryMetric.field, 'number'))}</strong>`
+                    },
+                    series: [{
+                        name: primaryMetric.field,
+                        type: 'bar',
+                        coordinateSystem: 'polar',
+                        roundCap: true,
+                        showBackground: true,
+                        backgroundStyle: { color: isLight ? 'rgba(15,23,42,0.06)' : 'rgba(255,255,255,0.05)' },
+                        data: rawVals.map((v, idx) => ({
+                            value: v,
+                            name: catKeys[idx],
+                            itemStyle: { color: palette[idx % palette.length] }
+                        })),
+                        label: {
+                            show: !!w.showLabel,
+                            position: 'middle',
+                            color: '#fff',
+                            fontSize: 10,
+                            formatter: p => formatValueByColumn(p.value, primaryMetric.field, 'number')
+                        }
+                    }]
+                });
+                attachAppChartInteractions(chart, w, mode, hierarchy, activeDimension, rows);
+                return;
+            }
+
+            if (mode === 'series' && hierarchy.length >= 2) {
+                // 8B. SERİ / RENK GRUPLAMA MODU
                 const xDim = hierarchy[0];
                 const seriesDim = hierarchy[1];
                 const xKeys = [...new Set(rows.map(r => formatDimensionValue(getRowValue(r, xDim), xDim)))];
@@ -1081,26 +1631,73 @@
                 const seriesKeys = [...new Set(rows.map(r => formatDimensionValue(getRowValue(r, seriesDim), seriesDim)))].slice(0, 12);
                 seriesKeys.sort((a, b) => a.localeCompare(b, 'tr-TR', { numeric: true }));
 
-                const isLine = w.type === 'line' || w.type === 'area';
-                const isStacked = w.type === 'stackedBar' || w.type === 'area';
-                const isHoriz = w.type === 'horizontalBar';
+                const isLine = isLineFamily;
+                const isStacked = w.type === 'stackedBar' || (isBarFamily && (barSubType === 'stacked' || barSubType === 'stacked100' || barSubType === 'horizontalStacked')) || (isLineFamily && (lineSubType === 'stackedLine' || lineSubType === 'stackedArea'));
+                const isPct100 = isBarFamily && barSubType === 'stacked100';
+                const isHoriz = w.type === 'horizontalBar' || (isBarFamily && (barSubType === 'horizontal' || barSubType === 'horizontalStacked'));
+                const isPictorial = isBarFamily && barSubType === 'pictorialDotted';
+                const hasBg = isBarFamily && barSubType === 'background';
+                const isAreaFill = isLineFamily && (lineSubType === 'area' || lineSubType === 'stackedArea' || lineSubType === 'gradientArea' || w.type === 'area');
+                const isSmoothLine = !isLineFamily || (lineSubType !== 'basic' && lineSubType !== 'step');
+                const stepMode = (isLineFamily && lineSubType === 'step') ? 'middle' : undefined;
 
-                const seriesList = seriesKeys.map(sk => ({
-                    name: sk,
-                    type: isLine ? 'line' : 'bar',
-                    stack: isStacked ? 'total' : undefined,
-                    areaStyle: w.type === 'area' ? { opacity: 0.25 } : undefined,
-                    smooth: true,
-                    data: xKeys.map(xk => {
-                        const matched = rows.filter(r =>
-                            formatDimensionValue(getRowValue(r, xDim), xDim) === xk &&
-                            formatDimensionValue(getRowValue(r, seriesDim), seriesDim) === sk);
-                        return Math.round(computeAggregate(matched, primaryMetric.field, primaryMetric.agg) * 100) / 100;
-                    })
+                const rawMatrix = seriesKeys.map(sk => xKeys.map(xk => {
+                    const matched = rows.filter(r =>
+                        formatDimensionValue(getRowValue(r, xDim), xDim) === xk &&
+                        formatDimensionValue(getRowValue(r, seriesDim), seriesDim) === sk);
+                    return Math.round(computeAggregate(matched, primaryMetric.field, primaryMetric.agg) * 100) / 100;
                 }));
 
+                const colTotals = xKeys.map((_, xi) => rawMatrix.reduce((acc, row) => acc + (row[xi] || 0), 0));
+
+                const seriesList = seriesKeys.map((sk, sIdx) => {
+                    const dataArr = isPct100
+                        ? rawMatrix[sIdx].map((v, xi) => colTotals[xi] ? Math.round((v / colTotals[xi]) * 1000) / 10 : 0)
+                        : rawMatrix[sIdx];
+                    return {
+                        name: sk,
+                        type: isLine ? 'line' : (isPictorial ? 'pictorialBar' : 'bar'),
+                        symbol: isPictorial ? 'rect' : (isLine && lineSubType === 'gradientArea' ? 'circle' : undefined),
+                        symbolRepeat: isPictorial ? true : undefined,
+                        symbolSize: isPictorial ? (isHoriz ? [6, '70%'] : ['70%', 6]) : (isLine && lineSubType === 'gradientArea' ? 7 : undefined),
+                        symbolMargin: isPictorial ? 2 : undefined,
+                        stack: isStacked ? 'total' : undefined,
+                        step: stepMode,
+                        showBackground: hasBg,
+                        backgroundStyle: hasBg ? { color: isLight ? 'rgba(15,23,42,0.06)' : 'rgba(148,163,184,0.12)', borderRadius: 4 } : undefined,
+                        areaStyle: isAreaFill ? (lineSubType === 'gradientArea' ? {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: 'rgba(14,165,233,0.55)' },
+                                { offset: 1, color: 'rgba(14,165,233,0.03)' }
+                            ])
+                        } : { opacity: 0.26 }) : undefined,
+                        smooth: isSmoothLine,
+                        label: w.showLabel ? {
+                            show: true,
+                            position: isStacked ? 'inside' : (isHoriz ? 'right' : 'top'),
+                            color: legendTextColor,
+                            fontSize: 10,
+                            formatter: p => isPct100 ? `%${p.value}` : formatValueByColumn(p.value, primaryMetric.field, 'number')
+                        } : undefined,
+                        markLine: (w.showMarkLine && sIdx === 0) ? {
+                            data: [{ type: 'average', name: 'Ortalama' }],
+                            label: { formatter: p => `Ort: ${formatValueByColumn(p.value, primaryMetric.field, 'number')}`, color: legendTextColor }
+                        } : undefined,
+                        markPoint: (w.showMarkPoint && sIdx === 0) ? {
+                            data: [{ type: 'max', name: 'Maks' }, { type: 'min', name: 'Min' }],
+                            label: { formatter: p => formatValueByColumn(p.value, primaryMetric.field, 'number') }
+                        } : undefined,
+                        data: dataArr
+                    };
+                });
+
                 const catAxis = { type: 'category', data: xKeys, axisLabel: { color: axisTextColor, rotate: (!isHoriz && xKeys.length > 6) ? 25 : 0 } };
-                const valAxis = { type: 'value', axisLabel: { color: axisTextColor, formatter: v => formatValueByColumn(v, primaryMetric.field, 'number') }, splitLine: { lineStyle: { color: splitLineColor } } };
+                const valAxis = {
+                    type: 'value',
+                    max: isPct100 ? 100 : undefined,
+                    axisLabel: { color: axisTextColor, formatter: v => isPct100 ? `%${v}` : formatValueByColumn(v, primaryMetric.field, 'number') },
+                    splitLine: { lineStyle: { color: splitLineColor } }
+                };
 
                 chart.setOption({
                     backgroundColor: 'transparent',
@@ -1113,7 +1710,8 @@
                             if (!Array.isArray(params) || params.length === 0) return '';
                             let res = `<strong>${escapeHtml(params[0].axisValueLabel || params[0].name || '')}</strong>`;
                             params.forEach(p => {
-                                res += `<br/>${p.marker || ''} ${escapeHtml(p.seriesName)}: <strong>${escapeHtml(formatValueByColumn(p.value, primaryMetric.field, 'number'))}</strong>`;
+                                const fmtVal = isPct100 ? `%${p.value}` : formatValueByColumn(p.value, primaryMetric.field, 'number');
+                                res += `<br/>${p.marker || ''} ${escapeHtml(p.seriesName)}: <strong>${escapeHtml(fmtVal)}</strong>`;
                             });
                             return res;
                         }
@@ -1134,7 +1732,7 @@
                     series: seriesList
                 });
             } else {
-                // 5B. BİRLEŞİK EKSEN (YIL / AY YAN YANA) VEYA ÇOKLU DEĞER (MULTI-MEASURE)
+                // 8C. BİRLEŞİK EKSEN (YIL / AY YAN YANA) VEYA ÇOKLU DEĞER (MULTI-MEASURE)
                 const activeDimCols = (mode === 'combined' && hierarchy.length > 1)
                     ? hierarchy
                     : [activeDimension || ''];
@@ -1142,34 +1740,82 @@
                 const firstGrouped = groupAndAggregateComposite(rows, activeDimCols, effectiveMetrics[0].field, effectiveMetrics[0].agg, w.topN || 20);
                 const categoryKeys = firstGrouped.map(g => g.key);
 
-                const isLine = w.type === 'line' || w.type === 'area';
-                const isStacked = w.type === 'stackedBar' || w.type === 'area';
-                const isHoriz = w.type === 'horizontalBar';
+                const isLine = isLineFamily;
+                const isStacked = w.type === 'stackedBar' || (isBarFamily && (barSubType === 'stacked' || barSubType === 'stacked100' || barSubType === 'horizontalStacked')) || (isLineFamily && (lineSubType === 'stackedLine' || lineSubType === 'stackedArea'));
+                const isPct100 = isBarFamily && barSubType === 'stacked100';
+                const isHoriz = w.type === 'horizontalBar' || (isBarFamily && (barSubType === 'horizontal' || barSubType === 'horizontalStacked'));
+                const isPictorial = isBarFamily && barSubType === 'pictorialDotted';
+                const hasBg = isBarFamily && barSubType === 'background';
+                const isAreaFill = isLineFamily && (lineSubType === 'area' || lineSubType === 'stackedArea' || lineSubType === 'gradientArea' || w.type === 'area');
+                const isSmoothLine = !isLineFamily || (lineSubType !== 'basic' && lineSubType !== 'step');
+                const stepMode = (isLineFamily && lineSubType === 'step') ? 'middle' : undefined;
 
-                const seriesList = effectiveMetrics.map((m, mIdx) => {
+                const rawMetricMatrix = effectiveMetrics.map((m, mIdx) => {
                     const groupedForMetric = mIdx === 0
                         ? firstGrouped
                         : groupAndAggregateComposite(rows, activeDimCols, m.field, m.agg, null);
                     const valMap = new Map(groupedForMetric.map(g => [g.key, g.value]));
+                    return categoryKeys.map(k => valMap.get(k) ?? 0);
+                });
+
+                const colTotals = categoryKeys.map((_, ki) => rawMetricMatrix.reduce((acc, arr) => acc + (arr[ki] || 0), 0));
+
+                const seriesList = effectiveMetrics.map((m, mIdx) => {
+                    const dataArr = isPct100
+                        ? rawMetricMatrix[mIdx].map((v, ki) => colTotals[ki] ? Math.round((v / colTotals[ki]) * 1000) / 10 : 0)
+                        : rawMetricMatrix[mIdx];
+
                     return {
                         name: `${m.field} (${(m.agg || 'sum').toUpperCase()})`,
-                        type: isLine ? 'line' : 'bar',
+                        type: isLine ? 'line' : (isPictorial ? 'pictorialBar' : 'bar'),
+                        symbol: isPictorial ? 'rect' : (isLine && lineSubType === 'gradientArea' ? 'circle' : undefined),
+                        symbolRepeat: isPictorial ? true : undefined,
+                        symbolSize: isPictorial ? (isHoriz ? [6, '65%'] : ['65%', 6]) : (isLine && lineSubType === 'gradientArea' ? 7 : undefined),
+                        symbolMargin: isPictorial ? 2 : undefined,
                         stack: isStacked ? 'total' : undefined,
-                        areaStyle: w.type === 'area' ? { opacity: 0.25 } : undefined,
-                        smooth: true,
-                        data: categoryKeys.map(k => valMap.get(k) ?? 0),
+                        step: stepMode,
+                        showBackground: hasBg,
+                        backgroundStyle: hasBg ? { color: isLight ? 'rgba(15,23,42,0.07)' : 'rgba(148,163,184,0.13)', borderRadius: 4 } : undefined,
+                        areaStyle: isAreaFill ? (lineSubType === 'gradientArea' ? {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: 'rgba(14,165,233,0.55)' },
+                                { offset: 1, color: 'rgba(14,165,233,0.03)' }
+                            ])
+                        } : { opacity: 0.26 }) : undefined,
+                        smooth: isSmoothLine,
+                        data: dataArr,
+                        label: w.showLabel ? {
+                            show: true,
+                            position: (isStacked && effectiveMetrics.length > 1) ? 'inside' : (isHoriz ? 'right' : 'top'),
+                            color: legendTextColor,
+                            fontSize: 10,
+                            formatter: p => isPct100 ? `%${p.value}` : formatValueByColumn(p.value, m.field, 'number')
+                        } : undefined,
+                        markLine: w.showMarkLine ? {
+                            data: [{ type: 'average', name: 'Ortalama' }],
+                            label: { formatter: p => `Ort: ${formatValueByColumn(p.value, m.field, 'number')}`, color: legendTextColor }
+                        } : undefined,
+                        markPoint: w.showMarkPoint ? {
+                            data: [{ type: 'max', name: 'Maks' }, { type: 'min', name: 'Min' }],
+                            label: { formatter: p => formatValueByColumn(p.value, m.field, 'number') }
+                        } : undefined,
                         itemStyle: effectiveMetrics.length === 1 && !isLine ? {
                             color: new echarts.graphic.LinearGradient(isHoriz ? 1 : 0, 0, 0, isHoriz ? 0 : 1, [
                                 { offset: 0, color: '#3b82f6' },
                                 { offset: 1, color: '#1d4ed8' }
                             ]),
-                            borderRadius: isHoriz ? [0, 4, 4, 0] : [4, 4, 0, 0]
+                            borderRadius: isPictorial ? 0 : (isHoriz ? [0, 4, 4, 0] : [4, 4, 0, 0])
                         } : undefined
                     };
                 });
 
                 const catAxis = { type: 'category', data: categoryKeys, axisLabel: { color: axisTextColor, rotate: (!isHoriz && categoryKeys.length > 5) ? 20 : 0 } };
-                const valAxis = { type: 'value', axisLabel: { color: axisTextColor, formatter: v => formatValueByColumn(v, effectiveMetrics[0].field, 'number') }, splitLine: { lineStyle: { color: splitLineColor } } };
+                const valAxis = {
+                    type: 'value',
+                    max: isPct100 ? 100 : undefined,
+                    axisLabel: { color: axisTextColor, formatter: v => isPct100 ? `%${v}` : formatValueByColumn(v, effectiveMetrics[0].field, 'number') },
+                    splitLine: { lineStyle: { color: splitLineColor } }
+                };
 
                 chart.setOption({
                     backgroundColor: 'transparent',
@@ -1183,7 +1829,8 @@
                             let res = `<strong>${escapeHtml(params[0].axisValueLabel || params[0].name || '')}</strong>`;
                             params.forEach((p, idx) => {
                                 const mCol = effectiveMetrics[idx]?.field || effectiveMetrics[0].field;
-                                res += `<br/>${p.marker || ''} ${escapeHtml(p.seriesName)}: <strong>${escapeHtml(formatValueByColumn(p.value, mCol, 'number'))}</strong>`;
+                                const fmtVal = isPct100 ? `%${p.value}` : formatValueByColumn(p.value, mCol, 'number');
+                                res += `<br/>${p.marker || ''} ${escapeHtml(p.seriesName)}: <strong>${escapeHtml(fmtVal)}</strong>`;
                             });
                             return res;
                         }
@@ -1205,28 +1852,7 @@
                 });
             }
 
-            // Tek Tık vs Çift Tık Ayrımı (2.2 Cross-Filter & 2.3 Drill-Down / Drill-Through)
-            let clickTimer = null;
-            chart.on('click', params => {
-                if (clickTimer) clearTimeout(clickTimer);
-                clickTimer = setTimeout(() => {
-                    const clickedVal = params.name;
-                    const filterDim = (mode === 'combined' && hierarchy.length > 1) ? hierarchy[0] : activeDimension;
-                    const filterVal = (mode === 'combined' && hierarchy.length > 1 && String(clickedVal).includes(' / '))
-                        ? String(clickedVal).split(' / ')[0]
-                        : clickedVal;
-                    toggleCrossFilter(filterDim, filterVal);
-                }, 230);
-            });
-
-            chart.on('dblclick', params => {
-                if (clickTimer) {
-                    clearTimeout(clickTimer);
-                    clickTimer = null;
-                }
-                const clickedVal = params.name;
-                handleChartDoubleClick(w, activeDimension, clickedVal, rows);
-            });
+            attachAppChartInteractions(chart, w, mode, hierarchy, activeDimension, rows);
         }
 
         // Madde 2.3: Çift Tıklandığında Alt Kırılıma (Drill-Down) veya Detay Kayıtlara (Drill-Through) Erişim
@@ -1453,6 +2079,11 @@
                             <option value="donut" ${w.type === 'donut' ? 'selected' : ''}>🍩 Halka Grafiği (Donut)</option>
                             <option value="gauge" ${w.type === 'gauge' ? 'selected' : ''}>🎯 İbre (Gauge)</option>
                             <option value="treemap" ${w.type === 'treemap' ? 'selected' : ''}>🟩 Treemap</option>
+                            <option value="sunburst" ${w.type === 'sunburst' ? 'selected' : ''}>☀️ Güneş Patlaması (Sunburst)</option>
+                            <option value="sankey" ${w.type === 'sankey' ? 'selected' : ''}>🔀 Sankey Akış Diyagramı</option>
+                            <option value="funnel" ${w.type === 'funnel' ? 'selected' : ''}>🌪️ Huni Grafiği (Funnel)</option>
+                            <option value="radar" ${w.type === 'radar' ? 'selected' : ''}>🕸️ Radar Grafiği</option>
+                            <option value="scatter" ${w.type === 'scatter' ? 'selected' : ''}>🫧 Dağılım / Baloncuk (Scatter)</option>
                             <option value="heatmap" ${w.type === 'heatmap' ? 'selected' : ''}>🔥 Isı Haritası (Heatmap)</option>
                             <option value="kpi" ${w.type === 'kpi' ? 'selected' : ''}>🔢 KPI Kartı</option>
                             <option value="pivot" ${w.type === 'pivot' ? 'selected' : ''}>🧮 Pivot Tablo</option>
