@@ -1,0 +1,2289 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpsWebBI - DevExpress BI Tarzı Görsel Tasarım Stüdyosu</title>
+    <script src="/lib/echarts.min.js"></script>
+    <style>
+        :root {
+            --bg: #0b1120;
+            --panel: #151f32;
+            --panel-alt: #1e293b;
+            --card: #162032;
+            --border: #334155;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --accent: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body {
+            margin: 0; background: var(--bg); color: var(--text);
+            height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        /* Üst Başlık ve Sekme Çubuğu */
+        .studio-topbar {
+            background: #0f172a; border-bottom: 1px solid var(--border);
+            padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        }
+        .studio-brand { display: flex; align-items: center; gap: 12px; }
+        .brand-pill {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff;
+            font-weight: 800; padding: 5px 10px; border-radius: 7px; font-size: 0.88rem;
+        }
+        .mode-tabs { display: flex; gap: 6px; background: #1e293b; padding: 4px; border-radius: 9px; border: 1px solid var(--border); }
+        .mode-tab {
+            padding: 6px 14px; border-radius: 6px; border: none; background: transparent;
+            color: var(--muted); font-weight: 700; font-size: 0.84rem; cursor: pointer; transition: all 0.15s;
+        }
+        .mode-tab.active { background: var(--primary); color: #fff; }
+        .btn {
+            padding: 6px 12px; border-radius: 7px; border: 1px solid var(--border);
+            background: #0f172a; color: var(--text); cursor: pointer; font-weight: 600;
+            font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn:hover { border-color: var(--primary); }
+        .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .btn-danger { background: rgba(239,68,68,0.15); border-color: var(--danger); color: #fca5a5; }
+
+        /* DevExpress Ribbon Benzeri Dashboard Özellik Çubuğu */
+        .ribbon-bar {
+            background: var(--panel-alt); border-bottom: 1px solid var(--border);
+            padding: 8px 16px; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px;
+        }
+        .r-field { display: flex; flex-direction: column; gap: 3px; }
+        .r-field label { font-size: 0.7rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+        .r-field input, .r-field select {
+            padding: 6px 9px; border-radius: 6px; border: 1px solid var(--border);
+            background: #0f172a; color: var(--text); font-size: 0.84rem; outline: none;
+        }
+
+        /* Ana Çalışma Alanı (Sol Dock Panel + Sağ Canlı Tuval) */
+        .studio-workspace {
+            flex: 1; display: flex; overflow: hidden; position: relative;
+        }
+
+        /* Sol DevExpress Dock Paneli (Toolbox + Data Items + Field List) */
+        .dock-sidebar {
+            width: 360px; min-width: 360px; background: var(--panel); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; overflow-y: auto; user-select: none;
+        }
+        .dock-section {
+            border-bottom: 1px solid var(--border); padding: 10px 12px;
+        }
+        .dock-sec-title {
+            font-size: 0.74rem; font-weight: 800; color: #93c5fd; text-transform: uppercase;
+            letter-spacing: 0.5px; margin: 0 0 8px 0; display: flex; align-items: center; justify-content: space-between;
+        }
+
+        /* 1. Araç Kutusu (Toolbox) */
+        .toolbox-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+        }
+        .tool-tile {
+            background: #0f172a; border: 1px solid var(--border); border-radius: 7px;
+            padding: 7px 4px; display: flex; flex-direction: column; align-items: center; gap: 3px;
+            cursor: grab; font-size: 0.73rem; font-weight: 600; color: #e2e8f0; text-align: center;
+            transition: all 0.15s;
+        }
+        .tool-tile:hover { border-color: var(--primary); background: rgba(59,130,246,0.12); transform: translateY(-1px); }
+        .tool-tile:active { cursor: grabbing; }
+        .tool-icon { font-size: 1.15rem; line-height: 1; }
+
+        /* 2. Veri Bağlama Yuvaları (Data Items / Drop Zones) */
+        .drop-zone {
+            background: rgba(15, 23, 42, 0.75); border: 1.5px dashed #475569; border-radius: 8px;
+            padding: 7px; min-height: 44px; margin-bottom: 8px; transition: all 0.15s;
+        }
+        .drop-zone.drag-over {
+            border-color: #38bdf8; background: rgba(56, 189, 248, 0.12);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+        }
+        .dz-label {
+            font-size: 0.71rem; font-weight: 700; color: var(--muted); text-transform: uppercase;
+            margin-bottom: 5px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .dz-empty {
+            font-size: 0.76rem; color: #64748b; text-align: center; padding: 6px 4px; font-style: italic;
+        }
+        .bound-pill {
+            background: #1e293b; border: 1px solid #3b82f6; border-radius: 6px;
+            padding: 4px 8px; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;
+            font-size: 0.79rem; color: #f8fafc; gap: 6px;
+        }
+        .bound-pill:last-child { margin-bottom: 0; }
+        .bound-pill select {
+            background: #0f172a; color: #6ee7b7; border: 1px solid var(--border);
+            border-radius: 4px; font-size: 0.72rem; padding: 1px 4px; font-weight: 700;
+        }
+        .bound-pill select.pill-col-select {
+            background: #0f172a; color: #f8fafc; border: 1px solid rgba(56, 189, 248, 0.45);
+            border-radius: 5px; font-size: 0.78rem; padding: 2px 6px; font-weight: 700;
+            flex: 1; min-width: 90px; max-width: 175px; cursor: pointer; outline: none;
+        }
+        .bound-pill select.pill-col-select:hover, .bound-pill select.pill-col-select:focus {
+            border-color: #38bdf8;
+        }
+        .dz-add-select {
+            width: 100%; margin-top: 5px; padding: 4px 7px; border-radius: 5px;
+            border: 1px dashed #475569; background: rgba(15, 23, 42, 0.65); color: #93c5fd;
+            font-size: 0.74rem; font-weight: 600; cursor: pointer; outline: none;
+        }
+        .dz-add-select:hover, .dz-add-select:focus {
+            border-color: #38bdf8; color: #38bdf8; background: rgba(15, 23, 42, 0.95);
+        }
+        .pill-actions { display: flex; align-items: center; gap: 3px; }
+        .pill-btn {
+            background: transparent; border: none; color: #94a3b8; cursor: pointer;
+            font-size: 0.75rem; padding: 1px 4px; border-radius: 4px;
+        }
+        .pill-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .pill-btn.del:hover { color: #fca5a5; }
+
+        /* 3. Veri Kaynağı Alan Listesi (Field List) */
+        .field-list-wrap {
+            flex: 1; display: flex; flex-direction: column; padding: 10px 12px; min-height: 180px;
+        }
+        .field-items-scroll {
+            flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; margin-top: 6px;
+        }
+        .field-chip {
+            background: #0f172a; border: 1px solid var(--border); border-radius: 6px;
+            padding: 6px 9px; display: flex; align-items: center; justify-content: space-between;
+            cursor: grab; font-size: 0.81rem; transition: all 0.12s;
+        }
+        .field-chip:hover { border-color: #38bdf8; background: #162238; }
+        .field-chip:active { cursor: grabbing; }
+        .f-type-badge {
+            font-size: 0.68rem; font-weight: 700; padding: 1px 6px; border-radius: 4px; text-transform: uppercase;
+        }
+        .ft-number { background: rgba(59,130,246,0.2); color: #93c5fd; }
+        .ft-string { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+        .ft-date { background: rgba(245,158,11,0.2); color: #fcd34d; }
+
+        /* Sağ Canlı Tuval Alanı */
+        .canvas-area {
+            flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 14px;
+            background: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
+            background-size: 20px 20px;
+        }
+        .dashboard-canvas {
+            display: grid; grid-template-columns: repeat(120, 1fr); gap: 8px;
+            align-content: start; min-height: 100%; padding-bottom: 40px;
+        }
+        .dashboard-canvas.canvas-drag-over {
+            outline: 2px dashed #38bdf8; outline-offset: -4px; border-radius: 12px;
+        }
+
+        /* Tuval Üzerindeki Widget Kartları (Seçim, Sürükleme, Köşeden Boyutlandırma) */
+        .widget-card {
+            background: var(--card); border: 1.5px solid var(--border); border-radius: 11px;
+            display: flex; flex-direction: column; overflow: hidden; position: relative;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.28); transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .widget-card.selected {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.35), 0 10px 25px rgba(0,0,0,0.4);
+        }
+        .widget-card.card-drop-target {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.4);
+        }
+        .widget-header {
+            padding: 8px 12px; background: rgba(15,23,42,0.65); border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: move;
+        }
+        .widget-title { font-size: 0.88rem; font-weight: 700; color: #e2e8f0; margin: 0; display: flex; align-items: center; gap: 6px; }
+        .drag-grip { color: #64748b; font-size: 0.95rem; cursor: grab; }
+        .size-badge {
+            font-size: 0.68rem; color: #94a3b8; background: #0f172a; border: 1px solid var(--border);
+            padding: 1px 6px; border-radius: 4px; font-weight: 600;
+        }
+        .widget-body { flex: 1; padding: 12px; position: relative; min-height: 0; overflow: auto; }
+        .widget-body.table-scroll { padding: 0; overflow: auto; }
+
+        /* Köşeden ve Kenardan Boyutlandırma Tutamaçları (Resize Handles) */
+        .resize-handle-se {
+            position: absolute; right: 0; bottom: 0; width: 18px; height: 18px;
+            cursor: nwse-resize; z-index: 20; display: flex; align-items: flex-end; justify-content: flex-end;
+            padding: 2px 3px; color: #64748b; font-size: 0.7rem; user-select: none;
+            background: linear-gradient(135deg, transparent 50%, rgba(56,189,248,0.35) 50%);
+        }
+        .widget-card:hover .resize-handle-se, .widget-card.selected .resize-handle-se {
+            color: #38bdf8; background: linear-gradient(135deg, transparent 50%, rgba(56,189,248,0.75) 50%);
+        }
+        .resize-handle-e {
+            position: absolute; right: 0; top: 34px; bottom: 18px; width: 10px;
+            cursor: col-resize; z-index: 18; transition: background 0.12s;
+        }
+        .resize-handle-e:hover {
+            background: rgba(56, 189, 248, 0.35);
+        }
+        .resize-handle-s {
+            position: absolute; left: 0; right: 18px; bottom: 0; height: 9px;
+            cursor: row-resize; z-index: 18; transition: background 0.12s;
+        }
+        .resize-handle-s:hover {
+            background: rgba(56, 189, 248, 0.35);
+        }
+
+        /* KPI ve Tablo Stilleri (app.html ile birebir aynı) */
+        .kpi-box {
+            display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+            height: 100%; padding: 2px 6px;
+        }
+        .kpi-meta {
+            font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.4px; margin-bottom: 2px;
+        }
+        .kpi-val {
+            font-size: clamp(1.45rem, 1.9vw, 1.95rem); font-weight: 800; color: #38bdf8;
+            line-height: 1.15; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; white-space: nowrap;
+        }
+        table.bi-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.82rem; }
+        table.bi-table thead th {
+            position: sticky; top: 0; z-index: 5; background: #0f172a; color: #93c5fd;
+            text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--border);
+            cursor: pointer; user-select: none; white-space: nowrap;
+        }
+        table.bi-table thead th:hover { background: #1e293b; color: #fff; }
+        table.bi-table thead th .sort-ind { display: inline-block; margin-left: 5px; font-size: 0.72rem; color: #38bdf8; }
+        table.bi-table td { padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #e2e8f0; }
+        table.bi-table tbody tr:hover td { background: rgba(59, 130, 246, 0.08); }
+        table.bi-table tfoot td {
+            position: sticky; bottom: 0; z-index: 5; background: #1e293b; font-weight: 700; color: #6ee7b7;
+            padding: 7px 10px; border-top: 2px solid var(--border);
+        }
+
+        /* 2. Sekme: SQL Veri Kaynağı Editörü */
+        .sql-studio-container {
+            flex: 1; overflow-y: auto; padding: 18px; display: none;
+        }
+        .sql-box {
+            max-width: 1100px; margin: 0 auto; background: var(--panel); border: 1px solid var(--border);
+            border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px;
+        }
+        .sql-box textarea {
+            width: 100%; min-height: 150px; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
+            background: #0f172a; color: #38bdf8; font-family: Consolas, monospace; font-size: 0.88rem; resize: vertical;
+        }
+        .status-toast {
+            position: fixed; bottom: 18px; right: 18px; padding: 10px 16px; border-radius: 9px;
+            background: #10b981; color: #fff; font-weight: 700; font-size: 0.86rem; z-index: 9999;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4); display: none;
+        }
+
+        /* AÇIK RENK TEMA (LIGHT THEME) STİLLERİ */
+        body.light-theme {
+            --bg: #f1f5f9;
+            --panel: #ffffff;
+            --panel-alt: #f8fafc;
+            --card: #ffffff;
+            --border: #cbd5e1;
+            --text: #0f172a;
+            --muted: #475569;
+        }
+        body.light-theme .studio-topbar { background: #ffffff; box-shadow: 0 1px 4px rgba(15,23,42,0.06); }
+        body.light-theme .mode-tabs { background: #f1f5f9; }
+        body.light-theme .btn { background: #ffffff; color: #0f172a; border-color: #cbd5e1; }
+        body.light-theme .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        body.light-theme .btn-accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+        body.light-theme .btn-danger { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+        body.light-theme .r-field input,
+        body.light-theme .r-field select,
+        body.light-theme #fieldSearchInput { background: #ffffff; color: #0f172a; border-color: #cbd5e1; }
+        body.light-theme .dock-sec-title { color: #1d4ed8; }
+        body.light-theme .tool-tile { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
+        body.light-theme .tool-tile:hover { background: #eff6ff; border-color: var(--primary); }
+        body.light-theme .drop-zone { background: #f8fafc; border-color: #94a3b8; }
+        body.light-theme .bound-pill { background: #eff6ff; color: #0f172a; border-color: #60a5fa; }
+        body.light-theme .bound-pill select { background: #ffffff; color: #047857; border-color: #cbd5e1; }
+        body.light-theme .bound-pill select.pill-col-select { background: #ffffff; color: #0f172a; border-color: #60a5fa; }
+        body.light-theme .dz-add-select { background: #ffffff; color: #1d4ed8; border-color: #94a3b8; }
+        body.light-theme .pill-btn { color: #475569; }
+        body.light-theme .pill-btn:hover { background: rgba(15,23,42,0.08); color: #0f172a; }
+        body.light-theme .field-chip { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
+        body.light-theme .field-chip:hover { background: #eff6ff; border-color: #3b82f6; }
+        body.light-theme .ft-number { background: #dbeafe; color: #1d4ed8; }
+        body.light-theme .ft-string { background: #d1fae5; color: #047857; }
+        body.light-theme .ft-date { background: #fef3c7; color: #b45309; }
+        body.light-theme .canvas-area {
+            background: radial-gradient(circle at 1px 1px, rgba(15,23,42,0.12) 1px, transparent 0);
+            background-size: 20px 20px;
+        }
+        body.light-theme .widget-card { box-shadow: 0 4px 14px rgba(15,23,42,0.08); }
+        body.light-theme .widget-header { background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+        body.light-theme .widget-title { color: #0f172a; }
+        body.light-theme .size-badge { background: #ffffff; color: #475569; border-color: #cbd5e1; }
+        body.light-theme .kpi-val { color: #0284c7; }
+        body.light-theme table.bi-table thead th { background: #e2e8f0; color: #1e3a8a; border-bottom: 2px solid #cbd5e1; }
+        body.light-theme table.bi-table thead th:hover { background: #cbd5e1; color: #0f172a; }
+        body.light-theme table.bi-table td { color: #1e293b; border-bottom: 1px solid #e2e8f0; }
+        body.light-theme table.bi-table tbody tr:hover td { background: rgba(59,130,246,0.08); }
+        body.light-theme table.bi-table tfoot td { background: #f1f5f9; color: #047857; border-top: 2px solid #cbd5e1; }
+        body.light-theme .sql-box textarea { background: #f8fafc; color: #0369a1; border-color: #cbd5e1; }
+    </style>
+</head>
+<body>
+    <!-- Üst Stüdyo Çubuğu -->
+    <header class="studio-topbar">
+        <div class="studio-brand">
+            <span class="brand-pill">SpsWebBI Studio</span>
+            <div class="mode-tabs">
+                <button type="button" class="mode-tab active" id="tabBtnVisual" onclick="switchStudioTab('visual')">
+                    1. Görsel Dashboard Tasarımcısı (Sürükle-Bırak)
+                </button>
+                <button type="button" class="mode-tab" id="tabBtnSql" onclick="switchStudioTab('sql')">
+                    2. Veri Kaynağı & SQL Sorgu Editörü
+                </button>
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+            <button type="button" class="btn" id="btnThemeToggle" onclick="toggleTheme()">☀️ Açık Tema</button>
+            <a href="/app" class="btn">⬅ Gösterim Ekranına Dön</a>
+            <a href="/admin" class="btn">Yetki & Süre Yönetimi</a>
+        </div>
+    </header>
+
+    <!-- SEKME 1: DEVEXPRESS BI TARZI GÖRSEL SÜRÜKLE-BIRAK TASARIMCI -->
+    <div id="visualDesignerView" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+        <!-- Üst Dashboard Seçim ve Kayıt Şeridi -->
+        <section class="ribbon-bar">
+            <div class="r-field" style="min-width:220px;">
+                <label>Mevcut Dashboard Şablonu</label>
+                <select id="selExistingDash" onchange="onSelectExistingDash()"></select>
+            </div>
+            <button type="button" class="btn" style="height:33px;" onclick="createNewBlankDashboard()">+ Yeni Boş Dashboard</button>
+
+            <div class="r-field" style="min-width:140px;">
+                <label>Dashboard Kodu</label>
+                <input type="text" id="dashCode" placeholder="DASH_ORNEK">
+            </div>
+            <div class="r-field" style="min-width:210px;flex:1;">
+                <label>Dashboard Başlığı</label>
+                <input type="text" id="dashTitle" placeholder="Örn: Satış & Sipariş Analiz Paneli">
+            </div>
+            <div class="r-field" style="min-width:210px;">
+                <label>Bağlı Veri Kaynağı (Datasource)</label>
+                <select id="dashDsId" onchange="onDesignerDataSourceChanged()"></select>
+            </div>
+            <div class="r-field" style="min-width:180px;">
+                <label>Açıklama</label>
+                <input type="text" id="dashDesc" placeholder="Opsiyonel açıklama">
+            </div>
+            <button type="button" class="btn btn-danger" style="height:33px;" onclick="clearCanvasWidgets()">Tuvali Temizle</button>
+            <button type="button" class="btn btn-accent" style="height:33px;padding:0 16px;" onclick="saveMasterDashboard()">
+                💾 Ana Şablonu Kaydet
+            </button>
+        </section>
+
+        <!-- Sol Dock Panel + Sağ Canlı Tuval -->
+        <div class="studio-workspace">
+            <aside class="dock-sidebar">
+                <!-- BÖLÜM 1: ARAÇ KUTUSU (TOOLBOX) -->
+                <div class="dock-section">
+                    <div class="dock-sec-title">
+                        <span>1. Araç Kutusu (Tuvale Sürükle veya Tıkla)</span>
+                    </div>
+                    <div class="toolbox-grid">
+                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'bar')" onclick="addWidgetFromToolbox('bar')">
+                            <span class="tool-icon">📊</span><span>Sütun</span>
+                        </div>
+                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'stackedBar')" onclick="addWidgetFromToolbox('stackedBar')">
+                            <span class="tool-icon">📚</span><span>Yığılmış</span>
+                        </div>
+                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'horizontalBar')" onclick="addWidgetFromToolbox('horizontalBar')">
+                            <span class="tool-icon">📉</span><span>Yatay Bar</span>
+                        </div>
+                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'line')" onclick="addWidgetFromToolbox('line')">
+                            <span class="tool-icon">📈</span><span>Çizgi</span>
+                        </div>
+                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'area')" onclick="addWidgetFromToolbox('area')">
+                            <span class="tool-icon">⛰️</span><span>Alan</span>
+                        </div>
+                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'pie')" onclick="addWidgetFromToolbox('pie')">
+                            <span class="tool-icon">🥧</span><span>Pasta</span>
+                        </div>
+                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'donut')" onclick="addWidgetFromToolbox('donut')">
+                            <span class="tool-icon">🍩</span><span>Halka</span>
+                        </div>
+                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'gauge')" onclick="addWidgetFromToolbox('gauge')">
+                            <span class="tool-icon">🎯</span><span>İbre</span>
+                        </div>
+                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'treemap')" onclick="addWidgetFromToolbox('treemap')">
+                            <span class="tool-icon">🟩</span><span>Treemap</span>
+                        </div>
+                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'heatmap')" onclick="addWidgetFromToolbox('heatmap')">
+                            <span class="tool-icon">🔥</span><span>Isı Haritası</span>
+                        </div>
+                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'kpi')" onclick="addWidgetFromToolbox('kpi')">
+                            <span class="tool-icon">🔢</span><span>KPI Kartı</span>
+                        </div>
+                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'table')" onclick="addWidgetFromToolbox('table')">
+                            <span class="tool-icon">📋</span><span>Tablo</span>
+                        </div>
+                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'pivot')" onclick="addWidgetFromToolbox('pivot')">
+                            <span class="tool-icon">🧮</span><span>Pivot</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BÖLÜM 2: SEÇİLİ BİLEŞEN VERİ BAĞLAMA YUVALARI (DATA ITEMS) -->
+                <div class="dock-section" id="dataBindingSection">
+                    <div class="dock-sec-title">
+                        <span>2. Seçili Bileşen & Veri Yuvaları</span>
+                        <span id="selectedWidgetBadge" style="color:#38bdf8;font-size:0.7rem;">Seçili Yok</span>
+                    </div>
+                    <div id="dataBindingContent">
+                        <div class="dz-empty">Tuvalden bir bileşene tıklayın veya araç kutusundan yeni bileşen ekleyin.</div>
+                    </div>
+                </div>
+
+                <!-- BÖLÜM 3: VERİ KAYNAĞI ALAN LİSTESİ (FIELD LIST) -->
+                <div class="field-list-wrap">
+                    <div class="dock-sec-title" style="margin-bottom:4px;">
+                        <span>3. Veri Kaynağı Kolonları (Sürükle Bırak)</span>
+                        <span id="fieldCountBadge" style="color:#6ee7b7;">0 Kolon</span>
+                    </div>
+                    <input type="text" id="fieldSearchInput" placeholder="Kolon ara..." oninput="renderFieldList()"
+                           style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:#0f172a;color:#fff;font-size:0.8rem;">
+                    <div class="field-items-scroll" id="fieldListContainer"></div>
+                </div>
+            </aside>
+
+            <!-- SAĞ CANLI TASARIM TUVALİ -->
+            <main class="canvas-area">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:0.8rem;color:var(--muted);">
+                    <span>💡 <strong>İpucu:</strong> Bileşenleri başlığından (⠿) sürükleyerek yer değiştirin, sağ alt köşesinden (◢) çekerek boyutlandırın, sol listeden kolonları sürükleyip bileşenlerin veya veri yuvalarının içine bırakın.</span>
+                    <span id="liveRowCountInfo" style="color:#6ee7b7;font-weight:700;"></span>
+                </div>
+                <div class="dashboard-canvas" id="designerCanvas"
+                     ondragover="onCanvasDragOver(event)"
+                     ondragleave="onCanvasDragLeave(event)"
+                     ondrop="onCanvasDrop(event)">
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- SEKME 2: VERİ KAYNAĞI VE SQL SORGU EDİTÖRÜ -->
+    <div id="sqlEditorView" class="sql-studio-container">
+        <div class="sql-box">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h2 style="margin:0;font-size:1.1rem;color:#93c5fd;">SQL Veri Kaynağı & Dinamik Filtre Parametresi Tanımlama (Madde 2.4 & 2.5)</h2>
+                <button type="button" class="btn" onclick="clearDataSourceForm()">+ Yeni Veri Kaynağı</button>
+            </div>
+
+            <div class="r-field">
+                <label>Mevcut Veri Kaynağını Seç (Düzenlemek İçin)</label>
+                <select id="selExistingDs" onchange="onSelectExistingDs()"></select>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 2fr 1fr;gap:12px;">
+                <div class="r-field">
+                    <label>Veri Kaynağı Kodu</label>
+                    <input type="text" id="dsCode" placeholder="Örn: DS_SATINALMA">
+                </div>
+                <div class="r-field">
+                    <label>Veri Kaynağı Adı</label>
+                    <input type="text" id="dsName" placeholder="Örn: Satınalma Sipariş Analizi">
+                </div>
+                <div class="r-field">
+                    <label>Kategori</label>
+                    <input type="text" id="dsCat" placeholder="Satış / Stok / Sevkiyat">
+                </div>
+            </div>
+
+            <div class="r-field">
+                <label>SQL Sorgusu (Yalnızca SELECT/WITH; filtreler için @ParametreAdi kullanın)</label>
+                <textarea id="dsSql" placeholder="SELECT ... FROM tablo WHERE (@Bolge IS NULL OR Bolge = @Bolge)"></textarea>
+            </div>
+
+            <div style="display:flex;gap:10px;">
+                <button type="button" class="btn btn-primary" onclick="previewAndDetectSql()">🔍 SQL Doğrula & Kolonları / @Parametreleri Algıla</button>
+                <button type="button" class="btn btn-accent" onclick="saveDataSource()">💾 Veri Kaynağını MariaDB'ye Kaydet</button>
+            </div>
+
+            <div>
+                <label style="font-size:0.78rem;color:var(--muted);font-weight:700;display:block;margin-bottom:6px;">
+                    FİLTRE PARAMETRELERİ (@Parametreler ve Açılır Liste Lookup SQL)
+                </label>
+                <table class="bi-table" style="border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+                    <thead>
+                        <tr>
+                            <th>Parametre (@)</th>
+                            <th>Ekran Etiketi</th>
+                            <th>Tip</th>
+                            <th>Lookup SQL (Seçim Listesi İçin Opsiyonel SELECT val, txt)</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="paramsTableBody"></tbody>
+                </table>
+                <button type="button" class="btn" style="margin-top:8px;" onclick="addParamRow('', '', 'select', '')">+ Parametre Satırı Ekle</button>
+            </div>
+
+            <div>
+                <label style="font-size:0.78rem;color:var(--muted);font-weight:700;display:block;margin-bottom:6px;">
+                    ALGILANAN KOLONLAR VE ÖNİZLEME
+                </label>
+                <div id="detectedSchemaBox" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"></div>
+                <div id="sqlPreviewTableWrap" style="max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:8px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-toast" id="statusToast"></div>
+
+    <script>
+        let allDataSources = [];
+        let allDashboards = [];
+        let currentDsId = null;
+        let currentDashId = null;
+
+        // Görsel Tasarımcı Durumu
+        let designerLayout = { widgets: [] };
+        let selectedWidgetId = null;
+        let liveColumns = [];
+        let liveRows = [];
+        let chartInstances = [];
+        let widgetDrillState = {};
+        let widgetSortState = {};
+
+        // Sürükle-Bırak Durumu
+        let dragPayload = null; // { kind: 'toolbox'|'field'|'widget', value: ... }
+
+        function isLightTheme() {
+            return document.body.classList.contains('light-theme');
+        }
+
+        function applySavedTheme() {
+            const saved = localStorage.getItem('sps_bi_theme') || 'dark';
+            document.body.classList.toggle('light-theme', saved === 'light');
+            const btn = document.getElementById('btnThemeToggle');
+            if (btn) btn.innerHTML = saved === 'light' ? '🌙 Koyu Tema' : '☀️ Açık Tema';
+        }
+
+        function toggleTheme() {
+            const next = isLightTheme() ? 'dark' : 'light';
+            localStorage.setItem('sps_bi_theme', next);
+            applySavedTheme();
+            renderDesignerCanvas();
+        }
+        applySavedTheme();
+
+        window.addEventListener('resize', () => {
+            chartInstances.forEach(c => { try { c.resize(); } catch (_) {} });
+        });
+
+        function showToast(msg, isError = false) {
+            const t = document.getElementById('statusToast');
+            t.textContent = msg;
+            t.style.background = isError ? '#ef4444' : '#10b981';
+            t.style.display = 'block';
+            setTimeout(() => { t.style.display = 'none'; }, 3200);
+        }
+
+        function switchStudioTab(tab) {
+            const isVisual = tab === 'visual';
+            document.getElementById('tabBtnVisual').classList.toggle('active', isVisual);
+            document.getElementById('tabBtnSql').classList.toggle('active', !isVisual);
+            document.getElementById('visualDesignerView').style.display = isVisual ? 'flex' : 'none';
+            document.getElementById('sqlEditorView').style.display = isVisual ? 'none' : 'block';
+            if (isVisual) {
+                setTimeout(() => chartInstances.forEach(c => { try { c.resize(); } catch (_) {} }), 60);
+            }
+        }
+
+        async function initDesigner() {
+            const me = await fetch('/api/auth/me');
+            if (!me.ok) { window.location.href = '/login'; return; }
+            const user = await me.json();
+            if (user.authMethod === 'Passwordless' || (user.role !== 'admin' && user.role !== 'designer')) {
+                alert('Tasarım stüdyosuna yalnızca şifreli giriş yapmış Admin veya Designer erişebilir.');
+                window.location.href = '/app';
+                return;
+            }
+            await loadAllData();
+        }
+
+        async function loadAllData() {
+            const [dsRes, dashRes] = await Promise.all([
+                fetch('/api/admin/datasources'),
+                fetch('/api/admin/dashboards')
+            ]);
+            const dsData = await dsRes.json();
+            const dashData = await dashRes.json();
+            allDataSources = dsData.datasources || [];
+            allDashboards = dashData.dashboards || [];
+
+            populateDataSourceSelects();
+            populateDashboardSelect();
+
+            if (allDashboards.length > 0 && !currentDashId) {
+                document.getElementById('selExistingDash').value = allDashboards[0].dashboard_id;
+                await onSelectExistingDash();
+            } else {
+                await createNewBlankDashboard();
+            }
+        }
+
+        function populateDataSourceSelects() {
+            const selDs = document.getElementById('selExistingDs');
+            const dashDs = document.getElementById('dashDsId');
+            selDs.innerHTML = '<option value="">-- Yeni Veri Kaynağı Oluştur --</option>';
+            dashDs.innerHTML = '';
+
+            allDataSources.forEach(ds => {
+                selDs.innerHTML += `<option value="${ds.datasource_id}">${escapeHtml(ds.code)} - ${escapeHtml(ds.name)}</option>`;
+                dashDs.innerHTML += `<option value="${ds.datasource_id}">${escapeHtml(ds.code)} - ${escapeHtml(ds.name)}</option>`;
+            });
+        }
+
+        function populateDashboardSelect() {
+            const selDash = document.getElementById('selExistingDash');
+            selDash.innerHTML = '<option value="">-- Yeni Dashboard Oluştur --</option>';
+            allDashboards.forEach(d => {
+                selDash.innerHTML += `<option value="${d.dashboard_id}">${escapeHtml(d.code)} - ${escapeHtml(d.title)}</option>`;
+            });
+            if (currentDashId) selDash.value = currentDashId;
+        }
+
+        async function onSelectExistingDash() {
+            const id = parseInt(document.getElementById('selExistingDash').value || '0', 10);
+            const d = allDashboards.find(x => x.dashboard_id === id);
+            if (!d) {
+                await createNewBlankDashboard();
+                return;
+            }
+            currentDashId = d.dashboard_id;
+            document.getElementById('dashCode').value = d.code;
+            document.getElementById('dashTitle').value = d.title;
+            document.getElementById('dashDesc').value = d.description || '';
+            document.getElementById('dashDsId').value = d.primary_datasource_id;
+
+            try {
+                designerLayout = JSON.parse(d.layout_json || '{"widgets":[]}');
+                if (!Array.isArray(designerLayout.widgets)) designerLayout.widgets = [];
+            } catch (_) {
+                designerLayout = { widgets: [] };
+            }
+
+            selectedWidgetId = designerLayout.widgets[0]?.id || null;
+            await loadLiveDataSourceData(d.primary_datasource_id);
+        }
+
+        async function createNewBlankDashboard() {
+            currentDashId = null;
+            document.getElementById('selExistingDash').value = '';
+            document.getElementById('dashCode').value = 'DASH_' + Math.floor(100 + Math.random() * 900);
+            document.getElementById('dashTitle').value = 'Yeni Analiz Dashboard';
+            document.getElementById('dashDesc').value = '';
+            designerLayout = { widgets: [] };
+            selectedWidgetId = null;
+            const dsId = parseInt(document.getElementById('dashDsId').value || '0', 10);
+            if (dsId > 0) await loadLiveDataSourceData(dsId);
+            else {
+                renderDesignerCanvas();
+                renderDataBindingPanel();
+            }
+        }
+
+        function clearCanvasWidgets() {
+            if (!confirm('Tuvaldeki tüm bileşenleri temizlemek istediğinize emin misiniz?')) return;
+            designerLayout.widgets = [];
+            selectedWidgetId = null;
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+        }
+
+        async function onDesignerDataSourceChanged() {
+            const dsId = parseInt(document.getElementById('dashDsId').value || '0', 10);
+            if (dsId > 0) {
+                await loadLiveDataSourceData(dsId);
+            }
+        }
+
+        async function loadLiveDataSourceData(datasourceId) {
+            const res = await fetch(`/api/datasources/${datasourceId}/execute`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filters: {} })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                liveColumns = data.columns || [];
+                liveRows = data.rows || [];
+                document.getElementById('liveRowCountInfo').textContent = `Canlı Veri: ${liveRows.length} kayıt, ${liveColumns.length} kolon yüklendi`;
+            } else {
+                liveColumns = [];
+                liveRows = [];
+                document.getElementById('liveRowCountInfo').textContent = 'Veri yüklenemedi';
+            }
+            renderFieldList();
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+        }
+
+        // BÖLÜM 3: ALAN LİSTESİ (FIELD LIST) ÇİZİMİ VE SÜRÜKLEME
+        function renderFieldList() {
+            const q = (document.getElementById('fieldSearchInput').value || '').toLowerCase().trim();
+            const container = document.getElementById('fieldListContainer');
+            container.innerHTML = '';
+            document.getElementById('fieldCountBadge').textContent = `${liveColumns.length} Kolon`;
+
+            liveColumns
+                .filter(c => !q || c.name.toLowerCase().includes(q))
+                .forEach(c => {
+                    const chip = document.createElement('div');
+                    chip.className = 'field-chip';
+                    chip.draggable = true;
+
+                    const typeClass = c.dataType === 'number' ? 'ft-number' : (c.dataType === 'date' ? 'ft-date' : 'ft-string');
+                    const typeIcon = c.dataType === 'number' ? '🔢 Sayı' : (c.dataType === 'date' ? '📅 Tarih' : '🔤 Metin');
+
+                    chip.innerHTML = `
+                        <span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(c.name)}</span>
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <span class="f-type-badge ${typeClass}">${typeIcon}</span>
+                            <button type="button" class="pill-btn" title="Seçili bileşene ekle" style="color:#38bdf8;font-weight:800;">+</button>
+                        </div>`;
+
+                    chip.addEventListener('dragstart', e => {
+                        dragPayload = { kind: 'field', column: c.name, dataType: c.dataType };
+                        e.dataTransfer.setData('text/plain', c.name);
+                    });
+
+                    chip.querySelector('button').addEventListener('click', e => {
+                        e.stopPropagation();
+                        autoAssignFieldToSelectedWidget(c.name, c.dataType);
+                    });
+
+                    container.appendChild(chip);
+                });
+        }
+
+        // BÖLÜM 1: ARAÇ KUTUSUNDAN BİLEŞEN EKLEME (SÜRÜKLE VEYA TIKLA)
+        function onToolboxDragStart(e, widgetType) {
+            dragPayload = { kind: 'toolbox', widgetType };
+            e.dataTransfer.setData('text/plain', widgetType);
+        }
+
+        function onCanvasDragOver(e) {
+            if (dragPayload && dragPayload.kind === 'toolbox') {
+                e.preventDefault();
+                document.getElementById('designerCanvas').classList.add('canvas-drag-over');
+            }
+        }
+
+        function onCanvasDragLeave(e) {
+            document.getElementById('designerCanvas').classList.remove('canvas-drag-over');
+        }
+
+        function onCanvasDrop(e) {
+            document.getElementById('designerCanvas').classList.remove('canvas-drag-over');
+            if (dragPayload && dragPayload.kind === 'toolbox') {
+                e.preventDefault();
+                addWidgetFromToolbox(dragPayload.widgetType);
+                dragPayload = null;
+            }
+        }
+
+        function isLikelyDimensionColumn(colName, dataType) {
+            if (dataType !== 'number') return true;
+            const n = String(colName || '').toLowerCase();
+            return /y[ıi]l|ay\b|g[üu]n|tarih|tar\.|termin|hafta|no\b|_id\b|^id$|kod|tip|t[üu]r|durum/i.test(n);
+        }
+
+        function getWidgetMetrics(w) {
+            if (Array.isArray(w.valueMetrics) && w.valueMetrics.length > 0) {
+                return w.valueMetrics;
+            }
+            if (w.valueField) {
+                return [{ field: w.valueField, agg: w.agg || 'sum' }];
+            }
+            return [];
+        }
+
+        function syncPrimaryMetricProps(w) {
+            const metrics = getWidgetMetrics(w);
+            w.valueMetrics = metrics;
+            w.valueField = metrics[0]?.field || '';
+            w.agg = metrics[0]?.agg || 'sum';
+        }
+
+        function addWidgetFromToolbox(type) {
+            const firstStrCol = liveColumns.find(c => isLikelyDimensionColumn(c.name, c.dataType))?.name || liveColumns[0]?.name || '';
+            const secondStrCol = liveColumns.filter(c => isLikelyDimensionColumn(c.name, c.dataType))[1]?.name || firstStrCol;
+            const firstNumCol = liveColumns.find(c => c.dataType === 'number' && !isLikelyDimensionColumn(c.name, c.dataType))?.name
+                || liveColumns.find(c => c.dataType === 'number')?.name
+                || liveColumns[0]?.name || '';
+
+            const titles = {
+                bar: 'Yeni Sütun Grafiği',
+                stackedBar: 'Yeni Yığılmış Sütun Grafiği',
+                horizontalBar: 'Yeni Yatay Sütun Grafiği',
+                line: 'Yeni Çizgi Grafiği',
+                area: 'Yeni Alan Grafiği',
+                pie: 'Yeni Pasta Grafiği',
+                donut: 'Yeni Halka Grafiği',
+                gauge: 'Yeni İbre Göstergesi',
+                treemap: 'Yeni Treemap Haritası',
+                heatmap: 'Yeni Isı Haritası',
+                kpi: firstNumCol ? `${firstNumCol} Toplamı` : 'Yeni KPI Kartı',
+                table: 'Detay Veri Tablosu',
+                pivot: 'Pivot Özet Tablosu'
+            };
+
+            const newWidget = {
+                id: 'w_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
+                type: type,
+                title: titles[type] || 'Yeni Bileşen',
+                dimension: firstStrCol,
+                secondaryDimension: secondStrCol,
+                drillHierarchy: (type === 'heatmap' || type === 'stackedBar') && secondStrCol && secondStrCol !== firstStrCol
+                    ? [firstStrCol, secondStrCol]
+                    : (firstStrCol ? [firstStrCol] : []),
+                multiDimMode: (type === 'stackedBar' || type === 'heatmap') ? 'series' : 'combined',
+                valueField: firstNumCol,
+                agg: 'sum',
+                valueMetrics: firstNumCol ? [{ field: firstNumCol, agg: 'sum' }] : [],
+                topN: 15,
+                columns: type === 'table' ? liveColumns.slice(0, 8).map(c => c.name) : [],
+                w: type === 'kpi' ? 3 : (type === 'table' ? 12 : 6),
+                h: type === 'kpi' ? 2 : 5
+            };
+
+            designerLayout.widgets.push(newWidget);
+            selectedWidgetId = newWidget.id;
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+            showToast(`${titles[type]} tuvale eklendi.`);
+        }
+
+        function getSelectedWidget() {
+            return (designerLayout.widgets || []).find(w => w.id === selectedWidgetId) || null;
+        }
+
+        function selectWidget(id) {
+            selectedWidgetId = id;
+            document.querySelectorAll('#designerCanvas .widget-card').forEach(el => {
+                el.classList.toggle('selected', el.dataset.widgetId === id);
+            });
+            renderDataBindingPanel();
+        }
+
+        // BÖLÜM 2: DEVEXPRESS TARZI VERİ BAĞLAMA YUVALARI (DATA ITEMS PANELİ)
+        function renderDataBindingPanel() {
+            const w = getSelectedWidget();
+            const badge = document.getElementById('selectedWidgetBadge');
+            const box = document.getElementById('dataBindingContent');
+
+            if (!w) {
+                badge.textContent = 'Seçili Yok';
+                box.innerHTML = '<div class="dz-empty">Tuvalden bir bileşene tıklayın veya araç kutusundan yeni bileşen ekleyin.</div>';
+                return;
+            }
+
+            badge.textContent = `${w.type.toUpperCase()} (${w.w}x${w.h})`;
+
+            let html = `
+                <div style="display:grid;grid-template-columns:1fr 125px;gap:6px;margin-bottom:8px;">
+                    <div class="r-field">
+                        <label>Bileşen Başlığı</label>
+                        <input type="text" value="${escapeHtml(w.title || '')}" oninput="updateSelectedWidgetProp('title', this.value)">
+                    </div>
+                    <div class="r-field">
+                        <label>Görsel Tipi</label>
+                        <select onchange="updateSelectedWidgetProp('type', this.value, true)">
+                            <option value="bar" ${w.type === 'bar' ? 'selected' : ''}>📊 Sütun</option>
+                            <option value="stackedBar" ${w.type === 'stackedBar' ? 'selected' : ''}>📚 Yığılmış Sütun</option>
+                            <option value="horizontalBar" ${w.type === 'horizontalBar' ? 'selected' : ''}>📉 Yatay Sütun</option>
+                            <option value="line" ${w.type === 'line' ? 'selected' : ''}>📈 Çizgi</option>
+                            <option value="area" ${w.type === 'area' ? 'selected' : ''}>⛰️ Alan (Area)</option>
+                            <option value="pie" ${w.type === 'pie' ? 'selected' : ''}>🥧 Pasta</option>
+                            <option value="donut" ${w.type === 'donut' ? 'selected' : ''}>🍩 Halka</option>
+                            <option value="gauge" ${w.type === 'gauge' ? 'selected' : ''}>🎯 İbre (Gauge)</option>
+                            <option value="treemap" ${w.type === 'treemap' ? 'selected' : ''}>🟩 Treemap</option>
+                            <option value="heatmap" ${w.type === 'heatmap' ? 'selected' : ''}>🔥 Isı Haritası</option>
+                            <option value="kpi" ${w.type === 'kpi' ? 'selected' : ''}>🔢 KPI Kartı</option>
+                            <option value="table" ${w.type === 'table' ? 'selected' : ''}>📋 Tablo</option>
+                            <option value="pivot" ${w.type === 'pivot' ? 'selected' : ''}>🧮 Pivot</option>
+                        </select>
+                    </div>
+                </div>`;
+
+            if (w.type === 'kpi' || w.type === 'gauge') {
+                if (w.type === 'kpi') {
+                    const metrics = getWidgetMetrics(w);
+                    const primaryMetric = metrics[0] || { field: w.valueField || '', agg: w.agg || 'sum' };
+                    const aggType = (primaryMetric.agg || 'sum').toLowerCase();
+                    const autoSubtitle = `${aggType === 'count' ? 'KAYIT SAYISI' : (aggType === 'avg' ? 'ORTALAMA' : (aggType === 'max' ? 'MAKSİMUM' : (aggType === 'min' ? 'MİNİMUM' : 'GENEL TOPLAM')))} (${primaryMetric.field || 'Seçilmedi'})`;
+                    const currentSub = w.subtitle !== undefined ? w.subtitle : autoSubtitle;
+                    html += `
+                        <div class="r-field" style="margin-bottom:8px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <label>KPI Alt Etiketi (Üstteki Küçük Yazı)</label>
+                                <button type="button" class="pill-btn del" style="font-size:0.68rem;" onclick="updateSelectedWidgetProp('subtitle', '', true)">Gizle (Boşalt)</button>
+                            </div>
+                            <input type="text" id="kpiSubtitleInput" value="${escapeHtml(currentSub)}"
+                                   placeholder="Boş bırakırsanız gizlenir..."
+                                   oninput="updateSelectedWidgetProp('subtitle', this.value)">
+                        </div>`;
+                }
+                html += renderValueDropZone(w, 'Değer / Ölçüm Kolonu (Values)');
+            } else if (w.type === 'table') {
+                html += renderTableColumnsDropZone(w);
+            } else if (w.type === 'pivot') {
+                html += renderSingleDimDropZone(w, 'dimension', 'Satır Boyutu (Row Dimension)');
+                html += renderSingleDimDropZone(w, 'secondaryDimension', 'Sütun Boyutu (Column Dimension)');
+                html += renderValueDropZone(w, 'Değer / Ölçüm (Values)');
+            } else {
+                // Tüm Grafik Tipleri (bar, stackedBar, horizontalBar, line, area, pie, donut, treemap, heatmap)
+                html += renderValueDropZone(w, 'Değer / Ölçüm (Values / Measures - Çoklu)');
+                html += renderDrillHierarchyDropZone(w);
+            }
+
+            box.innerHTML = html;
+            bindDropZoneEvents();
+        }
+
+        function buildColumnOptionsHtml(selectedCol, placeholderText = '') {
+            let html = '';
+            if (placeholderText) {
+                html += `<option value="">${escapeHtml(placeholderText)}</option>`;
+            }
+            const colNames = liveColumns.map(c => c.name);
+            if (selectedCol && !colNames.includes(selectedCol)) {
+                html += `<option value="${escapeHtml(selectedCol)}" selected>${escapeHtml(selectedCol)}</option>`;
+            }
+            liveColumns.forEach(c => {
+                const isSel = c.name === selectedCol ? 'selected' : '';
+                html += `<option value="${escapeHtml(c.name)}" ${isSel}>${escapeHtml(c.name)}</option>`;
+            });
+            return html;
+        }
+
+        function renderValueDropZone(w, labelText) {
+            const metrics = getWidgetMetrics(w);
+            let pills = '';
+            metrics.forEach((m, i) => {
+                const agg = m.agg || 'sum';
+                pills += `
+                    <div class="bound-pill">
+                        <select class="pill-col-select" title="Kolonu listeden değiştirin" onchange="updateMetricField(${i}, this.value)">
+                            ${buildColumnOptionsHtml(m.field)}
+                        </select>
+                        <div class="pill-actions">
+                            <select onchange="updateMetricAgg(${i}, this.value)">
+                                <option value="sum" ${agg === 'sum' ? 'selected' : ''}>Toplam (SUM)</option>
+                                <option value="avg" ${agg === 'avg' ? 'selected' : ''}>Ortalama (AVG)</option>
+                                <option value="count" ${agg === 'count' ? 'selected' : ''}>Adet (COUNT)</option>
+                                <option value="max" ${agg === 'max' ? 'selected' : ''}>Maks (MAX)</option>
+                                <option value="min" ${agg === 'min' ? 'selected' : ''}>Min (MIN)</option>
+                            </select>
+                            ${i > 0 ? `<button type="button" class="pill-btn" onclick="moveMetricItem(${i}, -1)" title="Yukarı">▲</button>` : ''}
+                            ${i < metrics.length - 1 ? `<button type="button" class="pill-btn" onclick="moveMetricItem(${i}, 1)" title="Aşağı">▼</button>` : ''}
+                            <button type="button" class="pill-btn del" onclick="removeMetricItem(${i})" title="Kaldır">✕</button>
+                        </div>
+                    </div>`;
+            });
+
+            const canAddMore = (w.type !== 'gauge' && w.type !== 'pivot') || metrics.length === 0;
+            const addDropdown = canAddMore ? `
+                <select class="dz-add-select" onchange="if(this.value){assignFieldToSlot('value', this.value); this.value='';}">
+                    ${buildColumnOptionsHtml('', '+ Listeden Kolon Seçerek Ekle...')}
+                </select>` : '';
+
+            return `
+                <div class="drop-zone" data-slot="value">
+                    <div class="dz-label">
+                        <span>🔢 ${labelText}</span>
+                        ${metrics.length > 0 ? `<button type="button" class="pill-btn del" onclick="clearMetricItems()">Temizle</button>` : ''}
+                    </div>
+                    ${pills || `<div class="dz-empty">Kolonu buraya sürükleyin veya aşağıdaki listeden seçin</div>`}
+                    ${addDropdown}
+                </div>`;
+        }
+
+        function renderSingleDimDropZone(w, propName, labelText) {
+            const val = w[propName] || '';
+            return `
+                <div class="drop-zone" data-slot="${propName}">
+                    <div class="dz-label"><span>🔤 ${labelText}</span></div>
+                    <div class="bound-pill">
+                        <select class="pill-col-select" style="max-width:100%;" onchange="assignFieldToSlot('${propName}', this.value)">
+                            ${buildColumnOptionsHtml(val, '-- Listeden Boyut Kolonu Seçin --')}
+                        </select>
+                    </div>
+                </div>`;
+        }
+
+        function renderDrillHierarchyDropZone(w) {
+            const list = (Array.isArray(w.drillHierarchy) && w.drillHierarchy.length > 0)
+                ? w.drillHierarchy
+                : (w.dimension ? [w.dimension] : []);
+
+            const mode = w.multiDimMode || 'combined';
+            let pills = '';
+            list.forEach((col, i) => {
+                let roleTag = 'Ana Eksen';
+                if (i > 0) {
+                    if (mode === 'combined') roleTag = `+ Birleşik (${i + 1})`;
+                    else if (mode === 'series') roleTag = i === 1 ? 'Seri Grubu' : `${i + 1}. Kırılım`;
+                    else roleTag = `${i + 1}. Kırılım`;
+                }
+                pills += `
+                    <div class="bound-pill">
+                        <select class="pill-col-select" title="Boyut kolonunu listeden değiştirin" onchange="updateDrillField(${i}, this.value)">
+                            ${buildColumnOptionsHtml(col)}
+                        </select>
+                        <small style="color:#93c5fd;white-space:nowrap;font-size:0.68rem;">(${roleTag})</small>
+                        <div class="pill-actions">
+                            ${i > 0 ? `<button type="button" class="pill-btn" onclick="moveDrillItem(${i}, -1)" title="Yukarı">▲</button>` : ''}
+                            ${i < list.length - 1 ? `<button type="button" class="pill-btn" onclick="moveDrillItem(${i}, 1)" title="Aşağı">▼</button>` : ''}
+                            <button type="button" class="pill-btn del" onclick="removeDrillItem(${i})" title="Kaldır">✕</button>
+                        </div>
+                    </div>`;
+            });
+
+            return `
+                <div class="drop-zone" data-slot="drill">
+                    <div class="dz-label" style="flex-wrap:wrap;gap:4px;">
+                        <span>🔤 Boyut & Kırılım (Arguments / Series)</span>
+                        ${list.length > 1 ? `
+                        <select onchange="updateSelectedWidgetProp('multiDimMode', this.value, true)"
+                                style="background:#0f172a;color:#38bdf8;border:1px solid var(--border);border-radius:4px;font-size:0.7rem;padding:2px 4px;font-weight:700;">
+                            <option value="combined" ${mode === 'combined' ? 'selected' : ''}>🔗 Birlikte Göster (Örn: Yıl / Ay)</option>
+                            <option value="series" ${mode === 'series' ? 'selected' : ''}>🎨 Seri / Renk Grubu Yap</option>
+                            <option value="drill" ${mode === 'drill' ? 'selected' : ''}>🔍 Çift Tık Alt Kırılım (Drill-Down)</option>
+                        </select>` : ''}
+                    </div>
+                    ${pills || '<div class="dz-empty">Boyut kolonunu sürükleyin veya aşağıdan seçin</div>'}
+                    <select class="dz-add-select" onchange="if(this.value){assignFieldToSlot('drill', this.value); this.value='';}">
+                        ${buildColumnOptionsHtml('', '+ Listeden Boyut Kolonu Seçerek Ekle...')}
+                    </select>
+                </div>`;
+        }
+
+        function renderTableColumnsDropZone(w) {
+            const cols = Array.isArray(w.columns) && w.columns.length > 0
+                ? w.columns
+                : liveColumns.map(c => c.name);
+
+            let pills = '';
+            cols.forEach((col, i) => {
+                pills += `
+                    <div class="bound-pill">
+                        <span>${i + 1}. <strong>${escapeHtml(col)}</strong></span>
+                        <div class="pill-actions">
+                            ${i > 0 ? `<button type="button" class="pill-btn" onclick="moveTableCol(${i}, -1)">▲</button>` : ''}
+                            ${i < cols.length - 1 ? `<button type="button" class="pill-btn" onclick="moveTableCol(${i}, 1)">▼</button>` : ''}
+                            <button type="button" class="pill-btn del" onclick="removeTableCol(${i})">✕</button>
+                        </div>
+                    </div>`;
+            });
+
+            return `
+                <div class="drop-zone" data-slot="tableCols" style="max-height:210px;overflow-y:auto;">
+                    <div class="dz-label">
+                        <span>📋 Tablo Sütunları (${cols.length})</span>
+                        <div style="display:flex;gap:4px;">
+                            <button type="button" class="pill-btn" style="color:#38bdf8;" onclick="setAllTableCols()">+ Tümünü Ekle</button>
+                            <button type="button" class="pill-btn del" onclick="clearTableCols()">Temizle</button>
+                        </div>
+                    </div>
+                    ${pills || '<div class="dz-empty">Tabloda görmek istediğiniz kolonları buraya sürükleyin</div>'}
+                </div>`;
+        }
+
+        function bindDropZoneEvents() {
+            document.querySelectorAll('#dataBindingContent .drop-zone').forEach(zone => {
+                zone.addEventListener('dragover', e => {
+                    if (dragPayload && dragPayload.kind === 'field') {
+                        e.preventDefault();
+                        zone.classList.add('drag-over');
+                    }
+                });
+                zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+                zone.addEventListener('drop', e => {
+                    zone.classList.remove('drag-over');
+                    if (!dragPayload || dragPayload.kind !== 'field') return;
+                    e.preventDefault();
+                    const slot = zone.dataset.slot;
+                    assignFieldToSlot(slot, dragPayload.column);
+                    dragPayload = null;
+                });
+            });
+        }
+
+        function assignFieldToSlot(slot, colName) {
+            const w = getSelectedWidget();
+            if (!w || !colName) return;
+
+            if (slot === 'value') {
+                const metrics = getWidgetMetrics(w);
+                if (w.type === 'gauge' || w.type === 'pivot') {
+                    w.valueMetrics = [{ field: colName, agg: w.agg || 'sum' }];
+                } else {
+                    if (!metrics.some(m => m.field === colName)) {
+                        metrics.push({ field: colName, agg: 'sum' });
+                    }
+                    w.valueMetrics = metrics;
+                }
+                syncPrimaryMetricProps(w);
+                if (w.type === 'kpi' && (!w.title || w.title.startsWith('Yeni '))) {
+                    w.title = `${colName} Toplamı`;
+                }
+            } else if (slot === 'dimension') {
+                w.dimension = colName;
+            } else if (slot === 'secondaryDimension') {
+                w.secondaryDimension = colName;
+            } else if (slot === 'drill') {
+                if (!Array.isArray(w.drillHierarchy)) {
+                    w.drillHierarchy = w.dimension ? [w.dimension] : [];
+                }
+                if (!w.drillHierarchy.includes(colName)) {
+                    w.drillHierarchy.push(colName);
+                }
+                w.dimension = w.drillHierarchy[0] || colName;
+                if (w.drillHierarchy.length > 1) {
+                    w.secondaryDimension = w.drillHierarchy[1];
+                    if (!w.multiDimMode) w.multiDimMode = 'combined';
+                }
+            } else if (slot === 'tableCols') {
+                if (!Array.isArray(w.columns) || w.columns.length === 0) {
+                    w.columns = [];
+                }
+                if (!w.columns.includes(colName)) {
+                    w.columns.push(colName);
+                }
+            }
+
+            delete widgetDrillState[w.id];
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+        }
+
+        function autoAssignFieldToSelectedWidget(colName, dataType) {
+            const w = getSelectedWidget();
+            if (!w) {
+                showToast('Önce tuvalden bir bileşen seçin veya ekleyin.', true);
+                return;
+            }
+            const isDim = isLikelyDimensionColumn(colName, dataType);
+            if (w.type === 'table') {
+                assignFieldToSlot('tableCols', colName);
+            } else if (w.type === 'kpi' || w.type === 'gauge') {
+                assignFieldToSlot('value', colName);
+            } else if (w.type === 'pivot') {
+                if (!isDim) assignFieldToSlot('value', colName);
+                else if (!w.dimension) assignFieldToSlot('dimension', colName);
+                else assignFieldToSlot('secondaryDimension', colName);
+            } else {
+                if (!isDim) assignFieldToSlot('value', colName);
+                else assignFieldToSlot('drill', colName);
+            }
+        }
+
+        function updateMetricField(idx, newCol) {
+            const w = getSelectedWidget();
+            if (!w || !newCol) return;
+            const metrics = getWidgetMetrics(w);
+            if (!metrics[idx]) return;
+            const oldCol = metrics[idx].field;
+            metrics[idx].field = newCol;
+            w.valueMetrics = metrics;
+            syncPrimaryMetricProps(w);
+            if (w.type === 'kpi' && idx === 0 && (!w.title || w.title === `${oldCol} Toplamı` || w.title.startsWith('Yeni '))) {
+                w.title = `${newCol} Toplamı`;
+            }
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+        }
+
+        function updateDrillField(idx, newCol) {
+            const w = getSelectedWidget();
+            if (!w || !newCol) return;
+            if (!Array.isArray(w.drillHierarchy) || w.drillHierarchy.length === 0) {
+                w.drillHierarchy = w.dimension ? [w.dimension] : [];
+            }
+            if (idx >= 0 && idx < w.drillHierarchy.length) {
+                w.drillHierarchy[idx] = newCol;
+            }
+            w.dimension = w.drillHierarchy[0] || '';
+            w.secondaryDimension = w.drillHierarchy[1] || '';
+            delete widgetDrillState[w.id];
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+        }
+
+        function updateMetricAgg(idx, newAgg) {
+            const w = getSelectedWidget();
+            if (!w) return;
+            const metrics = getWidgetMetrics(w);
+            if (!metrics[idx]) return;
+            metrics[idx].agg = newAgg;
+            w.valueMetrics = metrics;
+            syncPrimaryMetricProps(w);
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+        }
+
+        function moveMetricItem(idx, dir) {
+            const w = getSelectedWidget();
+            if (!w) return;
+            const metrics = getWidgetMetrics(w);
+            const target = idx + dir;
+            if (target < 0 || target >= metrics.length) return;
+            const tmp = metrics[idx];
+            metrics[idx] = metrics[target];
+            metrics[target] = tmp;
+            w.valueMetrics = metrics;
+            syncPrimaryMetricProps(w);
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+        }
+
+        function removeMetricItem(idx) {
+            const w = getSelectedWidget();
+            if (!w) return;
+            const metrics = getWidgetMetrics(w);
+            metrics.splice(idx, 1);
+            w.valueMetrics = metrics;
+            syncPrimaryMetricProps(w);
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+        }
+
+        function clearMetricItems() {
+            const w = getSelectedWidget();
+            if (!w) return;
+            w.valueMetrics = [];
+            syncPrimaryMetricProps(w);
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+        }
+
+        function updateSelectedWidgetProp(prop, val, rerenderAll = false) {
+            const w = getSelectedWidget();
+            if (!w) return;
+            w[prop] = val;
+            if (prop === 'type') {
+                if (val === 'kpi') { w.w = 3; w.h = 2; }
+                else if (val === 'table' && (!w.columns || w.columns.length === 0)) {
+                    w.columns = liveColumns.slice(0, 8).map(c => c.name);
+                    w.w = 12; w.h = 5;
+                }
+            }
+            if (prop === 'title') {
+                const cardTitle = document.querySelector(`#designerCanvas .widget-card[data-widget-id="${w.id}"] .w-title-text`);
+                if (cardTitle) cardTitle.textContent = val;
+                return;
+            }
+            if (prop === 'subtitle') {
+                const cardMeta = document.querySelector(`#designerCanvas .widget-card[data-widget-id="${w.id}"] .kpi-meta`);
+                if (cardMeta) {
+                    cardMeta.textContent = val;
+                    cardMeta.style.display = val && val.trim() !== '' ? 'block' : 'none';
+                }
+                return;
+            }
+            if (rerenderAll) {
+                renderDesignerCanvas();
+                renderDataBindingPanel();
+            }
+        }
+
+        function moveDrillItem(idx, dir) {
+            const w = getSelectedWidget();
+            if (!w || !Array.isArray(w.drillHierarchy)) return;
+            const target = idx + dir;
+            if (target < 0 || target >= w.drillHierarchy.length) return;
+            const tmp = w.drillHierarchy[idx];
+            w.drillHierarchy[idx] = w.drillHierarchy[target];
+            w.drillHierarchy[target] = tmp;
+            w.dimension = w.drillHierarchy[0] || '';
+            w.secondaryDimension = w.drillHierarchy[1] || '';
+            delete widgetDrillState[w.id];
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+        }
+
+        function removeDrillItem(idx) {
+            const w = getSelectedWidget();
+            if (!w || !Array.isArray(w.drillHierarchy)) return;
+            w.drillHierarchy.splice(idx, 1);
+            w.dimension = w.drillHierarchy[0] || '';
+            w.secondaryDimension = w.drillHierarchy[1] || '';
+            delete widgetDrillState[w.id];
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+        }
+
+        function moveTableCol(idx, dir) {
+            const w = getSelectedWidget();
+            if (!w) return;
+            if (!Array.isArray(w.columns) || w.columns.length === 0) w.columns = liveColumns.map(c => c.name);
+            const target = idx + dir;
+            if (target < 0 || target >= w.columns.length) return;
+            const tmp = w.columns[idx];
+            w.columns[idx] = w.columns[target];
+            w.columns[target] = tmp;
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+        }
+
+        function removeTableCol(idx) {
+            const w = getSelectedWidget();
+            if (!w) return;
+            if (!Array.isArray(w.columns) || w.columns.length === 0) w.columns = liveColumns.map(c => c.name);
+            w.columns.splice(idx, 1);
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+        }
+
+        function setAllTableCols() {
+            const w = getSelectedWidget();
+            if (!w) return;
+            w.columns = liveColumns.map(c => c.name);
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+        }
+
+        function clearTableCols() {
+            const w = getSelectedWidget();
+            if (!w) return;
+            w.columns = [];
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+        }
+
+        // SAĞ CANLI TUVAL ÇİZİMİ, SÜRÜKLE-BIRAK YER DEĞİŞTİRME VE KÖŞEDEN BOYUTLANDIRMA
+        function renderDesignerCanvas() {
+            chartInstances.forEach(c => { try { c.dispose(); } catch (_) {} });
+            chartInstances = [];
+
+            const canvas = document.getElementById('designerCanvas');
+            canvas.innerHTML = '';
+
+            const widgets = designerLayout.widgets || [];
+            if (widgets.length === 0) {
+                const noDs = allDataSources.length === 0;
+                canvas.innerHTML = `
+                    <div style="grid-column:span 120;border:2px dashed #334155;border-radius:14px;padding:60px 20px;text-align:center;color:#94a3b8;">
+                        <div style="font-size:2rem;margin-bottom:8px;">📐</div>
+                        <div style="font-size:1.05rem;font-weight:700;color:#e2e8f0;">
+                            ${noDs ? 'Henüz Tanımlı SQL Veri Kaynağı Yok' : 'Dashboard Tuvali Boş'}
+                        </div>
+                        <div style="font-size:0.86rem;margin-top:6px;margin-bottom:14px;">
+                            ${noDs
+                                ? 'Rapor tasarlamaya başlamak için önce bir SQL Veri Kaynağı (SELECT sorgusu) tanımlayın.'
+                                : 'Soldaki <strong>Araç Kutusu</strong>\'ndan bir grafik, KPI kartı veya tabloyu buraya sürükleyip bırakın.'}
+                        </div>
+                        ${noDs ? `<button type="button" class="btn btn-primary" onclick="switchStudioTab('sql')">➕ İlk SQL Veri Kaynağını Tanımla</button>` : ''}
+                    </div>`;
+                return;
+            }
+
+            widgets.forEach((w, idx) => {
+                const card = document.createElement('div');
+                card.className = 'widget-card' + (w.id === selectedWidgetId ? ' selected' : '');
+                card.dataset.widgetId = w.id;
+                card.dataset.widgetIndex = idx;
+
+                const colSpan12 = Math.min(12, Math.max(1.0, Math.round((Number(w.w) || (w.type === 'kpi' ? 3 : 4)) * 10) / 10));
+                const gridSpan120 = Math.min(120, Math.max(10, Math.round(colSpan12 * 10)));
+                const hUnits = Math.min(16, Math.max(1.2, Math.round((Number(w.h) || (w.type === 'kpi' ? 2 : 4)) * 20) / 20));
+                const rowHeight = w.type === 'kpi'
+                    ? Math.max(82, Math.round(hUnits * 58))
+                    : Math.max(115, Math.round(hUnits * 58));
+                card.style.gridColumn = `span ${gridSpan120}`;
+                card.style.height = `${rowHeight}px`;
+
+                // Karta tıklayınca seç
+                card.addEventListener('mousedown', e => {
+                    if (w.id !== selectedWidgetId) {
+                        selectWidget(w.id);
+                    }
+                });
+
+                // Kart başlığı (Sürükle-Bırak ile yer değiştirme)
+                const header = document.createElement('div');
+                header.className = 'widget-header';
+                header.draggable = true;
+
+                header.addEventListener('dragstart', e => {
+                    dragPayload = { kind: 'widget', fromIndex: idx, widgetId: w.id };
+                    e.dataTransfer.setData('text/plain', String(idx));
+                });
+
+                // Kart üzerine başka bir kart veya kolon sürüklendiğinde
+                card.addEventListener('dragover', e => {
+                    if (!dragPayload) return;
+                    if (dragPayload.kind === 'widget' && dragPayload.fromIndex !== idx) {
+                        e.preventDefault();
+                        card.classList.add('card-drop-target');
+                    } else if (dragPayload.kind === 'field') {
+                        e.preventDefault();
+                        card.classList.add('card-drop-target');
+                    }
+                });
+                card.addEventListener('dragleave', () => card.classList.remove('card-drop-target'));
+                card.addEventListener('drop', e => {
+                    card.classList.remove('card-drop-target');
+                    if (!dragPayload) return;
+                    if (dragPayload.kind === 'widget' && dragPayload.fromIndex !== idx) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const moved = designerLayout.widgets.splice(dragPayload.fromIndex, 1)[0];
+                        designerLayout.widgets.splice(idx, 0, moved);
+                        dragPayload = null;
+                        renderDesignerCanvas();
+                    } else if (dragPayload.kind === 'field') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        selectedWidgetId = w.id;
+                        autoAssignFieldToSelectedWidget(dragPayload.column, dragPayload.dataType);
+                        dragPayload = null;
+                    }
+                });
+
+                const drillState = widgetDrillState[w.id];
+                const hasDrillBack = drillState && drillState.level > 0;
+
+                header.innerHTML = `
+                    <div class="widget-title">
+                        <span class="drag-grip" title="Sürükleyerek yerini değiştirin">⠿</span>
+                        <span class="w-title-text">${escapeHtml(w.title || 'Bileşen')}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        ${hasDrillBack ? `<button type="button" class="pill-btn" style="color:#fbbf24;border:1px solid #f59e0b;" onclick="drillUpWidget(event, '${w.id}')">⬅ Üst Kırılım</button>` : ''}
+                        <span class="size-badge" id="sizeBadge_${w.id}">${colSpan12}/12 × ${hUnits}</span>
+                        <button type="button" class="pill-btn del" title="Bileşeni Sil" onclick="deleteWidgetByIndex(event, ${idx})">🗑️</button>
+                    </div>`;
+
+                const body = document.createElement('div');
+                body.className = (w.type === 'table' || w.type === 'pivot')
+                    ? 'widget-body table-scroll'
+                    : 'widget-body';
+
+                // Köşeden ve kenardan fareyle boyutlandırma tutamaçları
+                const handleSE = document.createElement('div');
+                handleSE.className = 'resize-handle-se';
+                handleSE.title = 'Fareyle çekerek genişlik ve yüksekliği ayarlayın';
+                handleSE.textContent = '◢';
+
+                const handleE = document.createElement('div');
+                handleE.className = 'resize-handle-e';
+                handleE.title = 'Genişliği ayarlayın';
+
+                const handleS = document.createElement('div');
+                handleS.className = 'resize-handle-s';
+                handleS.title = 'Yüksekliği ayarlayın';
+
+                attachResizeBehavior(card, w, handleSE, true, true);
+                attachResizeBehavior(card, w, handleE, true, false);
+                attachResizeBehavior(card, w, handleS, false, true);
+
+                card.appendChild(header);
+                card.appendChild(body);
+                card.appendChild(handleSE);
+                card.appendChild(handleE);
+                card.appendChild(handleS);
+                canvas.appendChild(card);
+
+                renderWidgetContent(w, body);
+            });
+        }
+
+        function drillUpWidget(e, widgetId) {
+            e.stopPropagation();
+            const st = widgetDrillState[widgetId];
+            if (!st) return;
+            st.level--;
+            st.filters.pop();
+            if (st.level <= 0) delete widgetDrillState[widgetId];
+            renderDesignerCanvas();
+        }
+
+        function deleteWidgetByIndex(e, idx) {
+            e.stopPropagation();
+            designerLayout.widgets.splice(idx, 1);
+            if (designerLayout.widgets.length > 0) {
+                selectedWidgetId = designerLayout.widgets[0].id;
+            } else {
+                selectedWidgetId = null;
+            }
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+        }
+
+        // FAREYLE SÜRÜKLEYEREK KART BOYUTLANDIRMA (ULTRA-HASSAS 120 MİKRO-SÜTUNLU RESIZE ENGINE)
+        function attachResizeBehavior(cardEl, widgetObj, handleEl, allowW, allowH) {
+            handleEl.addEventListener('mousedown', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                selectWidget(widgetObj.id);
+
+                const canvasEl = document.getElementById('designerCanvas');
+                const canvasWidth = canvasEl.clientWidth || 1200;
+                // 120 mikro-sütun: her 0.1 adım (~8-10px) son derece yumuşak ve hassas genişlik değişimi sağlar
+                const microColPx = canvasWidth / 120;
+                // Dikeyde her 0.05 satır (~3px) piksel hassasiyetinde yükseklik değişimi sağlar
+                const microRowPx = 2.9;
+
+                const startX = e.clientX;
+                const startY = e.clientY;
+                const startW = Number(widgetObj.w) || (widgetObj.type === 'kpi' ? 3 : 4);
+                const startH = Number(widgetObj.h) || (widgetObj.type === 'kpi' ? 2 : 5);
+
+                function onMouseMove(ev) {
+                    if (allowW) {
+                        const deltaMicroCols = Math.round((ev.clientX - startX) / microColPx);
+                        const newW = Math.min(12, Math.max(1.0, Math.round((startW + deltaMicroCols * 0.1) * 10) / 10));
+                        if (newW !== widgetObj.w) {
+                            widgetObj.w = newW;
+                            const span120 = Math.min(120, Math.max(10, Math.round(newW * 10)));
+                            cardEl.style.gridColumn = `span ${span120}`;
+                        }
+                    }
+                    if (allowH) {
+                        const deltaMicroRows = Math.round((ev.clientY - startY) / microRowPx);
+                        const newH = Math.min(16, Math.max(1.2, Math.round((startH + deltaMicroRows * 0.05) * 20) / 20));
+                        if (newH !== widgetObj.h) {
+                            widgetObj.h = newH;
+                            const pxH = widgetObj.type === 'kpi'
+                                ? Math.max(82, Math.round(newH * 58))
+                                : Math.max(115, Math.round(newH * 58));
+                            cardEl.style.height = `${pxH}px`;
+                        }
+                    }
+                    const badge = document.getElementById(`sizeBadge_${widgetObj.id}`);
+                    if (badge) badge.textContent = `${widgetObj.w}/12 × ${widgetObj.h}`;
+                    chartInstances.forEach(c => { try { c.resize(); } catch (_) {} });
+                }
+
+                function onMouseUp() {
+                    window.removeEventListener('mousemove', onMouseMove);
+                    window.removeEventListener('mouseup', onMouseUp);
+                    renderDataBindingPanel();
+                    chartInstances.forEach(c => { try { c.resize(); } catch (_) {} });
+                }
+
+                window.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('mouseup', onMouseUp);
+            });
+        }
+
+        // BİLEŞEN İÇERİĞİNİ CANLI VERİYLE ÇİZME
+        function renderWidgetContent(w, container) {
+            let rows = liveRows;
+            const metrics = getWidgetMetrics(w);
+            const primaryMetric = metrics[0] || { field: w.valueField || '', agg: w.agg || 'sum' };
+
+            if (w.type === 'kpi') {
+                if (metrics.length <= 1) {
+                    const aggType = (primaryMetric.agg || 'sum').toLowerCase();
+                    const aggLabel = aggType === 'count' ? 'KAYIT SAYISI' : (aggType === 'avg' ? 'ORTALAMA' : (aggType === 'max' ? 'MAKSİMUM' : (aggType === 'min' ? 'MİNİMUM' : 'GENEL TOPLAM')));
+                    const autoSub = `${aggLabel} (${primaryMetric.field || 'Seçilmedi'})`;
+                    const effectiveSub = w.subtitle !== undefined ? w.subtitle : autoSub;
+                    const val = computeAggregate(rows, primaryMetric.field, aggType);
+                    container.innerHTML = `
+                        <div class="kpi-box">
+                            <div class="kpi-meta" title="Değiştirmek için tıklayın"
+                                 style="cursor:text;display:${effectiveSub && effectiveSub.trim() !== '' ? 'block' : 'none'};"
+                                 onclick="promptKpiSubtitle(event, '${w.id}')">${escapeHtml(effectiveSub)}</div>
+                            <div class="kpi-val">${formatNumber(val)}</div>
+                        </div>`;
+                } else {
+                    const customSub = w.subtitle !== undefined && w.subtitle.trim() !== '' ? w.subtitle : '';
+                    let itemsHtml = '';
+                    metrics.forEach(m => {
+                        const aggType = (m.agg || 'sum').toLowerCase();
+                        const aggShort = aggType === 'count' ? 'ADET' : (aggType === 'avg' ? 'ORT.' : (aggType === 'max' ? 'MAKS' : (aggType === 'min' ? 'MİN' : 'TOPLAM')));
+                        const v = computeAggregate(rows, m.field, aggType);
+                        itemsHtml += `
+                            <div style="flex:1;min-width:110px;padding:4px 8px;border-left:2px solid rgba(56,189,248,0.45);">
+                                <div class="kpi-meta" style="margin-bottom:1px;font-size:0.68rem;">${escapeHtml(m.field)} (${aggShort})</div>
+                                <div class="kpi-val" style="font-size:clamp(1.15rem, 1.5vw, 1.55rem);">${formatNumber(v)}</div>
+                            </div>`;
+                    });
+                    container.innerHTML = `
+                        <div class="kpi-box" style="justify-content:center;gap:6px;width:100%;">
+                            ${customSub ? `<div class="kpi-meta" style="cursor:text;" onclick="promptKpiSubtitle(event, '${w.id}')">${escapeHtml(customSub)}</div>` : ''}
+                            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;width:100%;">${itemsHtml}</div>
+                        </div>`;
+                }
+                return;
+            }
+            if (w.type === 'table') {
+                renderDataTable(w, rows, container);
+                return;
+            }
+            if (w.type === 'pivot') {
+                renderPivotTable(w, rows, container);
+                return;
+            }
+            renderChartWidget(w, rows, container);
+        }
+
+        function promptKpiSubtitle(e, widgetId) {
+            e.stopPropagation();
+            selectWidget(widgetId);
+            const inp = document.getElementById('kpiSubtitleInput');
+            if (inp) {
+                inp.focus();
+                inp.select();
+            }
+        }
+
+        function renderChartWidget(w, baseRows, container) {
+            const metrics = getWidgetMetrics(w);
+            const primaryMetric = metrics[0] || { field: w.valueField || '', agg: w.agg || 'sum' };
+            const hierarchy = (Array.isArray(w.drillHierarchy) && w.drillHierarchy.length > 0)
+                ? w.drillHierarchy
+                : (w.dimension ? [w.dimension] : []);
+
+            const mode = w.multiDimMode || 'combined';
+            let workingRows = baseRows;
+            let activeDims = hierarchy.length > 0 ? hierarchy : [''];
+
+            // Drill-down aktifse filtreleri uygula
+            const drillState = widgetDrillState[w.id];
+            if (drillState && drillState.level > 0 && Array.isArray(drillState.filters)) {
+                drillState.filters.forEach(f => {
+                    workingRows = workingRows.filter(r => String(getRowValue(r, f.dim) ?? 'Belirsiz') === String(f.val));
+                });
+            }
+
+            const chartDiv = document.createElement('div');
+            chartDiv.style.width = '100%';
+            chartDiv.style.height = '100%';
+            container.appendChild(chartDiv);
+
+            const chart = echarts.init(chartDiv, isLightTheme() ? null : 'dark');
+            chartInstances.push(chart);
+
+            const isLight = isLightTheme();
+            const axisTextColor = isLight ? '#334155' : '#94a3b8';
+            const legendTextColor = isLight ? '#1e293b' : '#cbd5e1';
+            const splitLineColor = isLight ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.06)';
+            const palette = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f43f5e', '#84cc16'];
+
+            // 1. İBRE (GAUGE) GRAFİĞİ
+            if (w.type === 'gauge') {
+                const val = Math.round(computeAggregate(workingRows, primaryMetric.field, primaryMetric.agg) * 100) / 100;
+                chart.setOption({
+                    backgroundColor: 'transparent',
+                    tooltip: { formatter: '{a} <br/>{b}: {c}' },
+                    series: [{
+                        name: w.title || primaryMetric.field,
+                        type: 'gauge',
+                        max: val > 0 ? Math.ceil(val * 1.25) : 100,
+                        progress: { show: true, width: 12 },
+                        axisLine: { lineStyle: { width: 12 } },
+                        detail: { valueAnimation: true, formatter: v => formatNumber(v), color: '#38bdf8', fontSize: 16 },
+                        data: [{ value: val, name: primaryMetric.field || 'Değer' }]
+                    }]
+                });
+                return;
+            }
+
+            // 2. ISI HARİTASI (HEATMAP)
+            if (w.type === 'heatmap') {
+                const dimX = hierarchy[0] || w.dimension || '';
+                const dimY = hierarchy[1] || w.secondaryDimension || dimX;
+                const xKeys = [...new Set(workingRows.map(r => String(getRowValue(r, dimX) ?? 'Belirsiz')))].slice(0, 20);
+                const yKeys = [...new Set(workingRows.map(r => String(getRowValue(r, dimY) ?? 'Belirsiz')))].slice(0, 15);
+                const heatData = [];
+                let maxVal = 0;
+                xKeys.forEach((xk, xi) => {
+                    yKeys.forEach((yk, yi) => {
+                        const matched = workingRows.filter(r =>
+                            String(getRowValue(r, dimX) ?? 'Belirsiz') === xk &&
+                            String(getRowValue(r, dimY) ?? 'Belirsiz') === yk);
+                        const v = Math.round(computeAggregate(matched, primaryMetric.field, primaryMetric.agg) * 100) / 100;
+                        if (v > maxVal) maxVal = v;
+                        heatData.push([xi, yi, v]);
+                    });
+                });
+                chart.setOption({
+                    backgroundColor: 'transparent',
+                    tooltip: { position: 'top' },
+                    grid: { left: 12, right: 20, top: 20, bottom: 28, containLabel: true },
+                    xAxis: { type: 'category', data: xKeys, splitArea: { show: true } },
+                    yAxis: { type: 'category', data: yKeys, splitArea: { show: true } },
+                    visualMap: { min: 0, max: maxVal || 100, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, itemWidth: 10, itemHeight: 60 },
+                    series: [{ type: 'heatmap', data: heatData, label: { show: xKeys.length <= 10 } }]
+                });
+                return;
+            }
+
+            // 3. TREEMAP GRAFİĞİ
+            if (w.type === 'treemap') {
+                const dimKeyCols = (mode === 'combined' && hierarchy.length > 1) ? hierarchy : [hierarchy[0] || w.dimension || ''];
+                const grouped = groupAndAggregateComposite(workingRows, dimKeyCols, primaryMetric.field, primaryMetric.agg, w.topN || 25);
+                chart.setOption({
+                    backgroundColor: 'transparent',
+                    tooltip: { formatter: info => `${escapeHtml(info.name)}: <strong>${formatNumber(info.value)}</strong>` },
+                    series: [{
+                        type: 'treemap',
+                        roam: false,
+                        breadcrumb: { show: false },
+                        data: grouped.map(g => ({ name: g.key, value: g.value }))
+                    }]
+                });
+                return;
+            }
+
+            // 4. PASTA VE HALKA GRAFİKLERİ
+            const isPie = w.type === 'pie' || w.type === 'donut';
+            if (isPie) {
+                const currentLevel = drillState ? drillState.level : 0;
+                const dimCols = (mode === 'combined' && hierarchy.length > 1)
+                    ? hierarchy
+                    : [hierarchy[Math.min(currentLevel, hierarchy.length - 1)] || w.dimension || ''];
+                const grouped = groupAndAggregateComposite(workingRows, dimCols, primaryMetric.field, primaryMetric.agg, w.topN || 15);
+                chart.setOption({
+                    backgroundColor: 'transparent',
+                    color: palette,
+                    tooltip: { trigger: 'item', confine: true, formatter: p => `${escapeHtml(p.name)}: <strong>${formatNumber(p.value)}</strong> (%${p.percent})` },
+                    legend: { type: 'scroll', bottom: 0, textStyle: { color: legendTextColor, fontSize: 11 } },
+                    series: [{
+                        type: 'pie',
+                        radius: w.type === 'donut' ? ['38%', '68%'] : '65%',
+                        center: ['50%', '45%'],
+                        data: grouped.map(g => ({ name: g.key, value: g.value })),
+                        label: { color: legendTextColor, fontSize: 11 }
+                    }]
+                });
+                attachDesignerChartDrillEvents(chart, w, hierarchy);
+                return;
+            }
+
+            // 5. SÜTUN, YIĞILMIŞ SÜTUN, YATAY SÜTUN, ÇİZGİ VE ALAN GRAFİKLERİ
+            // Senaryo A: Çoklu Boyut "Seri / Renk Grubu (series)" modundaysa (Örn: X ekseni = Sip. Ay, Seri = Sip. Yıl)
+            if (mode === 'series' && hierarchy.length >= 2) {
+                const xDim = hierarchy[0];
+                const seriesDim = hierarchy[1];
+                const xKeys = [...new Set(workingRows.map(r => String(getRowValue(r, xDim) ?? 'Belirsiz')))];
+                xKeys.sort((a, b) => a.localeCompare(b, 'tr-TR', { numeric: true }));
+                const seriesKeys = [...new Set(workingRows.map(r => String(getRowValue(r, seriesDim) ?? 'Belirsiz')))].slice(0, 12);
+                seriesKeys.sort((a, b) => a.localeCompare(b, 'tr-TR', { numeric: true }));
+
+                const isLine = w.type === 'line' || w.type === 'area';
+                const isStacked = w.type === 'stackedBar' || w.type === 'area';
+                const isHoriz = w.type === 'horizontalBar';
+
+                const seriesList = seriesKeys.map(sk => {
+                    const dataArr = xKeys.map(xk => {
+                        const matched = workingRows.filter(r =>
+                            String(getRowValue(r, xDim) ?? 'Belirsiz') === xk &&
+                            String(getRowValue(r, seriesDim) ?? 'Belirsiz') === sk);
+                        return Math.round(computeAggregate(matched, primaryMetric.field, primaryMetric.agg) * 100) / 100;
+                    });
+                    return {
+                        name: sk,
+                        type: isLine ? 'line' : 'bar',
+                        stack: isStacked ? 'total' : undefined,
+                        areaStyle: w.type === 'area' ? { opacity: 0.25 } : undefined,
+                        smooth: true,
+                        data: dataArr
+                    };
+                });
+
+                const catAxis = {
+                    type: 'category',
+                    data: xKeys,
+                    axisLabel: { color: axisTextColor, rotate: (!isHoriz && xKeys.length > 6) ? 25 : 0 }
+                };
+                const valAxis = {
+                    type: 'value',
+                    axisLabel: { color: axisTextColor },
+                    splitLine: { lineStyle: { color: splitLineColor } }
+                };
+
+                chart.setOption({
+                    backgroundColor: 'transparent',
+                    color: palette,
+                    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, confine: true },
+                    legend: { type: 'scroll', top: 0, textStyle: { color: legendTextColor, fontSize: 11 } },
+                    toolbox: {
+                        show: true,
+                        right: 8,
+                        top: 0,
+                        iconStyle: { borderColor: axisTextColor },
+                        feature: {
+                            magicType: { type: ['line', 'bar', 'stack'], title: { line: 'Çizgi', bar: 'Sütun', stack: 'Yığılmış' } },
+                            restore: { title: 'Sıfırla' },
+                            saveAsImage: { title: 'Resim İndir' }
+                        }
+                    },
+                    dataZoom: [{ type: 'inside' }],
+                    grid: { left: 12, right: 20, top: 34, bottom: 20, containLabel: true },
+                    xAxis: isHoriz ? valAxis : catAxis,
+                    yAxis: isHoriz ? catAxis : valAxis,
+                    series: seriesList
+                });
+                return;
+            }
+
+            // Senaryo B: Birleşik Eksen (Örn: Sip. Yıl + Sip. Ay birlikte) VEYA Çoklu Değer/Ölçüm (Örn: Sip. Mt + Sip. Kg birlikte)
+            const currentLevel = drillState ? drillState.level : 0;
+            const activeDimCols = (mode === 'combined' && hierarchy.length > 1)
+                ? hierarchy
+                : [hierarchy[Math.min(currentLevel, Math.max(0, hierarchy.length - 1))] || w.dimension || ''];
+
+            const effectiveMetrics = metrics.length > 0 ? metrics : [{ field: w.valueField || '', agg: w.agg || 'sum' }];
+            const firstGrouped = groupAndAggregateComposite(workingRows, activeDimCols, effectiveMetrics[0].field, effectiveMetrics[0].agg, w.topN || 20);
+            const categoryKeys = firstGrouped.map(g => g.key);
+
+            const isLine = w.type === 'line' || w.type === 'area';
+            const isStacked = w.type === 'stackedBar' || w.type === 'area';
+            const isHoriz = w.type === 'horizontalBar';
+
+            const seriesList = effectiveMetrics.map((m, mIdx) => {
+                const groupedForMetric = mIdx === 0
+                    ? firstGrouped
+                    : groupAndAggregateComposite(workingRows, activeDimCols, m.field, m.agg, null);
+                const valMap = new Map(groupedForMetric.map(g => [g.key, g.value]));
+                return {
+                    name: `${m.field} (${(m.agg || 'sum').toUpperCase()})`,
+                    type: isLine ? 'line' : 'bar',
+                    stack: isStacked ? 'total' : undefined,
+                    areaStyle: w.type === 'area' ? { opacity: 0.25 } : undefined,
+                    smooth: true,
+                    data: categoryKeys.map(k => valMap.get(k) ?? 0),
+                    itemStyle: effectiveMetrics.length === 1 && !isLine ? {
+                        color: new echarts.graphic.LinearGradient(isHoriz ? 1 : 0, 0, 0, isHoriz ? 0 : 1, [
+                            { offset: 0, color: '#3b82f6' },
+                            { offset: 1, color: '#1d4ed8' }
+                        ]),
+                        borderRadius: isHoriz ? [0, 4, 4, 0] : [4, 4, 0, 0]
+                    } : undefined
+                };
+            });
+
+            const catAxis = {
+                type: 'category',
+                data: categoryKeys,
+                axisLabel: { color: axisTextColor, rotate: (!isHoriz && categoryKeys.length > 5) ? 20 : 0 }
+            };
+            const valAxis = {
+                type: 'value',
+                axisLabel: { color: axisTextColor },
+                splitLine: { lineStyle: { color: splitLineColor } }
+            };
+
+            chart.setOption({
+                backgroundColor: 'transparent',
+                color: palette,
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, confine: true },
+                legend: effectiveMetrics.length > 1 ? { type: 'scroll', top: 0, textStyle: { color: legendTextColor, fontSize: 11 } } : undefined,
+                toolbox: {
+                    show: true,
+                    right: 8,
+                    top: 0,
+                    iconStyle: { borderColor: axisTextColor },
+                    feature: {
+                        magicType: { type: ['line', 'bar', 'stack'], title: { line: 'Çizgi', bar: 'Sütun', stack: 'Yığılmış' } },
+                        restore: { title: 'Sıfırla' },
+                        saveAsImage: { title: 'Resim İndir' }
+                    }
+                },
+                dataZoom: [{ type: 'inside' }],
+                grid: { left: 12, right: 20, top: effectiveMetrics.length > 1 ? 34 : 26, bottom: 20, containLabel: true },
+                xAxis: isHoriz ? valAxis : catAxis,
+                yAxis: isHoriz ? catAxis : valAxis,
+                series: seriesList
+            });
+
+            attachDesignerChartDrillEvents(chart, w, hierarchy);
+        }
+
+        function attachDesignerChartDrillEvents(chart, w, hierarchy) {
+            if ((w.multiDimMode || 'combined') !== 'drill' || hierarchy.length <= 1) return;
+            chart.on('dblclick', params => {
+                if (!params || !params.name) return;
+                const st = widgetDrillState[w.id] || { level: 0, filters: [] };
+                if (st.level < hierarchy.length - 1) {
+                    const currentDim = hierarchy[st.level];
+                    st.filters.push({ dim: currentDim, val: params.name });
+                    st.level++;
+                    widgetDrillState[w.id] = st;
+                    renderDesignerCanvas();
+                }
+            });
+        }
+
+        function compareCellValues(aVal, bVal, dataType) {
+            if (aVal === null || aVal === undefined || aVal === '') return (bVal === null || bVal === undefined || bVal === '') ? 0 : 1;
+            if (bVal === null || bVal === undefined || bVal === '') return -1;
+            if (dataType === 'number' || (typeof aVal === 'number' && typeof bVal === 'number')) {
+                const nA = Number(aVal), nB = Number(bVal);
+                if (!isNaN(nA) && !isNaN(nB)) return nA - nB;
+            }
+            if (dataType === 'date') {
+                const tA = Date.parse(String(aVal)), tB = Date.parse(String(bVal));
+                if (!isNaN(tA) && !isNaN(tB)) return tA - tB;
+            }
+            return String(aVal).localeCompare(String(bVal), 'tr-TR', { numeric: true, sensitivity: 'base' });
+        }
+
+        function renderDataTable(w, rows, container) {
+            const widgetKey = w.id || 'preview_table';
+            const cols = (Array.isArray(w.columns) && w.columns.length > 0)
+                ? w.columns
+                : liveColumns.map(c => c.name);
+
+            if (cols.length === 0) {
+                container.innerHTML = '<div class="dz-empty" style="padding:24px;">Tabloya kolon eklemek için sol listeden kolon sürükleyin.</div>';
+                return;
+            }
+
+            const sortInfo = widgetSortState[widgetKey] || null;
+            let workingRows = rows.slice();
+            if (sortInfo && sortInfo.column) {
+                const colMeta = liveColumns.find(x => x.name.toLowerCase() === sortInfo.column.toLowerCase());
+                const dType = colMeta ? colMeta.dataType : 'string';
+                const factor = sortInfo.dir === 'desc' ? -1 : 1;
+                workingRows.sort((rA, rB) => compareCellValues(getRowValue(rA, sortInfo.column), getRowValue(rB, sortInfo.column), dType) * factor);
+            }
+
+            const displayRows = workingRows.slice(0, 150);
+            let html = '<table class="bi-table"><thead><tr>';
+            cols.forEach(c => {
+                let arrow = '<span class="sort-ind" style="opacity:0.35;">⇅</span>';
+                if (sortInfo && sortInfo.column === c) {
+                    arrow = `<span class="sort-ind">${sortInfo.dir === 'asc' ? '▲' : '▼'}</span>`;
+                }
+                html += `<th data-col="${escapeHtml(c)}">${escapeHtml(c)}${arrow}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            displayRows.forEach(r => {
+                html += '<tr>';
+                cols.forEach(c => { html += `<td>${formatCell(getRowValue(r, c))}</td>`; });
+                html += '</tr>';
+            });
+            html += '</tbody><tfoot><tr>';
+            cols.forEach((c, idx) => {
+                const colMeta = liveColumns.find(x => x.name.toLowerCase() === c.toLowerCase());
+                if (colMeta && colMeta.dataType === 'number' && !c.toLowerCase().endsWith('_id')) {
+                    html += `<td>${formatNumber(computeAggregate(rows, c, 'sum'))}</td>`;
+                } else {
+                    html += `<td>${idx === 0 ? 'Toplam (' + rows.length + ')' : ''}</td>`;
+                }
+            });
+            html += '</tr></tfoot></table>';
+            container.innerHTML = html;
+
+            container.querySelectorAll('thead th[data-col]').forEach(th => {
+                th.addEventListener('click', () => {
+                    const clickedCol = th.getAttribute('data-col');
+                    const cur = widgetSortState[widgetKey];
+                    if (!cur || cur.column !== clickedCol) widgetSortState[widgetKey] = { column: clickedCol, dir: 'asc' };
+                    else if (cur.dir === 'asc') widgetSortState[widgetKey] = { column: clickedCol, dir: 'desc' };
+                    else delete widgetSortState[widgetKey];
+                    const sc = container.scrollTop;
+                    renderDataTable(w, rows, container);
+                    container.scrollTop = sc;
+                });
+            });
+        }
+
+        function renderPivotTable(w, rows, container) {
+            const rowDim = w.dimension || (liveColumns[0]?.name ?? '');
+            const colDim = w.secondaryDimension || (liveColumns[1]?.name ?? '');
+            const valField = w.valueField || (liveColumns.find(c => c.dataType === 'number')?.name ?? '');
+
+            const rowKeys = [...new Set(rows.map(r => String(getRowValue(r, rowDim) ?? 'Belirsiz')))].slice(0, 40);
+            const colKeys = [...new Set(rows.map(r => String(getRowValue(r, colDim) ?? 'Belirsiz')))].slice(0, 12);
+
+            let html = `<table class="bi-table"><thead><tr><th>${escapeHtml(rowDim)} \\ ${escapeHtml(colDim)}</th>`;
+            colKeys.forEach(ck => { html += `<th>${escapeHtml(ck)}</th>`; });
+            html += '<th>Toplam</th></tr></thead><tbody>';
+
+            rowKeys.forEach(rk => {
+                let rowSum = 0;
+                html += `<tr><td><strong>${escapeHtml(rk)}</strong></td>`;
+                colKeys.forEach(ck => {
+                    const matching = rows.filter(r =>
+                        String(getRowValue(r, rowDim) ?? 'Belirsiz') === rk &&
+                        String(getRowValue(r, colDim) ?? 'Belirsiz') === ck);
+                    const v = computeAggregate(matching, valField, w.agg || 'sum');
+                    rowSum += v;
+                    html += `<td>${formatNumber(v)}</td>`;
+                });
+                html += `<td><strong>${formatNumber(rowSum)}</strong></td></tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // ANA DASHBOARD ŞABLONUNU MARIADB'YE KAYDETME
+        async function saveMasterDashboard() {
+            const code = document.getElementById('dashCode').value.trim();
+            const title = document.getElementById('dashTitle').value.trim();
+            if (!code || !title) {
+                showToast('Dashboard kodu ve başlığı zorunludur!', true);
+                return;
+            }
+
+            const payload = {
+                dashboardId: currentDashId,
+                code: code,
+                title: title,
+                description: document.getElementById('dashDesc').value.trim(),
+                primaryDataSourceId: parseInt(document.getElementById('dashDsId').value || '1', 10),
+                layoutJson: JSON.stringify(designerLayout)
+            };
+
+            const res = await fetch('/api/dashboards/save-master', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                currentDashId = data.dashboardId;
+                showToast(data.message || 'Ana şablon başarıyla kaydedildi.');
+                await loadAllData();
+            } else {
+                showToast(data.message || 'Kaydetme hatası!', true);
+            }
+        }
+
+        // SEKME 2: SQL VERİ KAYNAĞI EDİTÖRÜ FONKSİYONLARI
+        function onSelectExistingDs() {
+            const id = parseInt(document.getElementById('selExistingDs').value || '0', 10);
+            const ds = allDataSources.find(x => x.datasource_id === id);
+            if (!ds) { clearDataSourceForm(); return; }
+
+            currentDsId = ds.datasource_id;
+            document.getElementById('dsCode').value = ds.code;
+            document.getElementById('dsName').value = ds.name;
+            document.getElementById('dsCat').value = ds.category || '';
+            document.getElementById('dsSql').value = ds.sql_query;
+
+            const tbody = document.getElementById('paramsTableBody');
+            tbody.innerHTML = '';
+            (ds.parameters || []).forEach(p => {
+                addParamRow(p.param_name, p.label, p.param_type, p.lookup_sql || '');
+            });
+        }
+
+        function clearDataSourceForm() {
+            currentDsId = null;
+            document.getElementById('selExistingDs').value = '';
+            document.getElementById('dsCode').value = '';
+            document.getElementById('dsName').value = '';
+            document.getElementById('dsCat').value = '';
+            document.getElementById('dsSql').value = '';
+            document.getElementById('paramsTableBody').innerHTML = '';
+            document.getElementById('detectedSchemaBox').innerHTML = '';
+            document.getElementById('sqlPreviewTableWrap').innerHTML = '';
+        }
+
+        function addParamRow(name, label, type, lookupSql) {
+            const tbody = document.getElementById('paramsTableBody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" class="p-name" value="${escapeHtml(name)}" placeholder="Ulke" style="width:100%;background:#0f172a;color:#fff;border:1px solid var(--border);padding:5px;border-radius:5px;"></td>
+                <td><input type="text" class="p-label" value="${escapeHtml(label)}" placeholder="Ülke" style="width:100%;background:#0f172a;color:#fff;border:1px solid var(--border);padding:5px;border-radius:5px;"></td>
+                <td>
+                    <select class="p-type" style="background:#0f172a;color:#fff;border:1px solid var(--border);padding:5px;border-radius:5px;">
+                        <option value="select" ${type === 'select' ? 'selected' : ''}>Açılır Liste (Select)</option>
+                        <option value="date" ${type === 'date' ? 'selected' : ''}>Tarih (Date)</option>
+                        <option value="text" ${type === 'text' ? 'selected' : ''}>Metin (Text)</option>
+                        <option value="number" ${type === 'number' ? 'selected' : ''}>Sayı (Number)</option>
+                    </select>
+                </td>
+                <td><input type="text" class="p-lookup" value="${escapeHtml(lookupSql)}" placeholder="SELECT DISTINCT Ulke AS val, Ulke AS txt FROM ..." style="width:100%;background:#0f172a;color:#fff;border:1px solid var(--border);padding:5px;border-radius:5px;"></td>
+                <td><button type="button" class="pill-btn del" onclick="this.closest('tr').remove()">✕</button></td>`;
+            tbody.appendChild(tr);
+        }
+
+        async function previewAndDetectSql() {
+            const sql = document.getElementById('dsSql').value;
+            const res = await fetch('/api/datasources/preview-sql', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sqlQuery: sql })
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                showToast(data.message || 'SQL doğrulama hatası', true);
+                return;
+            }
+
+            showToast(`SQL doğrulandı: ${(data.columns || []).length} kolon algılandı.`);
+            const schemaBox = document.getElementById('detectedSchemaBox');
+            schemaBox.innerHTML = (data.columns || [])
+                .map(c => `<span class="f-type-badge ft-${c.dataType}">${escapeHtml(c.name)} (${c.dataType})</span>`)
+                .join('');
+
+            const existingParams = Array.from(document.querySelectorAll('.p-name')).map(i => i.value.trim().toLowerCase());
+            (data.extractedParameters || []).forEach(p => {
+                if (!existingParams.includes(p.toLowerCase())) {
+                    addParamRow(p, p, 'select', '');
+                }
+            });
+
+            const previewWrap = document.getElementById('sqlPreviewTableWrap');
+            renderDataTable({ id: 'sql_prev', columns: (data.columns || []).map(c => c.name) }, data.previewRows || [], previewWrap);
+        }
+
+        async function saveDataSource() {
+            const params = [];
+            document.querySelectorAll('#paramsTableBody tr').forEach((tr, idx) => {
+                const name = tr.querySelector('.p-name').value.trim();
+                if (name) {
+                    params.push({
+                        param_name: name,
+                        label: tr.querySelector('.p-label').value.trim() || name,
+                        param_type: tr.querySelector('.p-type').value,
+                        lookup_sql: tr.querySelector('.p-lookup').value.trim(),
+                        display_order: idx + 1
+                    });
+                }
+            });
+
+            const payload = {
+                dataSourceId: currentDsId,
+                code: document.getElementById('dsCode').value.trim(),
+                name: document.getElementById('dsName').value.trim(),
+                category: document.getElementById('dsCat').value.trim(),
+                sqlQuery: document.getElementById('dsSql').value,
+                parameters: params
+            };
+
+            const res = await fetch('/api/datasources/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                currentDsId = data.datasourceId;
+                showToast(data.message || 'Veri kaynağı kaydedildi.');
+                await loadAllData();
+                document.getElementById('dashDsId').value = currentDsId;
+                await loadLiveDataSourceData(currentDsId);
+            } else {
+                showToast(data.message || 'Kayıt başarısız!', true);
+            }
+        }
+
+        // YARDIMCI HESAPLAMA VE FORMAT FONKSİYONLARI
+        function getRowValue(row, colName) {
+            if (!row || !colName) return null;
+            if (colName in row) return row[colName];
+            const foundKey = Object.keys(row).find(k => k.toLowerCase() === colName.toLowerCase());
+            return foundKey ? row[foundKey] : null;
+        }
+
+        function computeAggregate(rows, field, agg) {
+            if (!rows || rows.length === 0) return 0;
+            const a = (agg || 'sum').toLowerCase();
+            if (a === 'count') return rows.length;
+            let sum = 0, count = 0, min = Infinity, max = -Infinity;
+            rows.forEach(r => {
+                const num = parseFloat(getRowValue(r, field));
+                if (!isNaN(num)) {
+                    sum += num;
+                    count++;
+                    if (num < min) min = num;
+                    if (num > max) max = num;
+                }
+            });
+            if (count === 0) return 0;
+            if (a === 'avg') return sum / count;
+            if (a === 'min') return min;
+            if (a === 'max') return max;
+            return sum;
+        }
+
+        function groupAndAggregateComposite(rows, dimFields, valField, agg, topN) {
+            const cols = Array.isArray(dimFields) && dimFields.length > 0 ? dimFields : [dimFields || ''];
+            const map = new Map();
+            const a = (agg || 'sum').toLowerCase();
+
+            rows.forEach(r => {
+                const parts = cols.map(c => {
+                    const v = getRowValue(r, c);
+                    if (v === null || v === undefined || v === '') return 'Belirsiz';
+                    if (/ay\b/i.test(c) && !isNaN(Number(v))) return String(v).padStart(2, '0');
+                    return String(v);
+                });
+                const key = parts.join(' / ');
+                const num = parseFloat(getRowValue(r, valField));
+                const val = isNaN(num) ? 0 : num;
+                if (!map.has(key)) map.set(key, { sum: 0, count: 0, min: Infinity, max: -Infinity });
+                const entry = map.get(key);
+                entry.sum += val;
+                entry.count += 1;
+                if (!isNaN(num)) {
+                    if (num < entry.min) entry.min = num;
+                    if (num > entry.max) entry.max = num;
+                }
+            });
+
+            const arr = [];
+            for (const [k, v] of map.entries()) {
+                let finalVal = v.sum;
+                if (a === 'count') finalVal = v.count;
+                else if (a === 'avg') finalVal = v.count ? v.sum / v.count : 0;
+                else if (a === 'min') finalVal = v.min === Infinity ? 0 : v.min;
+                else if (a === 'max') finalVal = v.max === -Infinity ? 0 : v.max;
+                arr.push({ key: k, value: Math.round(finalVal * 100) / 100 });
+            }
+
+            // Eğer eksen Yıl / Ay veya Tarih içeriyorsa kronolojik sırala, değilse büyüklüğe göre sırala
+            const isTimeAxis = cols.some(c => /y[ıi]l|ay\b|tarih|tar\.|termin/i.test(String(c)));
+            if (isTimeAxis) {
+                arr.sort((aItem, bItem) => aItem.key.localeCompare(bItem.key, 'tr-TR', { numeric: true }));
+            } else {
+                arr.sort((aItem, bItem) => bItem.value - aItem.value);
+            }
+            return topN ? arr.slice(0, topN) : arr;
+        }
+
+        function groupAndAggregate(rows, dimField, valField, agg, topN) {
+            return groupAndAggregateComposite(rows, [dimField], valField, agg, topN);
+        }
+
+        function formatNumber(val) {
+            return Number(val || 0).toLocaleString('tr-TR', { maximumFractionDigits: 2 });
+        }
+
+        function formatCell(val) {
+            if (val === null || val === undefined) return '';
+            if (typeof val === 'number') return formatNumber(val);
+            const str = String(val);
+            if (/^\d{4}-\d{2}-\d{2}T/.test(str)) {
+                return str.substring(0, 10).split('-').reverse().join('.');
+            }
+            return escapeHtml(str);
+        }
+
+        function escapeHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        initDesigner();
+    </script>
+</body>
+</html>

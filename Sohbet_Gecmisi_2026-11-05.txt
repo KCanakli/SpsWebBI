@@ -1,0 +1,610 @@
+================================================================================
+SPSWEBBI PROJESİ - TÜM YAZIŞMA GEÇMİŞİ (EKSİKSİZ KAYIT)
+Tarih: 05.11.2026
+Proje Dizini: c:\Projeler\SpsWebBI
+================================================================================
+
+--------------------------------------------------------------------------------
+[1] KULLANICI (2026-11-05T11:49:00Z):
+--------------------------------------------------------------------------------
+B1_V2 dosyasını okumanı ve bu proje için tartışıp yol haritası belirleyip planlamak istiyorum
+
+--------------------------------------------------------------------------------
+[2] KULLANICI (2026-11-05T13:10:00Z):
+--------------------------------------------------------------------------------
+Sen full stack developer sın. Ekli dosyada yapmanı istediğim bir proje var. Öncelikle proje dosyasını  incele. Sonrasında geliştirme planını hazırla. Uygulamayı adım adım geliştireceksin. Proje bitene kadar her adımdan önce bana yapacağın işlemi anlat ve onayımdan sonra bu işlemi projeye dahil et. Ne yaptın neden yaptın hepsini bilmek istiyorum. Proje c:\Projeler\SpsWebBI isimli klasörde bulunacak.
+
+--- [EKLİ DOSYA İÇERİĞİ: BI_V1.txt] ---
+# Rol ve Görev
+Sen kıdemli bir full-stack mimarısın. Aşağıdaki özellikleri içeren bir Web uygulaması (Host App) geliştireceksin. Uygulama kapalı devre local ağda çalışacak. Aynı zamanda sibe güvenlikle ilgili hiç bir açık bırakmadan kodlama yapılacak.
+
+1. Veri tabanı olarak MariaDB kullanılacak. Siber güvenlik ile ilgili hiç bir açık bırakılmayacak. 
+2. Kullanılan araçlar ücretsiz kullanım ve ticari dağıtıma uygun lisansa sahip olacak.
+	2.1. ASP.NET Core (C#), Dapper veri tabanı olarak MariaDB kullanılacak. Başka araçlara ihtiyaç duyduğunda (Apache ECharts) birlikte tartışıp anlaşalım ondan sonra projeye dahil et.
+	2.1. Geniş grafik, tablo, KPI, pivot raporlar oluşturmalı
+	2.2. Grafik üzerinde bir değere tıklandığında diğer göstergelerde tıklanan değere göre değişebilmeli. (Bursa bölgesi seçilince diğer grafiklerdede Bursaya ait 		     		     kayıtlar görünmeli)
+	2.3. Grafik üzerinde bir değere çift tıklandığında o değerin detaylarına erişebilmeli. (Yıl seçildiğinde yıla ait aylar, ay seçildiğinde aya ait haftalar, yada            	     	     ay seçildiğinde müşteri satışları, müşteri satışı seçildiğinde neler satılmış gibi)
+	2.4. SQL sorguları ile rapor oluşturabilmeli.
+        2.5. Proje müşteriye yüklendikten sonra yeni raporlar için sınıf tanımlamamalıyım. Sistem admin SQL komutları ile raporları tasarlayıp yetki verip kullandırabilmeli.
+	2.6. Kısaca Drill-through, Drill-down, Cross-filter gibi özelliklerin olmalı.
+3. Uygulama bilgisayar, telefon, tablet ve televizyon gibi cihazlarda responsive çalışabilecek.
+4. Birden fazla datasource dan beslenen birden fazla dashboard olabilir. Satınalma, satış, stok, sevkiyat v.b.
+5. Herbir datasource için filtre parametreleri olabilir. Filtreler seçildiğinde dashboard filtreye göre kendisini refresh eder.
+6. Her dashboard ekranına yetki ile erişim olacak. Dashboard a yetki verilirken kullanıcı bazlı olarak gösterim önceliği, refresh süresi ve ekranda kalma süresi tanımlanacak.
+7. Site açılış parametreleri (Köşeli parametreler isteğe bağlı kullanılır) 
+	7.1. User 	: User parametresine yetki için kullanıcı bilgisi gönderilir.
+     	7.2. Security	: Şifreli giriş şifresiz giriş için kullanılır.
+	7.3. Mode 	: Gösterim modu (Standalone/Slayt) 
+		7.3.1. Standalone modunda refresh süresi tanımlı ise tanımlanan saniye dolduğunda dashboard kendisini yenilemeli
+		7.3.2. Slayt modunda ise gösterim sırasına ve ekranda kalma süresine göre dashboard görünür. Ekranda kalma süresi bitince sonraki dashboard görüntülenir.
+8. Kullanım kuralları
+	8.1. Televizyonda çalıştırıldığında parametre olarak User=A, Security=0, Mode=Slayt gönderilirse 
+		8.1.1. A kullanıcısına ait yetkili dashboardlar veri tabanından çekilir. 
+		8.1.2. Security 0 olduğu için şifre/pin sorulmadan direk dashboard gösterim ekranı çalışır.
+		8.1.3. Mode Slayt olduğu için
+			8.1.3.1. A kullanıcısı için gösterim sırasına göre dashboardlar sırayla açılacak. 
+			8.1.3.2. Eğer tek bir dashboard a yetki varsa ve refresh süresi tanımlıysa belirtilen sürede dashboard refresh edilecek. 
+				 Eğer birden fazla dashboard tanımlı ise her dashboard tanımlanmış olan süre kadar ekranda görüntülendikten sonra sıradaki dashboard görüntülenecek. En son 				 dashboard görüntülendikten sonra yeniden ilk dashboarddan başlanarak görüntüleme yapılacak.
+	8.2. Bilgisayarda bir exe içerisinden çalıştırıldığında parametre olarak User=A, Security=0 gönderilirse
+		8.2.1. A kullanıcısına ait yetkili dashboardlar veri tabanından çekilir. 
+		8.2.2. Security 0 gönderilirse şifre/pin sorulmadan direk dashboard gösterim ekranı çalışır.
+		8.2.3. Ekranda datasourceların listesi görüntülenir
+		8.2.4. Ekranda datasource için uygun filtreler görüntülenir.
+		8.2.5. Ekranda Slayt görünümü ve Otomatik Yenileme için iki checkbox bulunur. Burada ya Slayt görünümü seçilebilir yada otomatik yenileme seçilir.
+		8.2.6. Göster tuşuna basınca 
+			8.2.6.1. Slayt görünümü seçili ise 7.3.2. kuralına göre gösterim yapılır.
+			8.2.6.2. Otomatik yenileme seçilmediyse 7.3.1. deki refresh süresi devre dışı kalır. Seçili datasource a ait dashboard görüntülenir. 
+	8.3. Bilgisayarda internet tarayıcıdan parametre olarak User=A, Security=0 gönderilirse
+		8.3.1. A kullanıcısına ait yetkili dashboardlar veri tabanından çekilir. 
+		8.3.2. Security 0 gönderilirse şifre/pin sorulmadan direk dashboard gösterim ekranı çalışır.
+		8.3.3. Ekranda datasourceların listesi görüntülenir
+		8.3.4. Ekranda datasource için uygun filtreler görüntülenir.
+		8.3.5. Ekranda Slayt görünümü ve Otomatik Yenileme için iki checkbox bulunur. Burada ya Slayt görünümü seçilebilir yada otomatik yenileme seçilir.
+		8.3.6. Göster tuşuna basınca 
+			8.3.6.1. Slayt görünümü seçili ise 7.3.2. kuralına göre gösterim yapılır.
+			8.3.6.2. Otomatik yenileme seçilmediyse 7.3.1. deki refresh süresi devre dışı kalır. Seçili datasource a ait dashboard görüntülenir. 
+	8.4. Bilgisayarda internet tarayıcıdan parametre olarak User=A, Security=1 gönderilirse
+		8.4.1. A kullanıcısına ait yetkili dashboardlar veri tabanından çekilir. 
+		8.4.2. Security 1 gönderilirse şifre/pin ekranı gelir ve şifre doğrulaması yaptırılır. Şifre doğru ise 8.4.3. den devam edilir yanlış ise sisteme girmez. 
+		8.4.3. Ekranda datasourceların listesi görüntülenir
+		8.4.4. Ekranda datasource için uygun filtreler görüntülenir.
+		8.4.5. Ekranda Slayt görünümü ve Otomatik Yenileme için iki checkbox bulunur. Burada ya Slayt görünümü seçilebilir yada otomatik yenileme seçilir.
+		8.4.6. Göster tuşuna basınca 
+			8.4.6.1. Slayt görünümü seçili ise 7.3.2. kuralına göre gösterim yapılır.
+			8.4.6.2. Otomatik yenileme seçilmediyse 7.3.1. deki refresh süresi devre dışı kalır. Seçili datasource a ait dashboard görüntülenir. 
+	8.5. Herhangi bir ortamda (pc/telefon/tablet) internet tarayıcıdan parametresiz sayfa açılırsa.
+		8.5.1. Login ekranı açılır. Kullanıcı ve şifre doğrulama yapılır. 
+		8.5.2. Kullanıcısına ait yetkili dashboardlar veri tabanından çekilir. 
+		8.5.3. Ekranda datasourceların listesi görüntülenir
+		8.5.4. Ekranda datasource için uygun filtreler görüntülenir.
+		8.5.5. Ekranda Slayt görünümü ve Otomatik Yenileme için iki checkbox bulunur. Burada ya Slayt görünümü seçilebilir yada otomatik yenileme seçilir.
+		8.5.6. Göster tuşuna basınca 
+			8.5.6.1. Slayt görünümü seçili ise 7.3.2. kuralına göre gösterim yapılır.
+			8.5.6.2. Otomatik yenileme seçilmediyse 7.3.1. deki refresh süresi devre dışı kalır. Seçili datasource a ait dashboard görüntülenir. 
+	8.6. Dashboard tasarım ve gösterim ekranı ayrı olmalı ve tasarım ekranı yetkiye bağlı çalışmalı.
+9. Dashboard da kullanılan sorgular ve dashboard layout ı MariaDB içerisinde tutulacak.
+10. Son kullanıcı kendi yetkisinde olan dashboard da tasarımı değiştirip yeniden açıldığında aynı tasarımı görebilmeli.
+--- [EKLİ DOSYA SONU] ---
+
+--------------------------------------------------------------------------------
+[3] ASİSTAN - ANTIGRAVITY (2026-11-05T13:10:01Z):
+--------------------------------------------------------------------------------
+Proje dokümanını tüm maddeleriyle (özellikle **Kapalı Devre Çalışma**, **Siber Güvenlik**, **Dinamik SQL / Sıfır DTO Sınıfı (Madde 2.5)**, **URL Açılış Senaryoları (Madde 7-8)** ve **Kullanıcı Bazlı Layout Özelleştirme (Madde 9-10)**) inceledim.
+
+Anlaştığımız çalışma prensibi gereği **henüz hiçbir kod veya klasör oluşturmadım**. Önce mimari kararlarımızı, kullanacağımız ek açık kaynak araçları ve adım adım yol haritamızı aşağıda sunuyorum.
+
+---
+
+## 1. Mimari ve Siber Güvenlik Kararları (Ne Yapacağız ve Neden?)
+
+1. **Tek Çatı Altında Host App (ASP.NET Core 8 Web Uygulaması):**
+   - **Ne yapacağız:** `c:\Projeler\SpsWebBI` altında doğrudan kendi içinde hem API uçlarını hem de Web arayüzünü barındıran tek bir **ASP.NET Core 8 Host App** kuracağız.
+   - **Neden:** Kapalı devre yerel ağda (intranet) IIS, Windows Servisi veya tek bir `.exe` olarak ekstra Node.js sunucusuna ihtiyaç duymadan çalışması, dağıtımının ve bakımının çok kolay olması için.
+2. **Kapalı Devre (Offline-First) Mimari:**
+   - **Ne yapacağız:** Hiçbir harici CDN linki (Google Fonts, CDNJS vb.) kullanmayacağız; tüm kütüphaneler (`wwwroot/lib/...`) proje içinde yerel olarak barındırılacak.
+   - **Neden:** İnternet çıkışı olmayan fabrika/ofis yerel ağlarında ve Smart TV'lerde sıfır dış bağımlılıkla çalışması için.
+3. **Sıfır Sınıf Tanımlama - Dinamik Veri Motoru (Madde 2.5):**
+   - **Ne yapacağız:** Dapper'ın `Query(sql, DynamicParameters)` özelliğini kullanarak sorgu sonuçlarını C# sınıfı (`DTO`) olmadan doğrudan dinamik satır/sütun (`IEnumerable<IDictionary<string, object>>`) ve otomatik kolon şeması (Metin, Sayı, Tarih) olarak okuyacağız.
+   - **Neden:** Proje müşteriye kurulduktan sonra yeni bir rapor/dashboard eklemek için C# kodu yazmaya veya derleme yapmaya gerek kalmaması, Admin'in sadece SQL yazarak yeni veri kaynağı ve rapor üretebilmesi için.
+4. **Siber Güvenlik Önlemleri (Madde 1):**
+   - **Dinamik SQL Güvenliği (SQL Injection & Yetkisiz Komut Engeli):**
+     - Admin tarafından yazılan SQL sorguları çalıştırılmadan önce bir **SQL Güvenlik Doğrulayıcısından (`SqlValidator`)** geçecek: Yalnızca `SELECT` / `WITH` ifadelerine izin verilecek; `INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE, GRANT, CREATE, CALL, EXECUTE, INTO OUTFILE` ve çoklu sorgu (`;`) kesin olarak reddedilecek.
+     - Kullanıcıların seçtiği tüm filtreler (`@BaslangicTarih`, `@Bolge` vb.) ve Cross-Filter / Drill-Down değerleri SQL metnine asla birleştirilmeyecek; Dapper `DynamicParameters` ile parametrik bağlanacak.
+   - **Kimlik Doğrulama, Parola ve Bağlantı Güvenliği:**
+     - Kullanıcı parolaları MariaDB'de **PBKDF2 (SHA-256 + Salt)** ile hash'lenerek saklanacak.
+     - Oturum yönetimi `HttpOnly`, `SameSite=Strict` şifreli Cookie ile yapılacak (XSS ile token çalınmasını engeller).
+     - `Security=0` (TV / Exe şifresiz giriş) yalnızca veritabanında **şifresiz giriş izni (`allow_passwordless = 1`)** verilmiş hesaplarda ve sadece **İzleme (Viewer)** ekranı için çalışacak; **Tasarım (`/designer`)** ve **Yönetim (`/admin`)** ekranları her koşulda şifreli oturum ve yetki kontrolü zorunlu tutacak.
+   - **Yetki Kontrolü (IDOR Koruması):**
+     - Her veri çekme ve kaydetme isteğinde, oturumdaki kullanıcının o `dashboard_id` ve `datasource_id` için yetkisi (`bi_user_dashboards`) sunucu tarafında kontrol edilecek.
+5. **Kullanıcı Bazlı Tasarım Kaydetme (Madde 9 & 10):**
+   - **Ne yapacağız:** Ana tasarım `bi_dashboards.layout_json` kolonunda, son kullanıcının kendi ekranında yaptığı yerleşim/grafik değişiklikleri ise `bi_user_dashboards.custom_layout_json` kolonunda tutulacak.
+   - **Neden:** Son kullanıcı kendisine yetki verilen dashboard üzerinde yer/boyut/görünüm değişikliği yaptığında diğer kullanıcıları veya ana şablonu bozmadan kendi tasarımını kaydedip tekrar açtığında aynı şekilde görebilmesi için (isterse "Varsayılana Dön" ile ana şablona dönebilecek).
+
+---
+
+## 2. Tartışılacak Ek Açık Kaynak Araçlar (Madde 2.1)
+
+Temel yığınımız **ASP.NET Core 8 (C#) + Dapper + MariaDB (`MySqlConnector`)**. Ön yüzde (Frontend) zengin BI özelliklerini (Cross-Filter, Drill-Down, Sürükle-Bırak Tasarım, Pivot, Responsive TV/Mobil) sağlamak için **tamamı ücretsiz ve ticari dağıtıma uygun (MIT / Apache 2.0 lisanslı)** şu kütüphaneleri öneriyorum:
+
+| İhtiyaç Alanı | Önerilen Araç | Lisans | Neden Bu Aracı Seçiyoruz? |
+| :--- | :--- | :--- | :--- |
+| **Grafik & KPI Motoru** | **Apache ECharts 5** | Apache 2.0 (Ücretsiz & Ticari) | Tek tık (`click` -> Cross-Filter) ve çift tık (`dblclick` -> Drill-Down) olaylarını yerel destekler; Bar, Çizgi, Pasta, Halka, Gauge (İbre), Funnel, Heatmap, Treemap grafiklerini TV ve mobilde 60 FPS hızında çizer. |
+| **Sürükle-Bırak Layout** | **GridStack.js** | MIT (Ücretsiz & Ticari) | Hem Admin tasarım ekranında hem de son kullanıcının kendi ekranında (Madde 10) bileşenleri fare/dokunmatik ile sürükleyip boyutlandırmasını ve JSON olarak MariaDB'ye kaydetmemizi sağlar; mobil/tablet/TV'ye göre otomatik responsive küçülür. |
+| **Veri Tablosu & Pivot** | **Tabulator** (veya **AG Grid Community**) | MIT (Ücretsiz & Ticari) | Dinamik SQL'den gelen kolonları sıfır yapılandırma ile listeler; sıralama, filtreleme, gruplama, alt toplam (Footer Summary) ve Pivot özetleme sunar. |
+| **Responsive UI & İkonlar** | **Bootstrap 5 + Bootstrap Icons** | MIT (Ücretsiz & Ticari) | PC, telefon, tablet ve TV ekranlarında tam responsive görünüm ve TV Kiosk (Slayt) modunda karanlık/aydınlık tema desteği sağlar. |
+
+---
+
+## 3. Adım Adım Geliştirme Planı (Yol Haritası)
+
+Projeyi aşağıdaki **8 adımda**, her adımdan önce size ne yapacağımı anlatıp onayınızı alarak ilerleteceğiz:
+
+- **Adım 1: Proje İskeleti ve MariaDB Veritabanı Şeması (`c:\Projeler\SpsWebBI`)**
+  - ASP.NET Core 8 projesinin oluşturulması, Dapper ve MySqlConnector paketlerinin eklenmesi.
+  - MariaDB üzerinde sistem tablolarının (`bi_users`, `bi_datasources`, `bi_datasource_params`, `bi_dashboards`, `bi_user_dashboards`, `bi_audit_logs`) otomatik kurulumu (Migration/Seed) ve güvenlik altyapısının (`SqlValidator`, `PasswordHasher`) yazılması.
+- **Adım 2: Kimlik Doğrulama ve 5 Açılış Senaryosu (`User`, `Security`, `Mode`)**
+  - Madde 7 ve 8'deki tüm açılış kurallarının (`8.1` TV Slayt, `8.2/8.3` PC/Tarayıcı `Security=0`, `8.4` `Security=1` Şifre/PIN doğrulama, `8.5` Parametresiz Login) kodlanması.
+- **Adım 3: Dinamik Veri Kaynağı (Datasource), Parametre ve Güvenli SQL Motoru**
+  - Admin'in C# sınıfı tanımlamadan SQL sorgusu yazabildiği, sorgudaki kolonların ve `@Parametre` filtrelerinin otomatik algılandığı, test edilip MariaDB'ye kaydedildiği servis ve ekranların yapılması.
+- **Adım 4: Gösterim Kontrol Paneli, Filtreler, Standalone Yenileme ve Slayt Modu Motoru**
+  - Kullanıcının yetkili olduğu datasource/dashboard listesini seçtiği, dinamik filtreleri girdiği, **Slayt Görünümü** veya **Otomatik Yenileme** checkbox'larını (birbirini dışlayan yapıda) seçip **"Göster"** tuşuyla çalıştırdığı ekranın ve Slayt zamanlayıcı döngüsünün (Madde 7.3 & 8) yapılması.
+- **Adım 5: Görselleştirme Motoru (Grafikler, KPI, Tablo, Pivot) + Cross-Filter & Drill-Down**
+  - Apache ECharts, GridStack ve Tabulator entegrasyonu.
+  - **Tek Tık (Cross-Filter):** Bir grafikte "Bursa" seçilince diğer tüm grafik/tabloların anında Bursa'ya göre filtrelenmesi.
+  - **Çift Tık (Drill-Down / Drill-Through):** `Yıl -> Ay -> Hafta` veya `Ay -> Müşteri Satışları -> Satılan Ürünler` şeklinde alt detaya inme ve üstteki yol çubuğundan (Breadcrumb) geri dönme.
+- **Adım 6: Dashboard Tasarım Ekranı (`/designer`) ve Kullanıcı Kişiselleştirmesi (Madde 8.6, 9, 10)**
+  - Yetkili kullanıcıların yeni widget (Grafik, KPI, Tablo, Pivot) ekleyip SQL kolonlarını eşleştirdiği tasarım ekranı.
+  - Son kullanıcının kendi yetkisindeki dashboard üzerinde yaptığı yerleşim/tasarım değişikliklerini kendi hesabına (`custom_layout_json`) kaydetmesi ve tekrar açtığında aynı tasarımı görmesi.
+- **Adım 7: Yetki, Gösterim Önceliği ve Süre Yönetim Ekranı (`/admin`)**
+  - Kullanıcı tanımlama ve kullanıcı bazlı dashboard yetkisi, **Gösterim Önceliği (Sırası)**, **Refresh Süresi (sn)** ve **Ekranda Kalma Süresi (sn)** atama ekranı (Madde 6).
+- **Adım 8: Örnek Veri Kaynakları (Sipariş, Stok vb.), Güvenlik Testleri ve Son Doğrulama**
+  - Mevcut MariaDB veritabanınızla (`SpsTeks`) bağlantı testi, örnek dashboard'ların oluşturulması ve tüm 8.1–8.6 senaryolarının uçtan uca doğrulanması.
+
+---
+
+## Onay Soruları (Başlamadan Önce)
+
+1. **Bölüm 2'de önerdiğim açık kaynak kütüphaneler** (**Apache ECharts**, **GridStack.js**, **Tabulator**, **Bootstrap 5**) sizin için uygun mudur?
+2. **Adım 1'e (Proje İskeleti, Güvenlik Altyapısı ve MariaDB Tablolarının Kurulumu)** başlamam için onay veriyor musunuz? (Onayınızla birlikte Adım 1'de oluşturacağım dosya ve tabloları detaylıca açıklayıp uygulayacağım.)
+
+--------------------------------------------------------------------------------
+[4] KULLANICI (2026-11-05T13:16:31Z):
+--------------------------------------------------------------------------------
+1. Uygundur.
+2. Onay veriyorum.
+mevcutta MariaDB kurulu istersen buna bağlantı bilgilerini verebilirim
+
+--------------------------------------------------------------------------------
+[5] ASİSTAN - ANTIGRAVITY (2026-11-05T13:20:42Z):
+--------------------------------------------------------------------------------
+## Adım 1 Tamamlandı: Ne Yaptık ve Neden Yaptık?
+
+`c:\Projeler\SpsWebBI` klasöründe **Adım 1** kapsamındaki temel mimariyi, siber güvenlik katmanını ve MariaDB veritabanı şema kurucusunu oluşturdum:
+
+1. **Proje Yapılandırması ([SpsWebBI.csproj](file:///c:/Projeler/SpsWebBI/SpsWebBI.csproj) & [appsettings.json](file:///c:/Projeler/SpsWebBI/appsettings.json)):**
+   - **Ne yaptık:** `.NET 8.0` Web Host App oluşturup `Dapper` ve `MySqlConnector` paketlerini tanımladık.
+   - **Neden:** Uygulamanın dış sunucu gerektirmeden kendi başına (Self-Hosted) çalışabilmesi ve yüksek performanslı MariaDB erişimi sağlaması için.
+2. **Parola Güvenliği ([PasswordHasher.cs](file:///c:/Projeler/SpsWebBI/Security/PasswordHasher.cs)):**
+   - **Ne yaptık:** Kullanıcı şifrelerini **PBKDF2 (HMAC-SHA256, 100.000 iterasyon, 16-byte kriptografik rastgele Salt)** ile hash'leyen ve `CryptographicOperations.FixedTimeEquals` ile doğrulayan sınıfı yazdık.
+   - **Neden:** Veritabanı ele geçirilse dahi şifrelerin çözülememesi ve zamanlama saldırılarına (Timing Attack) karşı tam koruma sağlamak için.
+3. **Veritabanı Bağlantı Güvenliği ([ConnectionProtector.cs](file:///c:/Projeler/SpsWebBI/Security/ConnectionProtector.cs)):**
+   - **Ne yaptık:** `appsettings.json` içindeki MariaDB şifresini Windows DPAPI (`ENC:...`) ile şifreleyen ve sürücü seviyesinde `AllowBatch=false` (çoklu sorgu yasağı) ile `AllowLoadLocalInfile=false` (yerel dosya okuma yasağı) kurallarını zorunlu kılan sınıfı ekledik.
+   - **Neden:** Diskteki yapılandırma dosyasında açık şifre kalmaması ve MySql sürücüsü üzerinden ikinci bir SQL komutu enjekte edilmesinin engellenmesi için.
+4. **Dinamik SQL Güvenlik Doğrulayıcısı ([SqlSecurityValidator.cs](file:///c:/Projeler/SpsWebBI/Security/SqlSecurityValidator.cs)):**
+   - **Ne yaptık:** Çalıştırılacak her dinamik SQL sorgusunda yorumları ve metinleri ayrıştırıp sadece `SELECT` / `WITH` ile başlayan sorgulara izin veren; `;` (Stacked Query), `DROP, DELETE, UPDATE, INSERT, ALTER, TRUNCATE, GRANT, CALL, EXEC, OUTFILE, SLEEP` ve sistem tablolarını (`information_schema`, `mysql`) kesin olarak engelleyen doğrulayıcıyı yazdık. Ayrıca sorgu içindeki `@Parametre` filtrelerini otomatik bulan `ExtractParameters` metodunu ekledik.
+   - **Neden:** Madde 2.4 ve 2.5 gereği Admin yeni SQL sorguları yazarken sistemin hiçbir şekilde veri silme/değiştirme veya SQL Injection riskine maruz kalmaması için.
+5. **MariaDB Sistem Şeması ve Başlangıç Verileri ([DatabaseInitializer.cs](file:///c:/Projeler/SpsWebBI/Data/DatabaseInitializer.cs) & [BiSystemModels.cs](file:///c:/Projeler/SpsWebBI/Models/BiSystemModels.cs)):**
+   - **Ne yaptık:** Uygulama açıldığında MariaDB'de otomatik olarak şu 6 tabloyu oluşturan yapıyı kurduk:
+     - `bi_users`: Kullanıcılar, rolleri (`admin`, `designer`, `viewer`), şifresiz giriş izni (`allow_passwordless`) ve hatalı giriş kilitleme alanları.
+     - `bi_datasources`: Dinamik SQL sorguları ve otomatik kolon şeması (Madde 4 & 9).
+     - `bi_datasource_params`: Her datasource'a özel filtre parametreleri ve dinamik seçim sorguları (Madde 5).
+     - `bi_dashboards`: Dashboard tanımları ve varsayılan tasarım JSON'u (Madde 9).
+     - `bi_user_dashboards`: Kullanıcı bazlı dashboard yetkisi, **gösterim önceliği (`display_order`)**, **yenileme süresi (`refresh_seconds`)**, **ekranda kalma süresi (`slide_duration_seconds`)** ve **son kullanıcının kendi özelleştirdiği tasarım (`custom_layout_json`)** (Madde 6 & 10).
+     - `bi_audit_logs`: Tüm giriş ve kritik işlemlerin siber güvenlik iz kaydı.
+6. **Güvenli Web Host Başlatıcısı ([Program.cs](file:///c:/Projeler/SpsWebBI/Program.cs)):**
+   - **Ne yaptık:** `HttpOnly` ve `SameSite=Strict` Cookie oturumu ile `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN` güvenlik başlıklarını devreye aldık.
+
+---
+
+## Şimdi: MariaDB Bağlantı Bilgileri ve Adım 2 Onayı
+
+1. **MariaDB Bağlantı Bilgileri:**
+   - Mevcut MariaDB bağlantı bilgilerinizi (**Sunucu/IP, Port, Veritabanı Adı, Kullanıcı Adı, Şifre**) paylaşırsanız, şifreyi DPAPI ile şifreleyerek `appsettings.json` dosyasına kaydedip `bi_*` tablolarının veritabanınızda sorunsuz oluştuğunu hemen doğrulayabilirim.
+2. **Adım 2 İçin Yapacağım İşlem ve Onay Talebi:**
+   - **Adım 2'de Ne Yapacağım:** Dokümandaki **Madde 7 ve Madde 8 (8.1, 8.2, 8.3, 8.4, 8.5)** açılış kurallarını yöneten **Kimlik Doğrulama & Yönlendirme Servisini (`AuthController` ve Giriş/PIN Arayüzlerini)** yazacağım:
+     - **Senaryo 8.1 (`?User=A&Security=0&Mode=Slayt`):** Kullanıcı `A`'nın `allow_passwordless` yetkisini doğrulayıp şifre sormadan doğrudan tam ekran **Slayt Gösterim** modunu başlatacak.
+     - **Senaryo 8.2 & 8.3 (`?User=A&Security=0`):** Şifre sormadan doğrudan `A` kullanıcısının yetkili olduğu Datasource listesi, filtreler ve Slayt/Otomatik Yenileme seçim ekranını açacak.
+     - **Senaryo 8.4 (`?User=A&Security=1`):** Ekrana `A` kullanıcısı için **Şifre/PIN doğrulama ekranı** getirecek; şifre doğruysa seçim ekranına geçecek, yanlışsa girmeyecek (Brute-force korumalı).
+     - **Senaryo 8.5 (Parametresiz Açılış):** Kullanıcı Kodu ve Şifre soran standart **Login** ekranını açacak.
+
+MariaDB bağlantı bilgilerinizi paylaşabilir ve **Adım 2'ye geçmem için onay** verebilirsiniz.
+
+--------------------------------------------------------------------------------
+[6] KULLANICI (2026-11-05T13:24:50Z):
+--------------------------------------------------------------------------------
+127.0.0.1  spsteks 10231 şifre port 3323 bunu programdan girebileceğim bir hale getirelim. Bağlantı bilgisi istendiği zaman değiştirilebilsin
+
+--------------------------------------------------------------------------------
+[7] ASİSTAN - ANTIGRAVITY (2026-11-05T13:31:22Z):
+--------------------------------------------------------------------------------
+MariaDB bağlantı yönetimi servisini ve ekranını hazırladım; derleme işlemini başlattım, tamamlandığında sonucu paylaşacağım.
+
+--------------------------------------------------------------------------------
+[8] ASİSTAN - ANTIGRAVITY (2026-11-05T13:32:13Z):
+--------------------------------------------------------------------------------
+Verdiğiniz MariaDB bağlantı bilgilerini (`127.0.0.1`, Port: `3323`, Veritabanı: `spsteks`, Şifre: `10231`) sisteme tanımladım ve program içerisinden istediğiniz zaman değiştirilebilmesi için **Veritabanı Bağlantı Yönetim Modülünü** projeye ekleyip derledim (`0 Hata`).
+
+---
+
+## Ne Yaptık ve Neden Yaptık? (Veritabanı Bağlantı Yönetimi)
+
+1. **Çalışma Zamanı Bağlantı Yöneticisi ([DbConnectionManager.cs](file:///c:/Projeler/SpsWebBI/Services/DbConnectionManager.cs)):**
+   - **Ne yaptık:** `appsettings.json` içindeki bağlantı dizesini okuyan, eğer şifre açık metin yazılmışsa ilk açılışta otomatik olarak **Windows DPAPI (`ENC:...`)** formatına şifreleyen (`EnsurePasswordEncryptedOnDisk`), bağlantıyı canlı test eden (`TestConnectionAsync`) ve değişiklik yapıldığında uygulamayı yeniden başlatmaya gerek kalmadan hem dosyayı hem de aktif belleği güncelleyen (`SaveConnectionSettingsAsync`) servisi yazdık.
+   - **Neden:** Şifrenin (`10231`) disk üzerinde asla açık görünmemesi ve IP/Port/Veritabanı/Şifre değiştiğinde kesintisiz geçiş yapılabilmesi için.
+2. **Güvenli Bağlantı API'si ([DbSettingsController.cs](file:///c:/Projeler/SpsWebBI/Controllers/DbSettingsController.cs)):**
+   - **Ne yaptık:** `/api/db-settings`, `/api/db-settings/test` ve `/api/db-settings/save` uçlarını oluşturduk.
+   - **Neden (Siber Güvenlik Kuralı):** Mevcut veritabanı bağlantısı kopuksa (ilk kurulum veya IP/şifre değişikliği) kurtarma amacıyla doğrudan ayar yapılmasına izin verir; ancak veritabanı zaten aktifse yetkisiz kişilerin veritabanı adresini değiştirmesini engellemek için **Admin oturumu veya Admin doğrulama şifresi** zorunlu tutar. Kayıt sonrası yeni veritabanında `bi_*` tablolarını otomatik doğrular/oluşturur.
+3. **Web Bağlantı Ayarları Ekranı ([db-settings.html](file:///c:/Projeler/SpsWebBI/wwwroot/db-settings.html)):**
+   - **Ne yaptık:** `/db-settings` adresinden (veya giriş/yönetim ekranlarındaki butondan) açılan; Sunucu (`127.0.0.1`), Port (`3323`), Veritabanı (`spsteks`), Kullanıcı (`root`) ve Şifre bilgilerini test edip kaydedebileceğiniz arayüzü hazırladık.
+
+---
+
+## Sıradaki Adım (Adım 2): Kimlik Doğrulama ve 5 Açılış Senaryosu (`User`, `Security`, `Mode`)
+
+**Adım 2'de Ne Yapacağım ve Neden Yapacağım?**
+
+Dokümandaki **Madde 7** ve **Madde 8 (8.1, 8.2, 8.3, 8.4, 8.5)** kurallarını birebir işleten kimlik doğrulama ve giriş yönlendirme yapısını kuracağım:
+
+1. **`Services/AuthService.cs` (Kimlik Doğrulama, Brute-Force Koruması ve Denetim Kaydı):**
+   - Kullanıcı şifre/PIN doğrulamasını yapacak; art arda 5 hatalı girişte hesabı 15 dakika kilitleyecek (`locked_until`).
+   - `Security=0` ile gelen isteklerde kullanıcının `allow_passwordless = 1` yetkisi olup olmadığını kontrol edecek.
+   - Tüm başarılı/başarısız girişleri ve `Security=0` erişimlerini IP adresiyle birlikte `bi_audit_logs` tablosuna kaydedecek.
+2. **`Controllers/AuthController.cs` ve Açılış Karar Motoru (`/` ve `/view`):**
+   - URL'den gelen `User`, `Security` (`0` veya `1`) ve `Mode` (`Standalone` veya `Slayt`) parametrelerini okuyup şu 5 kuralı çalıştıracak:
+     - **Kural 8.1 (`?User=A&Security=0&Mode=Slayt` - TV Modu):** Şifre sormadan `A` kullanıcısı için oturum açacak ve doğrudan **Tam Ekran Slayt Gösterim** modunu başlatacak.
+     - **Kural 8.2 & 8.3 (`?User=A&Security=0` - Exe veya Tarayıcı):** Şifre sormadan `A` kullanıcısı için oturum açacak ve doğrudan **Datasource Seçim / Filtre / Slayt veya Otomatik Yenileme Kontrol Ekranını** açacak.
+     - **Kural 8.4 (`?User=A&Security=1`):** Kullanıcı kodu `A` sabitlenmiş olarak **Şifre / PIN Doğrulama Ekranını** açacak; şifre doğruysa Kontrol Ekranına geçecek, yanlışsa girişe izin vermeyecek.
+     - **Kural 8.5 (Parametresiz Açılış):** Standart **Kullanıcı Kodu + Şifre Login Ekranını** (ve sağ altta *"Veritabanı Ayarları"* bağlantısını) açacak; doğrulanınca Kontrol Ekranına yönlendirecek.
+
+**Adım 2'yi bu şekilde projeye dahil etmem için onay veriyor musunuz?**
+
+--------------------------------------------------------------------------------
+[9] KULLANICI (2026-11-05T13:34:12Z):
+--------------------------------------------------------------------------------
+evet
+
+--------------------------------------------------------------------------------
+[10] ASİSTAN - ANTIGRAVITY (2026-11-05T13:37:54Z):
+--------------------------------------------------------------------------------
+## Adım 2 Tamamlandı: Ne Yaptık ve Neden Yaptık?
+
+**Adım 2** kapsamında dokümandaki **Madde 7** ve **Madde 8 (8.1, 8.2, 8.3, 8.4, 8.5)** açılış ve güvenlik senaryolarını projeye dahil edip derledim (`0 Hata`):
+
+1. **Kimlik Doğrulama & Brute-Force Koruması ([AuthService.cs](file:///c:/Projeler/SpsWebBI/Services/AuthService.cs)):**
+   - **Ne yaptık:**
+     - `AuthenticateWithPasswordAsync`: Şifre/PIN doğrulamasını PBKDF2 ile yapar; art arda 5 hatalı denemede hesabı 15 dakika kilitler (`locked_until`).
+     - `AuthenticatePasswordlessAsync`: `Security=0` ile gelen isteklerde kullanıcının veritabanında `allow_passwordless = 1` izni olup olmadığını denetler.
+     - `WriteAuditLogAsync`: Tüm başarılı/başarısız girişleri, kilitlenmeleri ve `Security=0` geçişlerini IP adresiyle birlikte `bi_audit_logs` tablosuna yazar.
+   - **Neden:** Şifre deneme saldırılarını (Brute-Force) engellemek ve `Security=0` parametresinin yetkisiz hesaplar (örneğin `admin` hesabı) için kötüye kullanılmasını kesin olarak önlemek için.
+2. **Açılış Parametreleri Karar Motoru ([AuthController.cs](file:///c:/Projeler/SpsWebBI/Controllers/AuthController.cs)):**
+   - **Ne yaptık:** `/api/auth/evaluate-entry` ucu ile URL'den gelen `User`, `Security` ve `Mode` parametrelerini analiz ederek 5 senaryoyu ayırdık:
+     - **Senaryo 8.1 (`?User=A&Security=0&Mode=Slayt`):** `A` kullanıcısını şifresiz doğrular, `HttpOnly` Cookie oturumunu açar ve doğrudan `START_SLIDESHOW` komutu döner.
+     - **Senaryo 8.2 & 8.3 (`?User=A&Security=0`):** Şifresiz oturumu açar ve doğrudan `SHOW_CONTROL_PANEL` (Datasource listesi, filtreler, Slayt/Otomatik Yenileme seçimi) komutu döner.
+     - **Senaryo 8.4 (`?User=A&Security=1`):** Kullanıcı kodunu `A` olarak kilitler (`lockUserCode = true`) ve ekrana sadece `A` kullanıcısı için Şifre/PIN doğrulama ekranını getirir.
+     - **Senaryo 8.5 (Parametresiz Açılış):** Kullanıcı Kodu ve Şifre isteyen tam Login ekranını açar.
+   - **Neden:** Televizyon, masaüstü `.exe` çağrısı, tarayıcı ve mobil cihazların tek bir giriş noktasından dokümandaki kurallara birebir uygun yönlendirilmesi için.
+3. **Dinamik Giriş ve PIN Doğrulama Ekranı ([login.html](file:///c:/Projeler/SpsWebBI/wwwroot/login.html)):**
+   - **Ne yaptık:** Açılış parametrelerine göre kendisini otomatik şekillendiren (8.4'te kullanıcı kodunu sabitleyip PIN soran, 8.5'te tam giriş formu gösteren, 8.1-8.3'te hiç beklemeden gösterim ekranına geçen) ve alt barda **Veritabanı Ayarları (`/db-settings`)** bağlantısı sunan responsive giriş ekranını oluşturduk.
+
+---
+
+## Sıradaki Adım (Adım 3): Dinamik Veri Kaynağı, Parametre ve Güvenli SQL Motoru (Madde 2.4, 2.5, 4, 5, 9)
+
+**Adım 3'te Ne Yapacağım ve Neden Yapacağım?**
+
+Dokümandaki en kritik mimari kural olan **Madde 2.5 (*"Proje müşteriye yüklendikten sonra yeni raporlar için sınıf tanımlamamalıyım. Sistem admin SQL komutları ile raporları tasarlayıp yetki verip kullandırabilmeli"*), Madde 4 ve Madde 5**'i hayata geçireceğim:
+
+1. **`Services/DynamicQueryService.cs` (Sıfır C# Sınıfı ile Dinamik SQL Motoru):**
+   - **Ne yapacağım:**
+     - Admin'in tanımladığı SQL sorgusunu önce `SqlSecurityValidator` ile doğrulayacak.
+     - Sorgu içindeki `@Parametre` filtrelerini ve ayrıca grafiklerden gelen **Cross-Filter** (tek tık filtreleri, örn. `Bolge = 'Bursa'`) ile **Drill-Down** (çift tık kırılımları) koşullarını Dapper `DynamicParameters` ile güvenli biçimde sorguya bağlayacak.
+     - Sorguyu çalıştırıp sonuçları C# DTO sınıfı olmadan `List<Dictionary<string, object?>>` olarak okuyacak ve her kolonun veri tipini (`number`, `string`, `date`) çalışma zamanında otomatik tespit edecek (`DetectSchema`).
+     - Ayrıca `bi_datasource_params` içindeki dinamik filtrelerin (örneğin açılır kutu için `lookup_sql` sorgularının) değer listesini çekecek.
+   - **Neden:** Müşteride yeni bir Satınalma, Satış, Stok veya Sevkiyat raporu istendiğinde hiçbir C# kodu yazmadan, sadece SQL sorgusu girilerek tüm kolonların grafik, tablo, KPI ve pivot bileşenlerine otomatik bağlanabilmesi için.
+2. **`Controllers/DataSourceController.cs` (Veri Kaynağı & Sorgu API'si):**
+   - Kullanıcının yetkili olduğu veri kaynaklarını (`bi_datasources`), o veri kaynağına ait filtre parametrelerini (`bi_datasource_params`) ve filtre değerleriyle çalıştırılan canlı sorgu sonucunu döndüren API uçlarını oluşturacağım.
+   - Ayrıca ilk kurulumda `spsteks` veritabanınızdaki **Sipariş & Satış** ve **Depo & Stok Durum** sorgularını örnek `bi_datasources` ve `bi_dashboards` kayıtları olarak MariaDB'ye otomatik tohumlayacağım (Seed).
+
+**Adım 3'ü bu şekilde projeye dahil etmem için onay veriyor musunuz?**
+
+--------------------------------------------------------------------------------
+[11] KULLANICI (2026-11-05T13:40:16Z):
+--------------------------------------------------------------------------------
+Yaptıklarında User=A sabit değil dimi
+
+--------------------------------------------------------------------------------
+[12] ASİSTAN - ANTIGRAVITY (2026-11-05T13:40:16Z):
+--------------------------------------------------------------------------------
+**Hayır, kesinlikle sabit (hardcoded) değil; tamamen dinamiktir.**
+
+- [`AuthController.cs`](file:///c:/Projeler/SpsWebBI/Controllers/AuthController.cs#L38-L55) ve [`AuthService.cs`](file:///c:/Projeler/SpsWebBI/Services/AuthService.cs#L39-L41) içinde `User` parametresine hangi kullanıcı kodu gönderilirse (`?User=AHMET`, `?User=TV_URETIM`, `?User=MUHASEBE` vb.), sistem doğrudan MariaDB'deki `bi_users` tablosundan `WHERE user_code = @UserCode` sorgusuyla o kullanıcıyı bulur.
+- O kullanıcıya tanımlanmış olan yetkili dashboard'ları (`bi_user_dashboards`), gösterim sırasını (`display_order`), yenileme süresini (`refresh_seconds`) ve slayt süresini (`slide_duration_seconds`) veritabanından dinamik olarak çeker.
+- Dokümanda örnek olarak `User=A` verildiği için yalnızca ilk kurulumda test edebilmeniz amacıyla veritabanına başlangıç kaydı olarak `admin` ve `A` kullanıcılarını ekledik. Yönetim ekranından istediğiniz kadar kullanıcı tanımlayıp URL'de `?User=KULLANICI_KODU` olarak çağırabilirsiniz.
+
+**Adım 3 (Dinamik Veri Kaynağı, Parametre ve Sıfır Sınıf ile Güvenli SQL Motoru)** işlemine geçmem için onay veriyor musunuz?
+
+--------------------------------------------------------------------------------
+[13] KULLANICI (2026-11-05T13:41:41Z):
+--------------------------------------------------------------------------------
+peki burada herhangi biri ekranda giriş anında buradaki user da bulunan ismi görüp kendisi elle yazsa giriş yapabilir mi?
+
+--------------------------------------------------------------------------------
+[14] ASİSTAN - ANTIGRAVITY (2026-11-05T13:41:41Z):
+--------------------------------------------------------------------------------
+Çok kritik bir siber güvenlik noktasına değindiniz. Açıkça anlatayım:
+
+### 1. Şu Anki Durumda Ne Olur?
+- **Şifreli kullanıcılarda (`allow_passwordless = 0`):** Örneğin `admin` veya şifreli bir yönetici hesabının adını gören biri tarayıcıya elle `?User=admin&Security=0` yazsa bile **giriş yapamaz**; çünkü `AuthService` veritabanındaki `allow_passwordless` alanını kontrol eder, reddeder ve şifre ekranına atar.
+- **Şifresiz girişe izin verilen kullanıcılarda (`allow_passwordless = 1`):** Eğer `A` kullanıcısına TV veya `.exe` için şifresiz giriş izni verilmişse, yerel ağdaki başka biri adres çubuğunda `?User=A&Security=0` ibaresini görüp kendi bilgisayarında tarayıcıya aynısını elle yazarsa **şu anki haliyle `A` kullanıcısının ekranını açabilir.**
+
+---
+
+### 2. Bunu Tamamen Engellemek İçin Ne Yapmalıyız?
+
+Kimsenin ekranda veya adres çubuğunda kullanıcı adını görüp kendi bilgisayarından elle `?User=...&Security=0` yazarak girememesi için şu **3 katmanlı güvenlik önlemini** hemen ekleyebiliriz:
+
+1. **Adres Çubuğunu Anında Temizleme (`history.replaceState`):**
+   - Sayfa açıldığı ilk milisaniyede tarayıcı adres çubuğundaki `?User=A&Security=0&Mode=Slayt` parametreleri otomatik silinir ve adres çubuğunda sadece `http://sunucu/app` yazar. Ekrana dışarıdan bakan biri URL'deki kullanıcı adını veya parametreleri göremez.
+2. **Cihaz IP Kısıtlaması (`allowed_ips` - TV ve Sabit PC'ler İçin):**
+   - `bi_users` tablosuna **`allowed_ips` (İzinli IP Adresleri)** alanı ekleriz.
+   - Örneğin TV kullanıcısı için sadece TV'nin IP'si tanımlanır. Başka bir bilgisayardan biri kullanıcı adını bilip elle `?User=A&Security=0` yazsa bile, isteği yapan cihazın IP'si yetkili listede olmadığı için sistem şifresiz girişi reddeder ve **Şifre/PIN sorar**.
+3. **Şifreli / İmzalı Parametre veya Erişim Anahtarı (`AccessToken` / Şifreli `User`):**
+   - `.exe` içerisinden veya TV kısayolundan çağrılırken `User=` parametresi açık metin (`User=AHMET`) olarak değil, sistemin ürettiği **şifreli/imzalı bir kod** (veya kullanıcıya özel gizli anahtar) ile gönderilir. Böylece ekranda `Ahmet` ismini gören biri adres çubuğuna `?User=Ahmet&Security=0` yazdığında imza doğrulamasından geçemez ve şifre ekranına düşer.
+
+Bu 3 güvenlik önlemini (**Adres çubuğundan parametreleri gizleme + İzinli IP kontrolü + İmzalı/Şifreli URL token desteği**) `AuthService` ve `AuthController` içerisine dahil edelim mi? Onay verirseniz önce bu güvenlik katmanını tamamlayıp ardından **Adım 3**'e geçelim.
+
+--------------------------------------------------------------------------------
+[15] KULLANICI (2026-11-05T13:44:54Z):
+--------------------------------------------------------------------------------
+2 anlamsız çünkü herkes heryerde programı açabilir. 3. ü yaparsak son kullanıcı layoutunu kaydetmeye çalıştığında veya kullanıcı ile ilgili başka bir işlem yapmaya kalktığında sıkıntı yaparmıyız hangi kullanıcı olduğunu bulmamız gerekir mi?
+
+--------------------------------------------------------------------------------
+[16] ASİSTAN - ANTIGRAVITY (2026-11-05T13:44:54Z):
+--------------------------------------------------------------------------------
+**Hiçbir sıkıntı yaşatmaz; hangi kullanıcı olduğunu sistem içeride %100 bilir.** 
+
+Nasıl çalıştığını adım adım açıklayayım:
+
+1. **Giriş Anında Çözümleme (Tek Seferlik):**
+   - URL'den gelen `User` parametresi şifreli/imzalı olsa bile (örneğin `?User=Tk8xX0FITUVU...&Security=0`), sunucuya (`AuthController`) ulaştığı anda sunucu bu şifreyi kendi gizli anahtarıyla çözer ve veritabanındaki gerçek kullanıcıyı (`user_id = 5`, `user_code = 'AHMET'`) bulur.
+2. **Oturuma Gerçek Kullanıcıyı Yazma:**
+   - Doğrulama başarılı olduğu anda sunucu, tarayıcının güvenli oturum çerezine (`HttpOnly Cookie`) şifreli kodu değil, doğrudan kullanıcının gerçek **`user_id`** ve **`user_code`** bilgisini kaydeder.
+   - Aynı saniyede tarayıcı adres çubuğundaki `?User=...&Security=0` parametrelerini gizler (`history.replaceState`).
+3. **Layout Kaydetme ve Diğer İşlemler:**
+   - Kullanıcı ekranda tasarımını değiştirip **"Tasarımı Kaydet"** dediğinde veya filtre çalıştırdığında, sistem artık URL'ye bakmaz; doğrudan oturumdaki gerçek **`user_id`** bilgisini okur ve `bi_user_dashboards` tablosunda o kullanıcının `custom_layout_json` alanına kaydeder.
+4. **Dışarıdan Elle Yazmaya Karşı Tam Koruma:**
+   - Ekranda `"Ahmet"` ismini gören biri kendi bilgisayarında tarayıcıya `?User=Ahmet&Security=0` yazarsa, `"Ahmet"` geçerli bir şifreli token olmadığı için sistem `Security=0` (şifresiz) girişi **reddeder** ve **Şifre / PIN ekranını** açar.
+   - Yönetim (Admin) ekranına da her kullanıcı için **"TV / Exe Açılış Linkini Üret"** özelliği koyacağız; böylece istediğiniz kullanıcının şifreli linkini tek tıkla kopyalayabileceksiniz.
+
+Bu yapıyı (**1: Adres çubuğundan parametreleri temizleme + 3: `Security=0` için şifreli/imzalı `User` token doğrulaması**) hemen uygulayıp ardından **Adım 3**'e geçmemi onaylıyor musunuz?
+
+--------------------------------------------------------------------------------
+[17] KULLANICI (2026-11-05T13:46:07Z):
+--------------------------------------------------------------------------------
+evet onaylıyorum
+
+--------------------------------------------------------------------------------
+[18] ASİSTAN - ANTIGRAVITY (2026-11-05T13:53:12Z):
+--------------------------------------------------------------------------------
+## Şifreli `User` Token Güvenliği ve Adım 3 Tamamlandı (`0 Hata`)
+
+### 1. Şifreli `User` Token Koruması ve URL Temizleme (Ne Yaptık ve Neden?)
+- **[`UserTokenProtector.cs`](file:///c:/Projeler/SpsWebBI/Security/UserTokenProtector.cs):**
+   - **Ne yaptık:** Kullanıcı kodlarını (`A`, `AHMET` vb.) **AES-256 + HMAC-SHA256** ile şifreleyip imzalayan (`UT1_...` formatında) ve doğrulayan kriptografik sınıfı yazdık.
+   - **Neden:** [`AuthController.cs`](file:///c:/Projeler/SpsWebBI/Controllers/AuthController.cs#L49-L66) içinde `Security=0` gönderildiğinde artık düz metin kullanıcı adı (`?User=Ahmet&Security=0`) **kesinlikle kabul edilmez**; düz metin yazılırsa sistem otomatik olarak Şifre/PIN ekranına düşer. Şifreli token doğrulandığında ise içeride gerçek `user_id` ve `user_code` çözülerek oturuma (Cookie) yazılır; böylece son kullanıcı kendi layout'unu kaydederken sistem hangi kullanıcı olduğunu %100 bilir.
+- **[`login.html`](file:///c:/Projeler/SpsWebBI/wwwroot/login.html#L112-L115):**
+   - **Ne yaptık:** Sayfa açıldığı ilk milisaniyede `window.history.replaceState` ile adres çubuğundaki `?User=...&Security=...&Mode=...` parametrelerini sildik.
+   - **Neden:** Ekrana dışarıdan bakan hiç kimsenin adres çubuğundan giriş parametresini görememesi için.
+
+---
+
+### 2. Adım 3: Dinamik Veri Kaynağı ve Sıfır Sınıf (Zero-DTO) SQL Motoru (Ne Yaptık ve Neden?)
+- **[`DynamicQueryService.cs`](file:///c:/Projeler/SpsWebBI/Services/DynamicQueryService.cs):**
+   - **Ne yaptık:**
+     - C# tarafında hiçbir model/sınıf (`DTO`) tanımlamadan Dapper ile `SELECT` sorgularını çalıştırıp dinamik satır (`List<Dictionary<string, object?>>`) ve otomatik kolon veri tipi (`number`, `date`, `string`, `boolean`) çıkaran motoru kurduk (Madde 2.5).
+     - Sorgu içindeki `@Parametre` filtrelerini otomatik algılayıp Dapper `DynamicParameters` ile güvenli bağladık; ayrıca filtrelerin açılır kutu seçeneklerini (`lookup_sql`) veritabanından canlı çeken yapıyı ekledik (Madde 5).
+     - Kullanıcının yetkili olduğu dashboard'ları çekerken (`GetAuthorizedDashboardsAsync`), eğer kullanıcının kendi kaydettiği `custom_layout_json` varsa onu, yoksa ana `layout_json`'u getiren sorguyu yazdık (Madde 9 & 10).
+- **[`DataSourceController.cs`](file:///c:/Projeler/SpsWebBI/Controllers/DataSourceController.cs):**
+   - **Ne yaptık:** Yetkili dashboard listesi (`/api/datasources/authorized-dashboards`), parametre listesi (`/api/datasources/{id}/parameters`), güvenli sorgu çalıştırma (`/api/datasources/{id}/execute`), yeni SQL sorgusu önizleme (`/api/datasources/preview-sql`) ve kaydetme (`/api/datasources/save`) API uçlarını oluşturduk. Her uçta IDOR yetki kontrolü yaptık.
+- **[`DatabaseInitializer.cs`](file:///c:/Projeler/SpsWebBI/Data/DatabaseInitializer.cs#L150-L246):**
+   - **Ne yaptık:** `spsteks` veritabanınızdaki **Satış & Sipariş Verileri (`DS_SIPARIS`)** ve **Depo & Stok Durum Verileri (`DS_STOK`)** sorgularını, dinamik filtrelerini (`@Ulke`, `@SiparisTuru`, `@Depo`, `@KumasTuru`) ve varsayılan dashboard yerleşimlerini ilk kurulumda otomatik tohumladık.
+
+---
+
+## Sıradaki Adım (Adım 4 ve Adım 5 Birlikte): Gösterim Kontrol Paneli, Slayt/Otomatik Yenileme Motoru ve Görsel BI Bileşenleri (Grafik, KPI, Tablo, Pivot, Cross-Filter, Drill-Down)
+
+**Sonraki Adımda Ne Yapacağım ve Neden Yapacağım?**
+
+Kullanıcının giriş yaptıktan sonra yönlendirildiği ana uygulama ekranını (`/app` -> `wwwroot/app.html` ve yerel JS/CSS kütüphanelerini) kuracağım:
+
+1. **Gösterim Kontrol Paneli (Madde 8.2, 8.3, 8.4, 8.5):**
+   - Üst kontrol çubuğunda kullanıcının yetkili olduğu **Datasource / Dashboard seçimi** listelenecek.
+   - Seçilen datasource'a ait **dinamik filtreler** (örn. Ülke, Sipariş Türü, Depo, Kumaş Türü) otomatik ekrana gelecek.
+   - Dokümandaki **Madde 8.2.5 / 8.3.5** kuralına birebir uygun olarak **"Slayt Görünümü"** ve **"Otomatik Yenileme"** için **birbirini dışlayan (biri seçilince diğeri kapanan) iki checkbox** ve **"Göster"** butonu yer alacak:
+     - **Slayt Görünümü seçilip Göster'e basılırsa (veya 8.1 TV modunda açılırsa):** Kullanıcının yetkili dashboard'ları `display_order` sırasına göre ve her birinin tanımlı `slide_duration_seconds` süresi kadar ekranda kalacak şekilde döngüsel olarak oynatılacak (tek dashboard varsa `refresh_seconds` süresinde yenilenecek).
+     - **Otomatik Yenileme seçilip Göster'e basılırsa:** Seçili dashboard `refresh_seconds` süresinde bir kendisini yenileyecek.
+     - **İkisi de seçilmezse:** Otomatik yenileme devre dışı kalacak ve seçili dashboard sabit görüntülenecek.
+2. **Görselleştirme, Cross-Filter ve Drill-Down Motoru (Madde 2.1, 2.2, 2.3, 2.6):**
+   - **KPI Kartları, Bar/Çizgi/Pasta/Halka Grafikler, Detay Tablosu ve Pivot Tablo** bileşenleri çizilecek.
+   - **Cross-Filter (Tek Tık - Madde 2.2):** Herhangi bir grafikte bir değere (örn. `"Bursa"` veya `"İhracat"`) tek tıklandığında diğer tüm grafikler, KPI'lar ve tablolar anında o değere göre filtrelenecek.
+   - **Drill-Down / Drill-Through (Çift Tık - Madde 2.3):** Bir grafikte bir değere çift tıklandığında tanımlı alt kırılıma (`Ülke -> İl -> Müşteri` veya `Yıl -> Ay -> Müşteri -> Satılan Stoklar`) inecek ve üstte geri dönülebilir **Breadcrumb (Yol Çubuğu)** oluşacak.
+
+**Bu adımı projeye dahil etmem için onay veriyor musunuz?**
+
+--------------------------------------------------------------------------------
+[19] KULLANICI (2026-11-05T13:55:59Z):
+--------------------------------------------------------------------------------
+devam
+
+--------------------------------------------------------------------------------
+[20] ASİSTAN - ANTIGRAVITY (2026-11-05T14:02:16Z):
+--------------------------------------------------------------------------------
+## Adım 4 ve Adım 5 Tamamlandı: Ne Yaptık ve Neden Yaptık? (`0 Hata`)
+
+### 1. Kapalı Devre Yerel Grafik Kütüphanesi ([`echarts.min.js`](file:///c:/Projeler/SpsWebBI/wwwroot/lib/echarts.min.js))
+- **Ne yaptık:** Apache ECharts 5.5 kütüphanesini `wwwroot/lib/echarts.min.js` içine yerel dosya olarak indirdik.
+- **Neden:** Uygulama kapalı devre yerel ağda (intranet / TV / Fabrika ağı) çalışacağı için internet bağlantısı olmasa bile tüm grafiklerin 60 FPS hızında çizilmesi için.
+
+### 2. Gösterim Kontrol Paneli, Slayt ve Otomatik Yenileme Motoru ([`app.html`](file:///c:/Projeler/SpsWebBI/wwwroot/app.html))
+- **Ne yaptık:**
+  - **Datasource Listesi & Dinamik Filtreler (Madde 8.2.3 & 8.2.4):** Oturum açan kullanıcının yetkili olduğu datasource/dashboard'ları `display_order` sırasıyla listeledik; seçilen datasource'a ait filtreleri (`@Ulke`, `@SiparisTuru`, `@Depo`, `@KumasTuru` vb.) veritabanından çekip ekrana otomatik yerleştirdik.
+  - **Birbirini Dışlayan İki Checkbox (Madde 8.2.5 / 8.3.5 / 8.4.5 / 8.5.5):** Ekrana **"Slayt Görünümü"** ve **"Otomatik Yenileme"** checkbox'larını koyduk; biri seçildiğinde diğeri otomatik kapanır.
+  - **"Göster" Tuşu ve Zamanlayıcı Kuralları (Madde 7.3 & 8.1 / 8.2.6):**
+    - **Slayt Görünümü** seçiliyse (veya TV'den `Mode=Slayt` ile açıldıysa): Tek bir dashboard yetkisi varsa `refresh_seconds` süresinde bir yeniler; birden fazla dashboard varsa her birini kendi `slide_duration_seconds` süresi kadar ekranda gösterip sıradakine geçer ve sonuncudan sonra ilk dashboard'a döner.
+    - **Otomatik Yenileme** seçiliyse: Seçili dashboard'u `refresh_seconds` süresinde bir canlı yeniler.
+    - **İkisi de seçili değilse:** Otomatik yenileme süresini devre dışı bırakır ve seçili dashboard'u sabit gösterir.
+
+### 3. Cross-Filter (Tek Tık), Drill-Down / Drill-Through (Çift Tık) ve Kişisel Layout Kaydı ([`DashboardController.cs`](file:///c:/Projeler/SpsWebBI/Controllers/DashboardController.cs) & [`app.html`](file:///c:/Projeler/SpsWebBI/wwwroot/app.html))
+- **Ne yaptık:**
+  - **Tek Tık (Cross-Filter - Madde 2.2):** Herhangi bir grafikte bir değere (örn. `"Bursa"` veya `"İhracat"`) tek tıklandığında diğer tüm grafikler, KPI kartları, veri tablosu ve pivot tablo anında o değere göre filtrelenir; üstte tıklanarak kaldırılabilen filtre rozeti oluşur.
+  - **Çift Tık (Drill-Down & Drill-Through - Madde 2.3):** Bir değere çift tıklandığında tanımlı alt kırılıma (`Ülke ➔ İl ➔ Müşteri` veya `Müşteri ➔ Kumaş Türü ➔ Stok Adı`) iner ve kart başlığında `⬅ Üst Kırılıma Dön` yol çubuğu (Breadcrumb) çıkar. En alt kırılımda çift tıklandığında ise o değere ait tüm satır detaylarını gösteren pencere (Drill-Through Modal) açılır.
+  - **Son Kullanıcı Kişisel Tasarım Kaydı (Madde 10):** Kullanıcı üstteki **"Tasarımımı Özelleştir"** butonuyla kendi ekranında grafik tipini, boyutunu, kolonlarını değiştirip veya yeni grafik/pivot/tablo ekleyip **"Tasarımımı Kaydet"** dediğinde `bi_user_dashboards.custom_layout_json` alanına kaydedilir; tekrar açtığında kendi tasarımı yüklenir (isterse **"Varsayılana Sıfırla"** ile ana şablona dönebilir).
+
+---
+
+## Sıradaki Adım (Adım 6 ve Adım 7): Ayrı Dashboard Tasarım Stüdyosu (`/designer`) ve Yetki / Öncelik / Süre Yönetim Ekranı (`/admin`)
+
+**Sonraki Adımda Ne Yapacağım ve Neden Yapacağım?**
+
+Dokümandaki **Madde 2.4, 2.5, 6, 8.6 ve 9** gereksinimlerini tamamlayacağım:
+
+1. **Ayrı Dashboard Tasarım Stüdyosu (`/designer` -> `wwwroot/designer.html` - Madde 2.4, 2.5, 8.6, 9):**
+   - Yalnızca şifreli oturum açmış `admin` veya `designer` yetkili kullanıcıların girebildiği ayrı tasarım ekranı.
+   - **SQL Veri Kaynağı & Filtre Tanımlama:** C# sınıfı yazmadan yeni SQL sorgusu (`SELECT ... WHERE (@Bolge IS NULL OR Bolge = @Bolge)`) yazma, **"Sorguyu Doğrula ve Kolonları Çıkar"** butonuyla kolonları ve `@Parametre` filtrelerini otomatik algılama, filtreler için açılır liste sorgusu (`lookup_sql`) tanımlama ve MariaDB'ye kaydetme.
+   - **Ana Dashboard Tasarımı:** Veri kaynağındaki kolonları seçerek KPI, Sütun, Çizgi, Pasta, Halka, Pivot ve Tablo bileşenleri oluşturma, çift tık (`Drill-Down`) hiyerarşi zincirini belirleme ve ana şablon (`bi_dashboards.layout_json`) olarak kaydetme.
+2. **Kullanıcı, Yetki, Öncelik, Süre ve Şifreli Link Yönetim Ekranı (`/admin` -> `wwwroot/admin.html` & `AdminController.cs` - Madde 6):**
+   - Yeni kullanıcı oluşturma, şifre/PIN belirleme, rol (`admin`, `designer`, `viewer`) ve şifresiz giriş izni (`allow_passwordless`) tanımlama.
+   - Kullanıcı bazlı olarak hangi dashboard'lara erişebileceğini, **Gösterim Önceliğini (`display_order`)**, **Yenileme Süresini (`refresh_seconds`)** ve **Slayt Ekranda Kalma Süresini (`slide_duration_seconds`)** tanımlama.
+   - Her kullanıcı için TV veya `.exe` kısayolunda kullanılacak **şifreli `User=` açılış linklerini (`UT1_...`) tek tıkla üretip kopyalama**.
+
+**Adım 6 ve Adım 7'yi projeye dahil etmem için onay veriyor musunuz?**
+
+--------------------------------------------------------------------------------
+[21] KULLANICI (2026-11-05T14:03:43Z):
+--------------------------------------------------------------------------------
+evet
+
+--------------------------------------------------------------------------------
+[22] ASİSTAN - ANTIGRAVITY (2026-11-05T14:08:54Z):
+--------------------------------------------------------------------------------
+**Adım 6 ve Adım 7 (Ayrı Dashboard Tasarım Stüdyosu `/designer` ve Yetki / Öncelik / Süre Yönetim Ekranı `/admin`)** başarıyla tamamlandı ve proje **0 Hata** ile derlendi.
+
+---
+
+### Adım 6 & Adım 7'de Ne Yaptım ve Neden Yaptım?
+
+1. **Ayrı Dashboard & SQL Veri Kaynağı Tasarım Stüdyosu ([designer.html](file:///c:/Projeler/SpsWebBI/wwwroot/designer.html)):**
+   - **Ne Yaptım:**
+     - **1. Sekme (Veri Kaynağı & SQL Editörü):** Kod tarafında hiçbir C# DTO/Model sınıfı yazmadan (**Madde 2.5**), doğrudan parametreli `SELECT` sorguları yazılan, `SqlSecurityValidator` ile sorgudaki `@Parametre`'leri tek tıkla otomatik yakalayan (`@BaslangicTarihi`, `@Atolye` vb.), parametre tiplerini (`date`, `string`, `number`, `lookup`) ve açılır liste sorgularını (`lookup_sql`) belirleyen, **Canlı Sorgu Önizleme** yapan ve `bi_datasources` tablosuna kaydeden ekranı geliştirdim.
+     - **2. Sekme (Ana Dashboard Şablon Tasarımcısı):** Seçilen veri kaynağının kolonlarını dinamik olarak çekip; sol panelden yeni bileşen (KPI Kartı, Sütun, Çizgi, Pasta, Halka, Veri Tablosu, Pivot Tablo) ekleme, **Alt Kırılım (Drill-Down)** boyutu tanımlama, sağda **Canlı ECharts/Pivot Önizlemesini** görme ve ana şablonu `bi_dashboards` tablosuna kaydetme (**Madde 8.6 ve Madde 9**) ekranını kurdum.
+   - **Neden Yaptım:** Rapor gösterim ekranından bağımsız bir tasarım ortamı sunmak ve yeni bir rapor gerektiğinde yazılımcıya veya C# derlemesine ihtiyaç duymadan sadece SQL sorgusu + görsel tasarım ile saniyeler içinde yeni dashboard yayınlayabilmek için.
+
+2. **Yetki, Öncelik, Süre ve Şifreli Link Yönetim Stüdyosu ([AdminController.cs](file:///c:/Projeler/SpsWebBI/Controllers/AdminController.cs) & [admin.html](file:///c:/Projeler/SpsWebBI/wwwroot/admin.html)):**
+   - **Ne Yaptım:**
+     - **Kullanıcı & Güvenli Link (Token) Yönetimi:** Yeni kullanıcı ekleme/güncelleme, şifresiz giriş izni (`allow_passwordless`) tanımlama ve konuştuğumuz güvenlik kuralı gereği her kullanıcı için **AES-256 + HMAC-SHA256 ile şifrelenmiş bağlantı linklerini** (`8.1 TV Slayt Linki`, `8.2 / 8.3 Exe & Tarayıcı Security=0 Linki`, `8.4 Security=1 Linki`) tek tıkla kopyalanabilir şekilde üreten pencereyi hazırladım.
+     - **Dashboard Yetki, Öncelik ve Süre Matrisi (**Madde 6**):** Seçilen kullanıcı için hangi dashboard'ları görebileceğini (`can_view`), slayt modunda hangi sırayla döneceğini (`display_order` - Öncelik), tekil ekranda kaç saniyede bir yenileneceğini (`refresh_seconds`) ve slayt modunda ekranda kaç saniye kalacağını (`slide_duration_seconds`) tablo üzerinden düzenleyip `bi_user_dashboards` tablosuna kaydeden matrisi geliştirdim.
+     - **Güvenlik Denetim Kayıtları (`bi_audit_logs`):** Tüm başarılı/başarısız girişleri, token doğrulamalarını ve yetki işlemlerini IP adresi ve zaman damgasıyla listeleyen izleme sekmesini ekledim.
+   - **Neden Yaptım:** TV'lerde, yöneticilerde veya departman bilgisayarlarında hangi raporların hangi sırayla ve hangi sürelerle gösterileceğini merkezi olarak yönetebilmek ve şifresiz giriş (`Security=0`) linklerini güvenli token ile üretebilmek için.
+
+3. **Rota ve Başlangıç Yapılandırması ([Program.cs](file:///c:/Projeler/SpsWebBI/Program.cs)):**
+   - **Ne Yaptım:** `/designer` ve `/admin` rotalarını aktif hale getirdim.
+
+---
+
+### Sıradaki ve Son Adım (Adım 8): Canlı MariaDB (`spsteks`) Doğrulaması ve Uygulamanın Ayağa Kaldırılması
+
+Şimdi **Adım 8 (Son Adım)** olarak şu işlemleri yapacağım:
+1. Uygulamayı verdiğiniz MariaDB (`127.0.0.1:3323`, `spsteks` veritabanı) bağlantısıyla başlatacağım.
+2. `DatabaseInitializer`'ın `spsteks` veritabanında `bi_*` tablolarını, varsayılan kullanıcıları (`admin`, `tv_user`, `A`) ve örnek dashboard'ları (`DS_SIPARIS`, `DS_STOK`) sorunsuz oluşturduğunu doğrulayacağım.
+3. API uçlarını (Login, Şifreli Token üretimi, Dinamik SQL çalıştırma, Yetki matrisi) canlı olarak test edip size giriş bilgilerini ve kullanabileceğiniz hazır test linklerini sunacağım.
+
+**Adım 8'i çalıştırıp uygulamayı canlı olarak ayağa kaldırmam için onay veriyor musunuz?**
+
+--------------------------------------------------------------------------------
+[23] KULLANICI (2026-11-05T14:10:31Z):
+--------------------------------------------------------------------------------
+evet
+
+--------------------------------------------------------------------------------
+[24] ASİSTAN - ANTIGRAVITY (2026-11-05T14:20:16Z):
+--------------------------------------------------------------------------------
+**Adım 8 (Canlı MariaDB `spsteks` Bağlantı/Şema Doğrulaması, Güvenlik Testleri ve Uygulamanın Başlatılması)** başarıyla tamamlandı! `SpsWebBI` uygulaması şu anda `http://localhost:5180` adresinde canlı olarak çalışmaktadır.
+
+---
+
+### Adım 8'de Ne Yaptım ve Neden Yaptım?
+
+1. **Veritabanı Parolasının Otomatik DPAPI Şifrelenmesi ([appsettings.json](file:///c:/Projeler/SpsWebBI/appsettings.json) & [ConnectionProtector.cs](file:///c:/Projeler/SpsWebBI/Security/ConnectionProtector.cs)):**
+   - **Ne Yaptım:** İlk açılışta `appsettings.json` içindeki `10231` düz metin şifresini Windows DPAPI ile otomatik olarak `ENC:AQAAANCMnd8...` formatına dönüştürdüm.
+   - **Neden Yaptım:** Dosya sistemine erişen yetkisiz kişilerin MariaDB veritabanı şifresini düz metin olarak okuyamaması için.
+
+2. **MariaDB (`127.0.0.1:3323` - `spsteks`) Otomatik Şema ve Başlangıç Verisi Kurulumu ([DatabaseInitializer.cs](file:///c:/Projeler/SpsWebBI/Data/DatabaseInitializer.cs)):**
+   - **Ne Yaptım:** `spsteks` veritabanında `bi_users`, `bi_datasources`, `bi_datasource_params`, `bi_dashboards`, `bi_user_dashboards` ve `bi_audit_logs` tablolarını oluşturdum. Gerçek `siparis`, `cari`, `stok` ve `w_stok_durum` tablolarınıza bağlanan 2 hazır veri kaynağını ve dashboard şablonunu (`DASH_SIPARIS` ve `DASH_STOK`) tanımladım.
+   - **Neden Yaptım:** Uygulamayı açtığınız anda kendi canlı verilerinizle çalışan hazır raporları ve filtreleri görebilmeniz için.
+
+3. **Canlı Güvenlik ve Sıfır-DTO (Zero-DTO) Motoru Testleri:**
+   - **Düz Metin Sızma Testi (`?User=A&Security=0`):** Bir kullanıcının adres çubuğuna elle `User=A&Security=0` yazması senaryosu test edildi; sistem şifresiz girişi **reddetti** ve zorunlu Şifre/PIN doğrulamasına yönlendirdi.
+   - **Şifreli Token (`UT1_...`) Testi:** `UserTokenProtector` ile üretilen AES-256 + HMAC-SHA256 imzalı token ile `Security=0` ve `Mode=Slayt` girişi test edildi; sistem gerçek `A` kullanıcısını çözümleyip doğrudan slayt modunu başlattı.
+   - **Sıfır-DTO Dinamik SQL Testi:** Hiçbir C# DTO sınıfı olmadan `spsteks` veritabanından:
+     - `DASH_SIPARIS` (`DS_SIPARIS`): **18 kolon, 290 gerçek sipariş satırı** başarıyla çekildi.
+     - `DASH_STOK` (`DS_STOK`): **10 kolon, 1.127 gerçek stok satırı** başarıyla çekildi.
+
+---
+
+### Canlı Test Bilgileri ve Doğrudan Tıklanabilir Açılış Linkleri
+
+Uygulama şu anda **`http://localhost:5180`** üzerinde çalışmaktadır. Aşağıdaki senaryoları tarayıcınızda doğrudan deneyebilirsiniz:
+
+#### 1. Kullanıcı Hesapları
+| Kullanıcı Kodu | Şifre / PIN | Rol | `Security=0` (Şifresiz Token) İzni |
+| :--- | :--- | :--- | :--- |
+| **`admin`** | `Admin123!` | Sistem Yöneticisi (`admin`) | Kapalı (`0`) |
+| **`A`** | `1234` | Operasyon / TV (`viewer`) | Açık (`1`) |
+
+---
+
+#### 2. Madde 8 Açılış Senaryoları (Canlı Linkler)
+
+- **Madde 8.5 (Parametresiz Tam Login Ekranı):**
+  [http://localhost:5180/login](http://localhost:5180/login)
+  *(Kullanıcı Kodu: `admin`, Şifre: `Admin123!` ile giriş yapabilirsiniz)*
+
+- **Madde 8.1 (TV Slayt Modu - Şifreli Token + `Security=0` + `Mode=Slayt`):**
+  [http://localhost:5180/?User=UT1_Pk9kKv_b7FwpHEwEjPV1s6QRKxsC7mXooD0n8k2TD8Y6fCQnaFxX1J2RAKM&Security=0&Mode=Slayt](http://localhost:5180/?User=UT1_Pk9kKv_b7FwpHEwEjPV1s6QRKxsC7mXooD0n8k2TD8Y6fCQnaFxX1J2RAKM&Security=0&Mode=Slayt)
+  *(Şifre sormadan doğrudan `A` kullanıcısının yetkili olduğu dashboard'ları öncelik sırasına ve ekran süresine göre tam ekran slayt olarak döndürür; adres çubuğundaki parametreleri anında temizler)*
+
+- **Madde 8.2 & 8.3 (Exe veya Tarayıcıdan Şifresiz Kontrol Ekranı - Şifreli Token + `Security=0`):**
+  [http://localhost:5180/?User=UT1_Pk9kKv_b7FwpHEwEjPV1s6QRKxsC7mXooD0n8k2TD8Y6fCQnaFxX1J2RAKM&Security=0](http://localhost:5180/?User=UT1_Pk9kKv_b7FwpHEwEjPV1s6QRKxsC7mXooD0n8k2TD8Y6fCQnaFxX1J2RAKM&Security=0)
+  *(Şifre sormadan doğrudan Kontrol Paneline girer; Datasource seçimi, filtreler, birbirini dışlayan **"Slayt Görünümü"** / **"Otomatik Yenileme"** kutucukları ve **"Göster"** butonu gelir)*
+
+- **Madde 8.4 (Kullanıcı Sabitli Şifre/PIN Doğrulama Ekranı - `Security=1`):**
+  [http://localhost:5180/?User=A&Security=1](http://localhost:5180/?User=A&Security=1)
+  *(`A` kullanıcısı kilitli gelir, sadece `1234` PIN/şifresini sorar)*
+
+- **Güvenlik Sızma Testi (Elle Düz Metin `?User=A&Security=0` Yazılması):**
+  [http://localhost:5180/?User=A&Security=0](http://localhost:5180/?User=A&Security=0)
+  *(Şifresiz girişi reddeder, güvenlik uyarısı göstererek `A` kullanıcısı için Şifre/PIN ister)*
+
+---
+
+#### 3. Yönetim ve Tasarım Ekranları (`admin` ile giriş yaptıktan sonra)
+- **Rapor & Gösterim Ekranı:** [http://localhost:5180/app](http://localhost:5180/app)
+- **Ayrı Tasarım Stüdyosu (SQL Veri Kaynağı & Ana Şablon Tasarımı):** [http://localhost:5180/designer](http://localhost:5180/designer)
+- **Yetki, Öncelik, Süre ve Şifreli Link Yönetimi:** [http://localhost:5180/admin](http://localhost:5180/admin)
+- **MariaDB Bağlantı Ayarları Ekranı:** [http://localhost:5180/db-settings](http://localhost:5180/db-settings)
+
+--------------------------------------------------------------------------------
+[25] KULLANICI (2026-11-05T14:21:54Z):
+--------------------------------------------------------------------------------
+bugün yazıştığımız tüm metinleri eksiksiz bir not defterine kayıt edermisin
+

@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpsWebBI - Dashboard & Analiz Ekranı</title>
+    <script src="/lib/echarts.min.js"></script>
+    <style>
+        :root {
+            --bg: #0b1120;
+            --panel: #1e293b;
+            --card: #162032;
+            --border: #334155;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --accent: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        body {
+            margin: 0; background: var(--bg); color: var(--text); min-height: 100vh;
+            display: flex; flex-direction: column; overflow-x: hidden;
+        }
+        /* Üst Navigasyon ve Kontrol Çubuğu */
+        .top-header {
+            background: var(--panel); border-bottom: 1px solid var(--border);
+            padding: 10px 18px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+        }
+        .brand-area { display: flex; align-items: center; gap: 12px; }
+        .brand-badge {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff;
+            font-weight: 800; padding: 6px 10px; border-radius: 8px; font-size: 0.95rem;
+        }
+        .dash-title { font-size: 1.1rem; font-weight: 700; margin: 0; }
+        .user-nav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 0.85rem; }
+        .btn {
+            padding: 7px 13px; border-radius: 7px; border: 1px solid var(--border);
+            background: #0f172a; color: var(--text); cursor: pointer; font-weight: 600;
+            font-size: 0.84rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn:hover { border-color: var(--primary); }
+        .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .btn-warning { background: rgba(245,158,11,0.18); border-color: var(--warning); color: #fcd34d; }
+
+        /* Madde 8.2 / 8.3 / 8.4 / 8.5: Datasource, Filtreler ve Slayt/Otomatik Yenileme Kontrol Paneli */
+        .control-bar {
+            background: rgba(30, 41, 59, 0.75); border-bottom: 1px solid var(--border);
+            padding: 12px 18px; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px;
+        }
+        .ctrl-group { display: flex; flex-direction: column; gap: 5px; min-width: 170px; }
+        .ctrl-group label { font-size: 0.78rem; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+        .ctrl-group select, .ctrl-group input {
+            padding: 8px 11px; border-radius: 7px; border: 1px solid var(--border);
+            background: #0f172a; color: var(--text); font-size: 0.9rem; outline: none;
+        }
+        .checkbox-group {
+            display: flex; align-items: center; gap: 16px; background: #0f172a;
+            border: 1px solid var(--border); padding: 8px 14px; border-radius: 8px; height: 37px;
+        }
+        .checkbox-group label {
+            display: flex; align-items: center; gap: 7px; font-size: 0.88rem; cursor: pointer;
+            color: var(--text); font-weight: 600; margin: 0; text-transform: none;
+        }
+        .checkbox-group input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
+
+        /* Slayt ve Otomatik Yenileme İlerleme Çubuğu */
+        .timer-progress-wrap { height: 4px; width: 100%; background: rgba(255,255,255,0.05); position: relative; }
+        .timer-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #3b82f6, #10b981); transition: width 0.25s linear; }
+
+        /* Aktif Cross-Filter (Tek Tık) Rozet Çubuğu */
+        .filter-badges-bar {
+            display: none; padding: 8px 18px; background: rgba(59, 130, 246, 0.1);
+            border-bottom: 1px solid rgba(59, 130, 246, 0.3); align-items: center; gap: 10px; flex-wrap: wrap;
+        }
+        .badge-chip {
+            background: var(--primary); color: #fff; padding: 4px 10px; border-radius: 999px;
+            font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+        }
+
+        /* 120 Mikro-Sütunlu Ultra-Hassas Responsive Dashboard Grid */
+        .dashboard-canvas {
+            padding: 16px; display: grid; grid-template-columns: repeat(120, 1fr);
+            gap: 8px; flex: 1; align-content: start;
+        }
+        .widget-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+            display: flex; flex-direction: column; overflow: hidden; position: relative;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+        }
+        .widget-header {
+            padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+        }
+        .widget-title { font-size: 0.92rem; font-weight: 700; color: #e2e8f0; margin: 0; }
+        .widget-breadcrumb {
+            font-size: 0.78rem; color: #60a5fa; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+        }
+        .widget-body { flex: 1; padding: 12px; position: relative; min-height: 0; overflow: auto; }
+        .widget-body.table-scroll { padding: 0; overflow: auto; }
+
+        /* Kullanıcı Tasarım Modunda Sürükle-Bırak ve Köşeden Boyutlandırma */
+        .widget-card.card-drop-target {
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.4);
+        }
+        .resize-handle-se {
+            position: absolute; right: 0; bottom: 0; width: 18px; height: 18px;
+            cursor: nwse-resize; z-index: 20; display: flex; align-items: flex-end; justify-content: flex-end;
+            padding: 2px 3px; color: #38bdf8; font-size: 0.7rem; user-select: none;
+            background: linear-gradient(135deg, transparent 50%, rgba(56,189,248,0.65) 50%);
+        }
+        .resize-handle-e {
+            position: absolute; right: 0; top: 34px; bottom: 18px; width: 10px;
+            cursor: col-resize; z-index: 18; transition: background 0.12s;
+        }
+        .resize-handle-e:hover {
+            background: rgba(56, 189, 248, 0.35);
+        }
+        .resize-handle-s {
+            position: absolute; left: 0; right: 18px; bottom: 0; height: 9px;
+            cursor: row-resize; z-index: 18; transition: background 0.12s;
+        }
+        .resize-handle-s:hover {
+            background: rgba(56, 189, 248, 0.35);
+        }
+
+        /* KPI Kartı Stili */
+        .kpi-box {
+            display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+            height: 100%; padding: 2px 6px;
+        }
+        .kpi-meta {
+            font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.4px; margin-bottom: 2px;
+        }
+        .kpi-val {
+            font-size: clamp(1.45rem, 1.9vw, 1.95rem); font-weight: 800; color: #38bdf8;
+            line-height: 1.15; letter-spacing: -0.5px; font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        /* Veri Tablosu ve Pivot Stili */
+        table.bi-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.84rem; }
+        table.bi-table thead th {
+            position: sticky; top: 0; z-index: 5; background: #0f172a; color: #93c5fd;
+            text-align: left; padding: 9px 12px; border-bottom: 2px solid var(--border);
+            cursor: pointer; user-select: none; white-space: nowrap; transition: background 0.15s;
+        }
+        table.bi-table thead th:hover { background: #1e293b; color: #fff; }
+        table.bi-table thead th .sort-ind {
+            display: inline-block; margin-left: 5px; font-size: 0.74rem; color: #38bdf8;
+        }
+        table.bi-table td { padding: 7px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #e2e8f0; }
+        table.bi-table tbody tr:hover td { background: rgba(59, 130, 246, 0.08); }
+        table.bi-table tfoot td {
+            position: sticky; bottom: 0; z-index: 5; background: #1e293b; font-weight: 700; color: #6ee7b7;
+            padding: 8px 12px; border-top: 2px solid var(--border);
+        }
+
+        /* Responsive Kırılımlar (Telefon, Tablet, TV) */
+        @media (max-width: 992px) {
+            .widget-card { grid-column: span 60 !important; }
+        }
+        @media (max-width: 640px) {
+            .widget-card { grid-column: span 120 !important; }
+            .control-bar { flex-direction: column; align-items: stretch; }
+        }
+        @media (min-width: 1900px) {
+            .kpi-val { font-size: 2.4rem; }
+            .widget-title { font-size: 1.1rem; }
+        }
+
+        /* Modal (Drill-Through Detay & Kişisel Widget Düzenleme) */
+        .modal-backdrop {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+            z-index: 1000; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-card {
+            background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+            width: 100%; max-width: 960px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;
+        }
+        .modal-header {
+            padding: 14px 18px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .modal-body { padding: 16px; overflow: auto; flex: 1; }
+
+        /* AÇIK RENK TEMA (LIGHT THEME) STİLLERİ */
+        body.light-theme {
+            --bg: #f1f5f9;
+            --panel: #ffffff;
+            --card: #ffffff;
+            --border: #cbd5e1;
+            --text: #0f172a;
+            --muted: #475569;
+        }
+        body.light-theme .top-header { background: #ffffff; box-shadow: 0 1px 4px rgba(15,23,42,0.06); }
+        body.light-theme .btn { background: #ffffff; color: #0f172a; border-color: #cbd5e1; }
+        body.light-theme .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        body.light-theme .btn-accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+        body.light-theme .btn-warning { background: #fef3c7; color: #b45309; border-color: #f59e0b; }
+        body.light-theme .control-bar { background: #f8fafc; border-bottom: 1px solid #cbd5e1; }
+        body.light-theme .ctrl-group select,
+        body.light-theme .ctrl-group input,
+        body.light-theme .checkbox-group { background: #ffffff; color: #0f172a; border-color: #cbd5e1; }
+        body.light-theme .widget-card { box-shadow: 0 4px 14px rgba(15,23,42,0.08); }
+        body.light-theme .widget-header { background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+        body.light-theme .widget-title { color: #0f172a; }
+        body.light-theme .kpi-val { color: #0284c7; }
+        body.light-theme table.bi-table thead th { background: #e2e8f0; color: #1e3a8a; border-bottom: 2px solid #cbd5e1; }
+        body.light-theme table.bi-table thead th:hover { background: #cbd5e1; color: #0f172a; }
+        body.light-theme table.bi-table td { color: #1e293b; border-bottom: 1px solid #e2e8f0; }
+        body.light-theme table.bi-table tbody tr:hover td { background: rgba(59,130,246,0.08); }
+        body.light-theme table.bi-table tfoot td { background: #f1f5f9; color: #047857; border-top: 2px solid #cbd5e1; }
+    </style>
+</head>
+<body>
+    <!-- Üst Başlık -->
+    <header class="top-header">
+        <div class="brand-area">
+            <span class="brand-badge">SpsWebBI</span>
+            <h1 class="dash-title" id="activeDashboardTitle">Yükleniyor...</h1>
+            <span id="timerStatusBadge" style="font-size:0.8rem;color:#6ee7b7;background:rgba(16,185,129,0.12);padding:4px 10px;border-radius:999px;display:none;"></span>
+        </div>
+        <div class="user-nav">
+            <button type="button" class="btn" id="btnThemeToggle" onclick="toggleTheme()">☀️ Açık Tema</button>
+            <button type="button" class="btn" id="btnToggleFilterBar" onclick="toggleControlBar()">Kontrol Panelini Gizle/Göster</button>
+            <button type="button" class="btn btn-warning" id="btnCustomizeLayout" onclick="toggleUserEditMode()">Tasarımımı Özelleştir</button>
+            <button type="button" class="btn btn-accent" id="btnSaveUserLayout" style="display:none;" onclick="saveUserCustomLayout()">Tasarımımı Kaydet</button>
+            <button type="button" class="btn" id="btnResetUserLayout" style="display:none;" onclick="resetUserCustomLayout()">Varsayılana Sıfırla</button>
+            <a href="/designer" class="btn" id="navDesignerLink" style="display:none;">Tasarım Stüdyosu (Admin)</a>
+            <a href="/admin" class="btn" id="navAdminLink" style="display:none;">Yetki & Süre Yönetimi</a>
+            <span id="userInfoText" style="color:var(--muted);"></span>
+            <button type="button" class="btn" onclick="logout()">Çıkış</button>
+        </div>
+    </header>
+
+    <div class="timer-progress-wrap">
+        <div class="timer-progress-bar" id="timerProgressBar"></div>
+    </div>
+
+    <!-- Madde 8.2, 8.3, 8.4, 8.5: Datasource Seçimi, Dinamik Filtreler, Slayt ve Otomatik Yenileme -->
+    <section class="control-bar" id="controlBarSection">
+        <div class="ctrl-group" style="min-width:260px;">
+            <label for="selectDashboard">Veri Kaynağı / Dashboard Seçimi</label>
+            <select id="selectDashboard" onchange="onDashboardSelectionChanged()"></select>
+        </div>
+
+        <!-- Seçilen Datasource'un Dinamik Filtreleri Buraya Otomatik Gelir -->
+        <div id="dynamicFiltersContainer" style="display:flex;flex-wrap:wrap;gap:12px;"></div>
+
+        <!-- Madde 8.2.5: Slayt Görünümü ve Otomatik Yenileme için birbirini dışlayan iki checkbox -->
+        <div class="checkbox-group">
+            <label title="Yetkili tüm dashboard'ları sırasına ve ekranda kalma süresine göre döngüsel gösterir">
+                <input type="checkbox" id="chkSlideMode" onchange="onModeCheckboxChanged('slide')">
+                Slayt Görünümü
+            </label>
+            <label title="Seçili dashboard'u tanımlı yenileme süresinde otomatik yeniler">
+                <input type="checkbox" id="chkAutoRefresh" onchange="onModeCheckboxChanged('refresh')">
+                Otomatik Yenileme
+            </label>
+        </div>
+
+        <button type="button" class="btn btn-primary" style="height:37px;padding:0 22px;font-size:0.92rem;" onclick="onShowButtonClicked()">
+            Göster
+        </button>
+    </section>
+
+    <!-- Aktif Cross-Filter (Tek Tık) Gösterge Çubuğu -->
+    <div class="filter-badges-bar" id="crossFilterBar">
+        <span style="font-size:0.82rem;color:#93c5fd;font-weight:600;">Aktif Grafik Filtresi (Cross-Filter):</span>
+        <div id="crossFilterBadges" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+        <button type="button" class="btn" style="padding:3px 9px;font-size:0.78rem;" onclick="clearAllCrossFilters()">Tümünü Temizle</button>
+    </div>
+
+    <!-- Kullanıcı Kişisel Düzenleme Araç Çubuğu (Madde 10) -->
+    <div id="userEditBanner" style="display:none;padding:10px 18px;background:rgba(245,158,11,0.12);border-bottom:1px solid rgba(245,158,11,0.35);align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <span style="font-size:0.88rem;color:#fcd34d;">
+            <strong>Kişisel Tasarım Modu (Madde 10):</strong> Her kartın sağ üstündeki <em>"Düzenle"</em> veya <em>"Yeni Bileşen Ekle"</em> ile görünümü değiştirip <strong>"Tasarımımı Kaydet"</strong> diyebilirsiniz.
+        </span>
+        <button type="button" class="btn btn-primary" onclick="openAddWidgetModal()">+ Yeni Grafik / Tablo / Pivot / KPI Ekle</button>
+    </div>
+
+    <!-- Dashboard Tuvali (Grid) -->
+    <main class="dashboard-canvas" id="dashboardCanvas"></main>
+
+    <!-- Drill-Through (Çift Tık Detay) ve Widget Düzenleme Modalı -->
+    <div class="modal-backdrop" id="detailModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modalTitle" style="margin:0;font-size:1.05rem;">Detay Kayıtlar</h3>
+                <button type="button" class="btn" onclick="closeModal()">Kapat ✕</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let authorizedDashboards = [];
+        let activeDashboardIndex = 0;
+        let currentLayout = { widgets: [] };
+        let currentColumns = [];
+        let rawRows = [];
+        let activeCrossFilters = {}; // { KolonAdi: Deger }
+        let widgetDrillState = {};   // { widgetId: { levelIndex: 0, path: [{dim, val}] } }
+        let widgetSortState = {};    // { widgetId: { column: 'Siparis_ID', dir: 'asc' | 'desc' } }
+        let isUserEditMode = false;
+        let userDraggedWidgetIndex = null;
+        let chartInstances = [];
+
+        // Zamanlayıcılar (Standalone Refresh & Slayt Modu)
+        let activeTimer = null;
+        let timerRemainingSec = 0;
+        let timerTotalSec = 0;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialModeParam = urlParams.get('Mode') || urlParams.get('mode') || '';
+        const autoStartSlide = urlParams.get('AutoStart') === '1' || initialModeParam.toLowerCase() === 'slayt';
+
+        // Güvenlik: Adres çubuğundaki parametreleri temizle
+        if (window.location.search) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        function isLightTheme() {
+            return document.body.classList.contains('light-theme');
+        }
+
+        function applySavedTheme() {
+            const saved = localStorage.getItem('sps_bi_theme') || 'dark';
+            document.body.classList.toggle('light-theme', saved === 'light');
+            const btn = document.getElementById('btnThemeToggle');
+            if (btn) btn.innerHTML = saved === 'light' ? '🌙 Koyu Tema' : '☀️ Açık Tema';
+        }
+
+        function toggleTheme() {
+            const next = isLightTheme() ? 'dark' : 'light';
+            localStorage.setItem('sps_bi_theme', next);
+            applySavedTheme();
+            renderAllWidgets();
+        }
+        applySavedTheme();
+
+        window.addEventListener('resize', () => {
+            chartInstances.forEach(c => { try { c.resize(); } catch (_) {} });
+        });
+
+        async function initApp() {
+            const meRes = await fetch('/api/auth/me');
+            if (!meRes.ok) {
+                window.location.href = '/login';
+                return;
+            }
+            currentUser = await meRes.json();
+            document.getElementById('userInfoText').textContent = `${currentUser.fullName} (${currentUser.userCode})`;
+
+            // Şifreli giriş yapmış Admin veya Designer ise yönetim menülerini göster (Madde 8.6)
+            if (currentUser.authMethod !== 'Passwordless') {
+                if (currentUser.role === 'admin' || currentUser.role === 'designer') {
+                    document.getElementById('navDesignerLink').style.display = 'inline-flex';
+                }
+                if (currentUser.role === 'admin') {
+                    document.getElementById('navAdminLink').style.display = 'inline-flex';
+                }
+            }
+
+            await loadAuthorizedDashboards();
+
+            if (authorizedDashboards.length === 0) {
+                document.getElementById('activeDashboardTitle').textContent = 'Yetkili Dashboard Bulunamadı';
+                document.getElementById('dashboardCanvas').innerHTML =
+                    '<div style="grid-column:span 12;padding:32px;text-align:center;color:#94a3b8;">Hesabınıza tanımlanmış aktif bir dashboard yetkisi bulunmamaktadır.</div>';
+                return;
+            }
+
+            // Madde 8.1: TV Slayt modunda açıldıysa doğrudan Slayt görünümünü başlat
+            if (autoStartSlide) {
+                document.getElementById('chkSlideMode').checked = true;
+                document.getElementById('chkAutoRefresh').checked = false;
+                document.getElementById('controlBarSection').style.display = 'none';
+                await startDisplayEngine();
+            } else {
+                // Varsayılan olarak ilk dashboard'un filtrelerini yükle ve göster
+                await onDashboardSelectionChanged();
+                await startDisplayEngine();
+            }
+        }
+
+        async function loadAuthorizedDashboards() {
+            const res = await fetch('/api/datasources/authorized-dashboards');
+            const data = await res.json();
+            authorizedDashboards = data.dashboards || [];
+
+            const sel = document.getElementById('selectDashboard');
+            sel.innerHTML = '';
+            authorizedDashboards.forEach((d, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                opt.textContent = `${d.datasource_name} — ${d.title} (Sıra: ${d.display_order})`;
+                sel.appendChild(opt);
+            });
+        }
+
+        // Madde 8.2.5 / 8.3.5: Slayt Görünümü ve Otomatik Yenileme birbirini dışlar
+        function onModeCheckboxChanged(which) {
+            const chkSlide = document.getElementById('chkSlideMode');
+            const chkRefresh = document.getElementById('chkAutoRefresh');
+            if (which === 'slide' && chkSlide.checked) {
+                chkRefresh.checked = false;
+            } else if (which === 'refresh' && chkRefresh.checked) {
+                chkSlide.checked = false;
+            }
+        }
+
+        async function onDashboardSelectionChanged() {
+            const sel = document.getElementById('selectDashboard');
+            activeDashboardIndex = parseInt(sel.value || '0', 10);
+            const dash = authorizedDashboards[activeDashboardIndex];
+            if (!dash) return;
+
+            // Seçilen datasource için dinamik filtreleri yükle (Madde 5 & 8.2.4)
+            const container = document.getElementById('dynamicFiltersContainer');
+            container.innerHTML = '<span style="font-size:0.82rem;color:#94a3b8;">Filtreler yükleniyor...</span>';
+
+            try {
+                const res = await fetch(`/api/datasources/${dash.primary_datasource_id}/parameters`);
+                const data = await res.json();
+                const params = data.parameters || [];
+                container.innerHTML = '';
+
+                params.forEach(p => {
+                    const grp = document.createElement('div');
+                    grp.className = 'ctrl-group';
+                    const lbl = document.createElement('label');
+                    lbl.textContent = p.label || p.param_name;
+                    grp.appendChild(lbl);
+
+                    if (p.options && p.options.length > 0) {
+                        const s = document.createElement('select');
+                        s.dataset.paramName = p.param_name;
+                        s.className = 'ds-filter-input';
+                        const allOpt = document.createElement('option');
+                        allOpt.value = '';
+                        allOpt.textContent = 'Tümü';
+                        s.appendChild(allOpt);
+                        p.options.forEach(o => {
+                            const opt = document.createElement('option');
+                            opt.value = o.value;
+                            opt.textContent = o.text;
+                            s.appendChild(opt);
+                        });
+                        if (p.default_value) s.value = p.default_value;
+                        s.onchange = () => refreshActiveDashboardData();
+                        grp.appendChild(s);
+                    } else {
+                        const inp = document.createElement('input');
+                        inp.type = p.param_type === 'date' ? 'date' : (p.param_type === 'number' ? 'number' : 'text');
+                        inp.dataset.paramName = p.param_name;
+                        inp.className = 'ds-filter-input';
+                        inp.placeholder = 'Tümü';
+                        if (p.default_value) inp.value = p.default_value;
+                        grp.appendChild(inp);
+                    }
+                    container.appendChild(grp);
+                });
+            } catch (_) {
+                container.innerHTML = '';
+            }
+        }
+
+        function collectFilterValues() {
+            const filters = {};
+            document.querySelectorAll('.ds-filter-input').forEach(el => {
+                const name = el.dataset.paramName;
+                if (name) filters[name] = el.value || null;
+            });
+            return filters;
+        }
+
+        // Madde 8.2.6 / 8.3.6 / 8.4.6 / 8.5.6: "Göster" tuşuna basılınca
+        async function onShowButtonClicked() {
+            await startDisplayEngine();
+        }
+
+        async function startDisplayEngine() {
+            stopActiveTimer();
+
+            const isSlide = document.getElementById('chkSlideMode').checked;
+            const isAutoRefresh = document.getElementById('chkAutoRefresh').checked;
+
+            await loadAndRenderDashboard(activeDashboardIndex, false);
+
+            const dash = authorizedDashboards[activeDashboardIndex];
+            if (!dash) return;
+
+            if (isSlide) {
+                // Madde 7.3.2 & 8.1.3.2:
+                // Tek bir dashboard yetkisi varsa ve refresh süresi tanımlıysa refresh_seconds ile yenile;
+                // Birden fazla dashboard varsa slide_duration_seconds sonunda sıradaki dashboard'a geç.
+                if (authorizedDashboards.length === 1) {
+                    const sec = dash.refresh_seconds > 0 ? dash.refresh_seconds : 60;
+                    startCountdownTimer(sec, 'Slayt (Tek Dashboard Yenileme)', async () => {
+                        await refreshActiveDashboardData();
+                    });
+                } else {
+                    const sec = dash.slide_duration_seconds > 0 ? dash.slide_duration_seconds : 30;
+                    startCountdownTimer(sec, `Slayt Modu (${activeDashboardIndex + 1}/${authorizedDashboards.length})`, async () => {
+                        activeDashboardIndex = (activeDashboardIndex + 1) % authorizedDashboards.length;
+                        document.getElementById('selectDashboard').value = activeDashboardIndex;
+                        await onDashboardSelectionChanged();
+                        await startDisplayEngine();
+                    });
+                }
+            } else if (isAutoRefresh) {
+                // Madde 7.3.1: Standalone modda refresh süresi tanımlı ise süre dolduğunda yenile
+                const sec = dash.refresh_seconds > 0 ? dash.refresh_seconds : 60;
+                startCountdownTimer(sec, 'Otomatik Yenileme', async () => {
+                    await refreshActiveDashboardData();
+                });
+            } else {
+                // Madde 8.2.6.2: Otomatik yenileme seçilmediyse refresh süresi devre dışı kalır
+                const badge = document.getElementById('timerStatusBadge');
+                badge.style.display = 'inline-block';
+                badge.textContent = 'Sabit Görünüm (Yenileme Kapalı)';
+                document.getElementById('timerProgressBar').style.width = '0%';
+            }
+        }
+
+        function startCountdownTimer(seconds, modeLabel, onComplete) {
+            stopActiveTimer();
+            timerTotalSec = seconds;
+            timerRemainingSec = seconds;
+            const badge = document.getElementById('timerStatusBadge');
+            const bar = document.getElementById('timerProgressBar');
+            badge.style.display = 'inline-block';
+
+            activeTimer = setInterval(async () => {
+                timerRemainingSec--;
+                const pct = ((timerTotalSec - timerRemainingSec) / timerTotalSec) * 100;
+                bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+                badge.textContent = `${modeLabel}: ${timerRemainingSec} sn`;
+
+                if (timerRemainingSec <= 0) {
+                    stopActiveTimer();
+                    await onComplete();
+                }
+            }, 1000);
+        }
+
+        function stopActiveTimer() {
+            if (activeTimer) {
+                clearInterval(activeTimer);
+                activeTimer = null;
+            }
+        }
+
+        async function loadAndRenderDashboard(index, preserveFilters = false) {
+            const dash = authorizedDashboards[index];
+            if (!dash) return;
+
+            document.getElementById('activeDashboardTitle').textContent = dash.title;
+            document.getElementById('btnResetUserLayout').style.display = dash.has_custom_layout ? 'inline-flex' : 'none';
+
+            try {
+                currentLayout = JSON.parse(dash.effective_layout_json || '{"widgets":[]}');
+            } catch (_) {
+                currentLayout = { widgets: [] };
+            }
+
+            if (!preserveFilters) {
+                activeCrossFilters = {};
+                widgetDrillState = {};
+                renderCrossFilterBadges();
+            }
+
+            await refreshActiveDashboardData();
+        }
+
+        async function refreshActiveDashboardData() {
+            const dash = authorizedDashboards[activeDashboardIndex];
+            if (!dash) return;
+
+            const filters = collectFilterValues();
+            const res = await fetch(`/api/datasources/${dash.primary_datasource_id}/execute`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filters })
+            });
+
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                document.getElementById('dashboardCanvas').innerHTML =
+                    `<div style="grid-column:span 12;padding:24px;color:#fca5a5;">Veri çekme hatası: ${escapeHtml(data.message || 'Bilinmeyen hata')}</div>`;
+                return;
+            }
+
+            currentColumns = data.columns || [];
+            rawRows = data.rows || [];
+            renderAllWidgets();
+        }
+
+        // Cross-Filter (Tek Tık) Uygulaması (Madde 2.2)
+        function getFilteredRows(excludeWidgetDimension = null) {
+            return rawRows.filter(row => {
+                for (const [col, val] of Object.entries(activeCrossFilters)) {
+                    if (excludeWidgetDimension && col.toLowerCase() === excludeWidgetDimension.toLowerCase()) continue;
+                    const cellVal = String(getRowValue(row, col) ?? '');
+                    if (cellVal !== String(val)) return false;
+                }
+                return true;
+            });
+        }
+
+        function getRowValue(row, colName) {
+            if (!row || !colName) return null;
+            if (colName in row) return row[colName];
+            const foundKey = Object.keys(row).find(k => k.toLowerCase() === colName.toLowerCase());
+            return foundKey ? row[foundKey] : null;
+        }
+
+        function toggleCrossFilter(dimension, value) {
+            if (!dimension) return;
+            if (activeCrossFilters[dimension] === value) {
+                delete activeCrossFilters[dimension];
+            } else {
+                activeCrossFilters[dimension] = value;
+            }
+            renderCrossFilterBadges();
+            renderAllWidgets();
+        }
+
+        function clearAllCrossFilters() {
+            activeCrossFilters = {};
+            renderCrossFilterBadges();
+            renderAllWidgets();
+        }
+
+        function renderCrossFilterBadges() {
+            const bar = document.getElementById('crossFilterBar');
+            const container = document.getElementById('crossFilterBadges');
+            const entries = Object.entries(activeCrossFilters);
+            if (entries.length === 0) {
+                bar.style.display = 'none';
+                return;
+            }
+            bar.style.display = 'flex';
+            container.innerHTML = '';
+            entries.forEach(([col, val]) => {
+                const chip = document.createElement('span');
+                chip.className = 'badge-chip';
+                chip.innerHTML = `${escapeHtml(col)}: <strong>${escapeHtml(String(val))}</strong> ✕`;
+                chip.onclick = () => toggleCrossFilter(col, val);
+                container.appendChild(chip);
+            });
+        }
+
+        function renderAllWidgets() {
+            chartInstances.forEach(c => { try { c.dispose(); } catch (_) {} });
+            chartInstances = [];
+
+            const canvas = document.getElementById('dashboardCanvas');
+            canvas.innerHTML = '';
+
+            const widgets = currentLayout.widgets || [];
+            widgets.forEach((w, idx) => {
+                const card = document.createElement('div');
+                card.className = 'widget-card';
+                const colSpan12 = Math.min(12, Math.max(1.0, Math.round((Number(w.w) || (w.type === 'kpi' ? 3 : 4)) * 10) / 10));
+                const gridSpan120 = Math.min(120, Math.max(10, Math.round(colSpan12 * 10)));
+                const hUnits = Math.min(16, Math.max(1.2, Math.round((Number(w.h) || (w.type === 'kpi' ? 2 : 4)) * 20) / 20));
+                const rowHeight = w.type === 'kpi'
+                    ? Math.max(82, Math.round(hUnits * 58))
+                    : Math.max(115, Math.round(hUnits * 58));
+                card.style.gridColumn = `span ${gridSpan120}`;
+                card.style.height = `${rowHeight}px`;
+
+                const header = document.createElement('div');
+                header.className = 'widget-header';
+
+                const titleWrap = document.createElement('div');
+                titleWrap.style.display = 'flex';
+                titleWrap.style.flexDirection = 'column';
+                titleWrap.style.gap = '2px';
+
+                const hTitle = document.createElement('h3');
+                hTitle.className = 'widget-title';
+                hTitle.textContent = w.title || 'Bileşen';
+                titleWrap.appendChild(hTitle);
+
+                // Drill-Down Breadcrumb (Madde 2.3)
+                const dState = widgetDrillState[w.id];
+                if (dState && dState.path && dState.path.length > 0) {
+                    const bc = document.createElement('div');
+                    bc.className = 'widget-breadcrumb';
+                    const trail = dState.path.map(p => `${p.dim}: ${p.val}`).join(' ➔ ');
+                    bc.innerHTML = `⬅ Üst Kırılıma Dön (${escapeHtml(trail)})`;
+                    bc.onclick = () => stepUpDrillDown(w.id);
+                    titleWrap.appendChild(bc);
+                }
+
+                header.appendChild(titleWrap);
+
+                // Kişisel Tasarım Modunda Sürükle-Bırak, Köşeden Boyutlandırma ve Düzenle/Sil Butonları (Madde 10)
+                if (isUserEditMode) {
+                    header.style.cursor = 'move';
+                    header.draggable = true;
+                    header.addEventListener('dragstart', e => {
+                        userDraggedWidgetIndex = idx;
+                        e.dataTransfer.setData('text/plain', String(idx));
+                    });
+                    card.addEventListener('dragover', e => {
+                        if (userDraggedWidgetIndex !== null && userDraggedWidgetIndex !== idx) {
+                            e.preventDefault();
+                            card.classList.add('card-drop-target');
+                        }
+                    });
+                    card.addEventListener('dragleave', () => card.classList.remove('card-drop-target'));
+                    card.addEventListener('drop', e => {
+                        card.classList.remove('card-drop-target');
+                        if (userDraggedWidgetIndex !== null && userDraggedWidgetIndex !== idx) {
+                            e.preventDefault();
+                            const moved = currentLayout.widgets.splice(userDraggedWidgetIndex, 1)[0];
+                            currentLayout.widgets.splice(idx, 0, moved);
+                            userDraggedWidgetIndex = null;
+                            renderAllWidgets();
+                        }
+                    });
+
+                    const tools = document.createElement('div');
+                    tools.style.display = 'flex';
+                    tools.style.alignItems = 'center';
+                    tools.style.gap = '6px';
+
+                    const sizeBadge = document.createElement('span');
+                    sizeBadge.id = `uSize_${w.id}`;
+                    sizeBadge.style.fontSize = '0.7rem';
+                    sizeBadge.style.color = '#93c5fd';
+                    sizeBadge.textContent = `${colSpan12}/12 × ${hUnits}`;
+
+                    const btnEdit = document.createElement('button');
+                    btnEdit.className = 'btn';
+                    btnEdit.style.padding = '3px 8px';
+                    btnEdit.style.fontSize = '0.75rem';
+                    btnEdit.textContent = 'Düzenle';
+                    btnEdit.onclick = () => openEditWidgetModal(idx);
+
+                    const btnDel = document.createElement('button');
+                    btnDel.className = 'btn';
+                    btnDel.style.padding = '3px 8px';
+                    btnDel.style.fontSize = '0.75rem';
+                    btnDel.style.color = '#fca5a5';
+                    btnDel.textContent = 'Sil';
+                    btnDel.onclick = () => {
+                        currentLayout.widgets.splice(idx, 1);
+                        renderAllWidgets();
+                    };
+                    tools.appendChild(sizeBadge);
+                    tools.appendChild(btnEdit);
+                    tools.appendChild(btnDel);
+                    header.appendChild(tools);
+                }
+
+                const body = document.createElement('div');
+                body.className = (w.type === 'table' || w.type === 'pivot')
+                    ? 'widget-body table-scroll'
+                    : 'widget-body';
+
+                card.appendChild(header);
+                card.appendChild(body);
+
+                if (isUserEditMode) {
+                    const handleSE = document.createElement('div');
+                    handleSE.className = 'resize-handle-se';
+                    handleSE.title = 'Fareyle çekerek boyutlandırın';
+                    handleSE.textContent = '◢';
+                    const handleE = document.createElement('div');
+                    handleE.className = 'resize-handle-e';
+                    const handleS = document.createElement('div');
+                    handleS.className = 'resize-handle-s';
+                    attachUserResizeBehavior(card, w, handleSE, true, true);
+                    attachUserResizeBehavior(card, w, handleE, true, false);
+                    attachUserResizeBehavior(card, w, handleS, false, true);
+                    card.appendChild(handleSE);
+                    card.appendChild(handleE);
+                    card.appendChild(handleS);
+                }
+
+                canvas.appendChild(card);
+
+                renderSingleWidget(w, body);
+            });
+        }
+
+        function attachUserResizeBehavior(cardEl, widgetObj, handleEl, allowW, allowH) {
+            handleEl.addEventListener('mousedown', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                const canvasEl = document.getElementById('dashboardCanvas');
+                const microColPx = (canvasEl.clientWidth || 1200) / 120;
+                const microRowPx = 2.9;
+                const startX = e.clientX, startY = e.clientY;
+                const startW = Number(widgetObj.w) || (widgetObj.type === 'kpi' ? 3 : 4);
+                const startH = Number(widgetObj.h) || (widgetObj.type === 'kpi' ? 2 : 5);
+
+                function onMove(ev) {
+                    if (allowW) {
+                        const deltaMicroCols = Math.round((ev.clientX - startX) / microColPx);
+                        const newW = Math.min(12, Math.max(1.0, Math.round((startW + deltaMicroCols * 0.1) * 10) / 10));
+                        widgetObj.w = newW;
+                        const span120 = Math.min(120, Math.max(10, Math.round(newW * 10)));
+                        cardEl.style.gridColumn = `span ${span120}`;
+                    }
+                    if (allowH) {
+                        const deltaMicroRows = Math.round((ev.clientY - startY) / microRowPx);
+                        const newH = Math.min(16, Math.max(1.2, Math.round((startH + deltaMicroRows * 0.05) * 20) / 20));
+                        widgetObj.h = newH;
+                        const pxH = widgetObj.type === 'kpi'
+                            ? Math.max(82, Math.round(newH * 58))
+                            : Math.max(115, Math.round(newH * 58));
+                        cardEl.style.height = `${pxH}px`;
+                    }
+                    const sb = document.getElementById(`uSize_${widgetObj.id}`);
+                    if (sb) sb.textContent = `${widgetObj.w}/12 × ${widgetObj.h}`;
+                    chartInstances.forEach(c => { try { c.resize(); } catch (_) {} });
+                }
+                function onUp() {
+                    window.removeEventListener('mousemove', onMove);
+                    window.removeEventListener('mouseup', onUp);
+                    chartInstances.forEach(c => { try { c.resize(); } catch (_) {} });
+                }
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('mouseup', onUp);
+            });
+        }
+
+        function getWidgetMetrics(w) {
+            if (Array.isArray(w.valueMetrics) && w.valueMetrics.length > 0) {
+                return w.valueMetrics;
+            }
+            if (w.valueField) {
+                return [{ field: w.valueField, agg: w.agg || 'sum' }];
+            }
+            return [];
+        }
+
+        function renderSingleWidget(w, container) {
+            let rows = getFilteredRows(w.dimension);
+            const metrics = getWidgetMetrics(w);
+            const primaryMetric = metrics[0] || { field: w.valueField || '', agg: w.agg || 'sum' };
+
+            // Eğer bu widget üzerinde aktif Drill-Down (çift tık alt kırılım) varsa uygula
+            const dState = widgetDrillState[w.id];
+            let activeDimension = w.dimension;
+            if (dState && dState.path && dState.path.length > 0) {
+                rows = rows.filter(r => dState.path.every(p => String(getRowValue(r, p.dim) ?? '') === String(p.val)));
+                if (Array.isArray(w.drillHierarchy) && dState.levelIndex < w.drillHierarchy.length) {
+                    activeDimension = w.drillHierarchy[dState.levelIndex];
+                }
+            }
+
+            if (w.type === 'kpi') {
+                if (metrics.length <= 1) {
+                    const aggType = (primaryMetric.agg || 'sum').toLowerCase();
+                    const aggLabel = aggType === 'count' ? 'KAYIT SAYISI' : (aggType === 'avg' ? 'ORTALAMA' : (aggType === 'max' ? 'MAKSİMUM' : (aggType === 'min' ? 'MİNİMUM' : 'GENEL TOPLAM')));
+                    const effectiveSub = w.subtitle !== undefined ? w.subtitle : aggLabel;
+                    const val = computeAggregate(rows, primaryMetric.field, aggType);
+                    container.innerHTML = `
+                        <div class="kpi-box">
+                            <div class="kpi-meta" style="display:${effectiveSub && effectiveSub.trim() !== '' ? 'block' : 'none'};">${escapeHtml(effectiveSub)}</div>
+                            <div class="kpi-val">${formatNumber(val)}</div>
+                        </div>`;
+                } else {
+                    const customSub = w.subtitle !== undefined && w.subtitle.trim() !== '' ? w.subtitle : '';
+                    let itemsHtml = '';
+                    metrics.forEach(m => {
+                        const aggType = (m.agg || 'sum').toLowerCase();
+                        const aggShort = aggType === 'count' ? 'ADET' : (aggType === 'avg' ? 'ORT.' : (aggType === 'max' ? 'MAKS' : (aggType === 'min' ? 'MİN' : 'TOPLAM')));
+                        const v = computeAggregate(rows, m.field, aggType);
+                        itemsHtml += `
+                            <div style="flex:1;min-width:110px;padding:4px 8px;border-left:2px solid rgba(56,189,248,0.45);">
+                                <div class="kpi-meta" style="margin-bottom:1px;font-size:0.68rem;">${escapeHtml(m.field)} (${aggShort})</div>
+                                <div class="kpi-val" style="font-size:clamp(1.15rem, 1.5vw, 1.55rem);">${formatNumber(v)}</div>
+                            </div>`;
+                    });
+                    container.innerHTML = `
+                        <div class="kpi-box" style="justify-content:center;gap:6px;width:100%;">
+                            ${customSub ? `<div class="kpi-meta">${escapeHtml(customSub)}</div>` : ''}
+                            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;width:100%;">${itemsHtml}</div>
+                        </div>`;
+                }
+                return;
+            }
+
+            if (w.type === 'table') {
+                renderDataTable(w, rows, container);
+                return;
+            }
+
+            if (w.type === 'pivot') {
+                renderPivotTable(w, rows, container);
+                return;
+            }
+
+            renderChartWidget(w, rows, activeDimension, container);
+        }
+
+        function renderChartWidget(w, rows, activeDimension, container) {
+            if (typeof echarts === 'undefined') {
+                container.innerHTML = '<div style="color:#94a3b8;padding:12px;">Grafik kütüphanesi yüklenemedi.</div>';
+                return;
+            }
+
+            const metrics = getWidgetMetrics(w);
+            const primaryMetric = metrics[0] || { field: w.valueField || '', agg: w.agg || 'sum' };
+            const hierarchy = (Array.isArray(w.drillHierarchy) && w.drillHierarchy.length > 0)
+                ? w.drillHierarchy
+                : (w.dimension ? [w.dimension] : []);
+            const mode = w.multiDimMode || (hierarchy.length > 1 ? 'drill' : 'combined');
+
+            const chartDiv = document.createElement('div');
+            chartDiv.style.width = '100%';
+            chartDiv.style.height = '100%';
+            container.appendChild(chartDiv);
+
+            const chart = echarts.init(chartDiv, isLightTheme() ? null : 'dark');
+            chartInstances.push(chart);
+
+            const isLight = isLightTheme();
+            const axisTextColor = isLight ? '#334155' : '#94a3b8';
+            const legendTextColor = isLight ? '#1e293b' : '#cbd5e1';
+            const splitLineColor = isLight ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.06)';
+            const palette = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f43f5e', '#84cc16'];
+
+            // 1. İBRE (GAUGE)
+            if (w.type === 'gauge') {
+                const val = Math.round(computeAggregate(rows, primaryMetric.field, primaryMetric.agg) * 100) / 100;
+                chart.setOption({
+                    backgroundColor: 'transparent',
+                    tooltip: { formatter: '{a} <br/>{b}: {c}' },
+                    series: [{
+                        name: w.title || primaryMetric.field,
+                        type: 'gauge',
+                        max: val > 0 ? Math.ceil(val * 1.25) : 100,
+                        progress: { show: true, width: 12 },
+                        axisLine: { lineStyle: { width: 12 } },
+                        detail: { valueAnimation: true, formatter: v => formatNumber(v), color: '#38bdf8', fontSize: 16 },
+                        data: [{ value: val, name: primaryMetric.field || 'Değer' }]
+                    }]
+                });
+                return;
+            }
+
+            // 2. ISI HARİTASI (HEATMAP)
+            if (w.type === 'heatmap') {
+                const dimX = hierarchy[0] || w.dimension || '';
+                const dimY = hierarchy[1] || w.secondaryDimension || dimX;
+                const xKeys = [...new Set(rows.map(r => String(getRowValue(r, dimX) ?? 'Belirsiz')))].slice(0, 20);
+                const yKeys = [...new Set(rows.map(r => String(getRowValue(r, dimY) ?? 'Belirsiz')))].slice(0, 15);
+                const heatData = [];
+                let maxVal = 0;
+                xKeys.forEach((xk, xi) => {
+                    yKeys.forEach((yk, yi) => {
+                        const matched = rows.filter(r =>
+                            String(getRowValue(r, dimX) ?? 'Belirsiz') === xk &&
+                            String(getRowValue(r, dimY) ?? 'Belirsiz') === yk);
+                        const v = Math.round(computeAggregate(matched, primaryMetric.field, primaryMetric.agg) * 100) / 100;
+                        if (v > maxVal) maxVal = v;
+                        heatData.push([xi, yi, v]);
+                    });
+                });
+                chart.setOption({
+                    backgroundColor: 'transparent',
+                    tooltip: { position: 'top' },
+                    grid: { left: 12, right: 20, top: 20, bottom: 28, containLabel: true },
+                    xAxis: { type: 'category', data: xKeys, splitArea: { show: true } },
+                    yAxis: { type: 'category', data: yKeys, splitArea: { show: true } },
+                    visualMap: { min: 0, max: maxVal || 100, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, itemWidth: 10, itemHeight: 60 },
+                    series: [{ type: 'heatmap', data: heatData, label: { show: xKeys.length <= 10 } }]
+                });
+                return;
+            }
+
+            // 3. TREEMAP
+            if (w.type === 'treemap') {
+                const dimCols = (mode === 'combined' && hierarchy.length > 1) ? hierarchy : [activeDimension || ''];
+                const grouped = groupAndAggregateComposite(rows, dimCols, primaryMetric.field, primaryMetric.agg, w.topN || 25);
+                chart.setOption({
+                    backgroundColor: 'transparent',
+                    tooltip: { formatter: info => `${escapeHtml(info.name)}: <strong>${formatNumber(info.value)}</strong>` },
+                    series: [{
+                        type: 'treemap',
+                        roam: false,
+                        breadcrumb: { show: false },
+                        data: grouped.map(g => ({ name: g.key, value: g.value }))
+                    }]
+                });
+                return;
+            }
+
+            // 4. PASTA VE HALKA
+            const isPie = w.type === 'pie' || w.type === 'donut';
+            if (isPie) {
+                const dimCols = (mode === 'combined' && hierarchy.length > 1) ? hierarchy : [activeDimension || ''];
+                const grouped = groupAndAggregateComposite(rows, dimCols, primaryMetric.field, primaryMetric.agg, w.topN || 15);
+                chart.setOption({
+                    backgroundColor: 'transparent',
+                    color: palette,
+                    tooltip: { trigger: 'item', confine: true, formatter: p => `${escapeHtml(p.name)}: <strong>${formatNumber(p.value)}</strong> (%${p.percent})` },
+                    legend: { type: 'scroll', bottom: 0, textStyle: { color: legendTextColor, fontSize: 11 } },
+                    series: [{
+                        type: 'pie',
+                        radius: w.type === 'donut' ? ['38%', '68%'] : '65%',
+                        center: ['50%', '45%'],
+                        data: grouped.map(g => ({ name: g.key, value: g.value })),
+                        label: { color: legendTextColor, fontSize: 11 }
+                    }]
+                });
+            } else if (mode === 'series' && hierarchy.length >= 2) {
+                // 5A. SERİ / RENK GRUPLAMA MODU
+                const xDim = hierarchy[0];
+                const seriesDim = hierarchy[1];
+                const xKeys = [...new Set(rows.map(r => String(getRowValue(r, xDim) ?? 'Belirsiz')))];
+                xKeys.sort((a, b) => a.localeCompare(b, 'tr-TR', { numeric: true }));
+                const seriesKeys = [...new Set(rows.map(r => String(getRowValue(r, seriesDim) ?? 'Belirsiz')))].slice(0, 12);
+                seriesKeys.sort((a, b) => a.localeCompare(b, 'tr-TR', { numeric: true }));
+
+                const isLine = w.type === 'line' || w.type === 'area';
+                const isStacked = w.type === 'stackedBar' || w.type === 'area';
+                const isHoriz = w.type === 'horizontalBar';
+
+                const seriesList = seriesKeys.map(sk => ({
+                    name: sk,
+                    type: isLine ? 'line' : 'bar',
+                    stack: isStacked ? 'total' : undefined,
+                    areaStyle: w.type === 'area' ? { opacity: 0.25 } : undefined,
+                    smooth: true,
+                    data: xKeys.map(xk => {
+                        const matched = rows.filter(r =>
+                            String(getRowValue(r, xDim) ?? 'Belirsiz') === xk &&
+                            String(getRowValue(r, seriesDim) ?? 'Belirsiz') === sk);
+                        return Math.round(computeAggregate(matched, primaryMetric.field, primaryMetric.agg) * 100) / 100;
+                    })
+                }));
+
+                const catAxis = { type: 'category', data: xKeys, axisLabel: { color: axisTextColor, rotate: (!isHoriz && xKeys.length > 6) ? 25 : 0 } };
+                const valAxis = { type: 'value', axisLabel: { color: axisTextColor }, splitLine: { lineStyle: { color: splitLineColor } } };
+
+                chart.setOption({
+                    backgroundColor: 'transparent',
+                    color: palette,
+                    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, confine: true },
+                    legend: { type: 'scroll', top: 0, textStyle: { color: legendTextColor, fontSize: 11 } },
+                    toolbox: {
+                        show: true, right: 8, top: 0, iconStyle: { borderColor: axisTextColor },
+                        feature: {
+                            magicType: { type: ['line', 'bar', 'stack'], title: { line: 'Çizgi', bar: 'Sütun', stack: 'Yığılmış' } },
+                            restore: { title: 'Sıfırla' },
+                            saveAsImage: { title: 'Resim İndir' }
+                        }
+                    },
+                    dataZoom: [{ type: 'inside' }],
+                    grid: { left: 12, right: 20, top: 34, bottom: 20, containLabel: true },
+                    xAxis: isHoriz ? valAxis : catAxis,
+                    yAxis: isHoriz ? catAxis : valAxis,
+                    series: seriesList
+                });
+            } else {
+                // 5B. BİRLEŞİK EKSEN (YIL / AY YAN YANA) VEYA ÇOKLU DEĞER (MULTI-MEASURE)
+                const activeDimCols = (mode === 'combined' && hierarchy.length > 1)
+                    ? hierarchy
+                    : [activeDimension || ''];
+                const effectiveMetrics = metrics.length > 0 ? metrics : [{ field: w.valueField || '', agg: w.agg || 'sum' }];
+                const firstGrouped = groupAndAggregateComposite(rows, activeDimCols, effectiveMetrics[0].field, effectiveMetrics[0].agg, w.topN || 20);
+                const categoryKeys = firstGrouped.map(g => g.key);
+
+                const isLine = w.type === 'line' || w.type === 'area';
+                const isStacked = w.type === 'stackedBar' || w.type === 'area';
+                const isHoriz = w.type === 'horizontalBar';
+
+                const seriesList = effectiveMetrics.map((m, mIdx) => {
+                    const groupedForMetric = mIdx === 0
+                        ? firstGrouped
+                        : groupAndAggregateComposite(rows, activeDimCols, m.field, m.agg, null);
+                    const valMap = new Map(groupedForMetric.map(g => [g.key, g.value]));
+                    return {
+                        name: `${m.field} (${(m.agg || 'sum').toUpperCase()})`,
+                        type: isLine ? 'line' : 'bar',
+                        stack: isStacked ? 'total' : undefined,
+                        areaStyle: w.type === 'area' ? { opacity: 0.25 } : undefined,
+                        smooth: true,
+                        data: categoryKeys.map(k => valMap.get(k) ?? 0),
+                        itemStyle: effectiveMetrics.length === 1 && !isLine ? {
+                            color: new echarts.graphic.LinearGradient(isHoriz ? 1 : 0, 0, 0, isHoriz ? 0 : 1, [
+                                { offset: 0, color: '#3b82f6' },
+                                { offset: 1, color: '#1d4ed8' }
+                            ]),
+                            borderRadius: isHoriz ? [0, 4, 4, 0] : [4, 4, 0, 0]
+                        } : undefined
+                    };
+                });
+
+                const catAxis = { type: 'category', data: categoryKeys, axisLabel: { color: axisTextColor, rotate: (!isHoriz && categoryKeys.length > 5) ? 20 : 0 } };
+                const valAxis = { type: 'value', axisLabel: { color: axisTextColor }, splitLine: { lineStyle: { color: splitLineColor } } };
+
+                chart.setOption({
+                    backgroundColor: 'transparent',
+                    color: palette,
+                    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, confine: true },
+                    legend: effectiveMetrics.length > 1 ? { type: 'scroll', top: 0, textStyle: { color: legendTextColor, fontSize: 11 } } : undefined,
+                    toolbox: {
+                        show: true, right: 8, top: 0, iconStyle: { borderColor: axisTextColor },
+                        feature: {
+                            magicType: { type: ['line', 'bar', 'stack'], title: { line: 'Çizgi', bar: 'Sütun', stack: 'Yığılmış' } },
+                            restore: { title: 'Sıfırla' },
+                            saveAsImage: { title: 'Resim İndir' }
+                        }
+                    },
+                    dataZoom: [{ type: 'inside' }],
+                    grid: { left: 12, right: 20, top: effectiveMetrics.length > 1 ? 34 : 26, bottom: 20, containLabel: true },
+                    xAxis: isHoriz ? valAxis : catAxis,
+                    yAxis: isHoriz ? catAxis : valAxis,
+                    series: seriesList
+                });
+            }
+
+            // Tek Tık vs Çift Tık Ayrımı (2.2 Cross-Filter & 2.3 Drill-Down / Drill-Through)
+            let clickTimer = null;
+            chart.on('click', params => {
+                if (clickTimer) clearTimeout(clickTimer);
+                clickTimer = setTimeout(() => {
+                    const clickedVal = params.name;
+                    const filterDim = (mode === 'combined' && hierarchy.length > 1) ? hierarchy[0] : activeDimension;
+                    const filterVal = (mode === 'combined' && hierarchy.length > 1 && String(clickedVal).includes(' / '))
+                        ? String(clickedVal).split(' / ')[0]
+                        : clickedVal;
+                    toggleCrossFilter(filterDim, filterVal);
+                }, 230);
+            });
+
+            chart.on('dblclick', params => {
+                if (clickTimer) {
+                    clearTimeout(clickTimer);
+                    clickTimer = null;
+                }
+                const clickedVal = params.name;
+                handleChartDoubleClick(w, activeDimension, clickedVal, rows);
+            });
+        }
+
+        // Madde 2.3: Çift Tıklandığında Alt Kırılıma (Drill-Down) veya Detay Kayıtlara (Drill-Through) Erişim
+        function handleChartDoubleClick(w, currentDim, clickedVal, currentRows) {
+            const hierarchy = Array.isArray(w.drillHierarchy) && w.drillHierarchy.length > 0
+                ? w.drillHierarchy
+                : [w.dimension];
+
+            const state = widgetDrillState[w.id] || { levelIndex: 0, path: [] };
+            if (state.levelIndex + 1 < hierarchy.length) {
+                state.path.push({ dim: currentDim, val: clickedVal });
+                state.levelIndex++;
+                widgetDrillState[w.id] = state;
+                renderAllWidgets();
+            } else {
+                // En alt kırılımda çift tıklandığında o değere ait tüm satır detaylarını (Drill-Through) aç
+                const detailRows = currentRows.filter(r => String(getRowValue(r, currentDim) ?? '') === String(clickedVal));
+                openDrillThroughModal(`${w.title} — ${currentDim}: ${clickedVal} Detayları (${detailRows.length} Kayıt)`, detailRows);
+            }
+        }
+
+        function stepUpDrillDown(widgetId) {
+            const state = widgetDrillState[widgetId];
+            if (!state || state.levelIndex <= 0) return;
+            state.path.pop();
+            state.levelIndex--;
+            renderAllWidgets();
+        }
+
+        function compareCellValues(aVal, bVal, dataType) {
+            if (aVal === null || aVal === undefined || aVal === '') return (bVal === null || bVal === undefined || bVal === '') ? 0 : 1;
+            if (bVal === null || bVal === undefined || bVal === '') return -1;
+
+            if (dataType === 'number' || (typeof aVal === 'number' && typeof bVal === 'number')) {
+                const nA = Number(aVal);
+                const nB = Number(bVal);
+                if (!isNaN(nA) && !isNaN(nB)) return nA - nB;
+            }
+
+            if (dataType === 'date') {
+                const tA = Date.parse(String(aVal));
+                const tB = Date.parse(String(bVal));
+                if (!isNaN(tA) && !isNaN(tB)) return tA - tB;
+            }
+
+            const sA = String(aVal);
+            const sB = String(bVal);
+            const numA = Number(sA);
+            const numB = Number(sB);
+            if (!isNaN(numA) && !isNaN(numB) && sA.trim() !== '' && sB.trim() !== '') {
+                return numA - numB;
+            }
+
+            return sA.localeCompare(sB, 'tr-TR', { numeric: true, sensitivity: 'base' });
+        }
+
+        function renderDataTable(w, rows, container) {
+            const widgetKey = w.id || 'modal_table';
+            const cols = (Array.isArray(w.columns) && w.columns.length > 0)
+                ? w.columns
+                : currentColumns.map(c => c.name);
+
+            const sortInfo = widgetSortState[widgetKey] || null;
+            let workingRows = rows.slice();
+
+            if (sortInfo && sortInfo.column) {
+                const colMeta = currentColumns.find(x => x.name.toLowerCase() === sortInfo.column.toLowerCase());
+                const dType = colMeta ? colMeta.dataType : 'string';
+                const factor = sortInfo.dir === 'desc' ? -1 : 1;
+                workingRows.sort((rA, rB) => {
+                    const vA = getRowValue(rA, sortInfo.column);
+                    const vB = getRowValue(rB, sortInfo.column);
+                    return compareCellValues(vA, vB, dType) * factor;
+                });
+            }
+
+            const displayRows = workingRows.slice(0, 300);
+            let html = '<table class="bi-table"><thead><tr>';
+            cols.forEach(c => {
+                let arrow = '<span class="sort-ind" style="opacity:0.35;">⇅</span>';
+                if (sortInfo && sortInfo.column === c) {
+                    arrow = `<span class="sort-ind">${sortInfo.dir === 'asc' ? '▲' : '▼'}</span>`;
+                }
+                html += `<th data-col="${escapeHtml(c)}" title="Sıralamak için tıklayın">${escapeHtml(c)}${arrow}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            displayRows.forEach(r => {
+                html += '<tr>';
+                cols.forEach(c => {
+                    const v = getRowValue(r, c);
+                    html += `<td>${formatCell(v)}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody><tfoot><tr>';
+            cols.forEach((c, idx) => {
+                const colMeta = currentColumns.find(x => x.name.toLowerCase() === c.toLowerCase());
+                if (colMeta && colMeta.dataType === 'number' && !c.toLowerCase().endsWith('_id')) {
+                    const sum = computeAggregate(rows, c, 'sum');
+                    html += `<td>${formatNumber(sum)}</td>`;
+                } else {
+                    html += `<td>${idx === 0 ? 'Toplam (' + rows.length + ')' : ''}</td>`;
+                }
+            });
+            html += '</tr></tfoot></table>';
+            container.innerHTML = html;
+
+            // Başlık tıklama ile sıralama (Sorting) olaylarını bağla
+            container.querySelectorAll('thead th[data-col]').forEach(th => {
+                th.addEventListener('click', () => {
+                    const clickedCol = th.getAttribute('data-col');
+                    const current = widgetSortState[widgetKey];
+                    if (!current || current.column !== clickedCol) {
+                        widgetSortState[widgetKey] = { column: clickedCol, dir: 'asc' };
+                    } else if (current.dir === 'asc') {
+                        widgetSortState[widgetKey] = { column: clickedCol, dir: 'desc' };
+                    } else {
+                        delete widgetSortState[widgetKey];
+                    }
+                    const prevScroll = container.scrollTop;
+                    renderDataTable(w, rows, container);
+                    container.scrollTop = prevScroll;
+                });
+            });
+        }
+
+        function renderPivotTable(w, rows, container) {
+            const rowDim = w.dimension || (currentColumns[0]?.name ?? '');
+            const colDim = w.secondaryDimension || (currentColumns[1]?.name ?? '');
+            const valField = w.valueField || (currentColumns.find(c => c.dataType === 'number')?.name ?? '');
+
+            const rowKeys = [...new Set(rows.map(r => String(getRowValue(r, rowDim) ?? 'Belirsiz')))].slice(0, 50);
+            const colKeys = [...new Set(rows.map(r => String(getRowValue(r, colDim) ?? 'Belirsiz')))].slice(0, 15);
+
+            let html = `<table class="bi-table"><thead><tr><th>${escapeHtml(rowDim)} \\ ${escapeHtml(colDim)}</th>`;
+            colKeys.forEach(ck => { html += `<th>${escapeHtml(ck)}</th>`; });
+            html += '<th>Toplam</th></tr></thead><tbody>';
+
+            rowKeys.forEach(rk => {
+                let rowSum = 0;
+                html += `<tr><td><strong>${escapeHtml(rk)}</strong></td>`;
+                colKeys.forEach(ck => {
+                    const matching = rows.filter(r =>
+                        String(getRowValue(r, rowDim) ?? 'Belirsiz') === rk &&
+                        String(getRowValue(r, colDim) ?? 'Belirsiz') === ck);
+                    const cellVal = computeAggregate(matching, valField, w.agg || 'sum');
+                    rowSum += cellVal;
+                    html += `<td>${formatNumber(cellVal)}</td>`;
+                });
+                html += `<td><strong>${formatNumber(rowSum)}</strong></td></tr>`;
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function openDrillThroughModal(title, rows) {
+            document.getElementById('modalTitle').textContent = title;
+            const body = document.getElementById('modalBody');
+            body.style.padding = '0';
+            renderDataTable({ id: 'drill_modal_tbl', columns: currentColumns.map(c => c.name) }, rows, body);
+            document.getElementById('detailModal').style.display = 'flex';
+        }
+
+        // Madde 10: Son Kullanıcının Kendi Tasarımını Özelleştirmesi ve Kaydetmesi
+        function toggleUserEditMode() {
+            isUserEditMode = !isUserEditMode;
+            document.getElementById('userEditBanner').style.display = isUserEditMode ? 'flex' : 'none';
+            document.getElementById('btnSaveUserLayout').style.display = isUserEditMode ? 'inline-flex' : 'none';
+            renderAllWidgets();
+        }
+
+        function openAddWidgetModal() {
+            openWidgetConfigModal(-1, {
+                id: 'w_' + Date.now(),
+                type: 'bar',
+                title: 'Yeni Analiz Bileşeni',
+                dimension: currentColumns[0]?.name || '',
+                secondaryDimension: currentColumns[1]?.name || '',
+                drillHierarchy: [],
+                valueField: currentColumns.find(c => c.dataType === 'number')?.name || '',
+                agg: 'sum',
+                w: 6,
+                h: 5
+            });
+        }
+
+        function openEditWidgetModal(index) {
+            const w = currentLayout.widgets[index];
+            if (!w) return;
+            openWidgetConfigModal(index, w);
+        }
+
+        function openWidgetConfigModal(index, w) {
+            document.getElementById('modalTitle').textContent = index >= 0 ? 'Bileşeni Düzenle' : 'Yeni Bileşen Ekle';
+            const colOpts = currentColumns.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)} (${c.dataType})</option>`).join('');
+            const body = document.getElementById('modalBody');
+            body.style.padding = '16px';
+
+            body.innerHTML = `
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                    <div class="ctrl-group">
+                        <label>Başlık</label>
+                        <input type="text" id="cfgTitle" value="${escapeHtml(w.title || '')}">
+                    </div>
+                    <div class="ctrl-group">
+                        <label>KPI Alt Etiketi (Boş bırakılırsa gizlenir)</label>
+                        <input type="text" id="cfgSubtitle" value="${escapeHtml(w.subtitle !== undefined ? w.subtitle : '')}" placeholder="Örn: TOPLAM METRAJ">
+                    </div>
+                    <div class="ctrl-group">
+                        <label>Bileşen Tipi</label>
+                        <select id="cfgType" onchange="if(this.value==='kpi'){document.getElementById('cfgW').value=3;document.getElementById('cfgH').value=2;}">
+                            <option value="bar" ${w.type === 'bar' ? 'selected' : ''}>📊 Sütun Grafiği (Bar)</option>
+                            <option value="stackedBar" ${w.type === 'stackedBar' ? 'selected' : ''}>📚 Yığılmış Sütun (Stacked Bar)</option>
+                            <option value="horizontalBar" ${w.type === 'horizontalBar' ? 'selected' : ''}>📉 Yatay Sütun (Horizontal Bar)</option>
+                            <option value="line" ${w.type === 'line' ? 'selected' : ''}>📈 Çizgi Grafiği (Line)</option>
+                            <option value="area" ${w.type === 'area' ? 'selected' : ''}>⛰️ Alan Grafiği (Area)</option>
+                            <option value="pie" ${w.type === 'pie' ? 'selected' : ''}>🥧 Pasta Grafiği (Pie)</option>
+                            <option value="donut" ${w.type === 'donut' ? 'selected' : ''}>🍩 Halka Grafiği (Donut)</option>
+                            <option value="gauge" ${w.type === 'gauge' ? 'selected' : ''}>🎯 İbre (Gauge)</option>
+                            <option value="treemap" ${w.type === 'treemap' ? 'selected' : ''}>🟩 Treemap</option>
+                            <option value="heatmap" ${w.type === 'heatmap' ? 'selected' : ''}>🔥 Isı Haritası (Heatmap)</option>
+                            <option value="kpi" ${w.type === 'kpi' ? 'selected' : ''}>🔢 KPI Kartı</option>
+                            <option value="pivot" ${w.type === 'pivot' ? 'selected' : ''}>🧮 Pivot Tablo</option>
+                            <option value="table" ${w.type === 'table' ? 'selected' : ''}>📋 Veri Tablosu (Grid)</option>
+                        </select>
+                    </div>
+                    <div class="ctrl-group">
+                        <label>Ana Boyut (Gruplama Kolonu)</label>
+                        <select id="cfgDim">${colOpts}</select>
+                    </div>
+                    <div class="ctrl-group">
+                        <label>Değer / Ölçüm Kolonu</label>
+                        <select id="cfgVal">${colOpts}</select>
+                    </div>
+                    <div class="ctrl-group">
+                        <label>Hesaplama Tipi (Aggregation)</label>
+                        <select id="cfgAgg">
+                            <option value="sum" ${w.agg === 'sum' ? 'selected' : ''}>Toplam (SUM)</option>
+                            <option value="count" ${w.agg === 'count' ? 'selected' : ''}>Adet (COUNT)</option>
+                            <option value="avg" ${w.agg === 'avg' ? 'selected' : ''}>Ortalama (AVG)</option>
+                        </select>
+                    </div>
+                    <div class="ctrl-group">
+                        <label>Çift Tık (Drill-Down) Alt Kırılım Kolonları (Virgülle)</label>
+                        <input type="text" id="cfgDrill" value="${escapeHtml((w.drillHierarchy || []).join(', '))}" placeholder="Örn: Ulke, Il, Cari">
+                    </div>
+                    <div class="ctrl-group">
+                        <label>Genişlik (1 - 12 Sütun)</label>
+                        <input type="number" id="cfgW" min="2" max="12" value="${w.w || 4}">
+                    </div>
+                    <div class="ctrl-group">
+                        <label>Yükseklik (2 - 10 Birim)</label>
+                        <input type="number" id="cfgH" min="2" max="10" value="${w.h || 5}">
+                    </div>
+                </div>
+                <div style="margin-top:18px;display:flex;justify-content:flex-end;gap:10px;">
+                    <button type="button" class="btn btn-primary" onclick="applyWidgetConfig(${index})">Uygula</button>
+                </div>`;
+
+            if (w.dimension) document.getElementById('cfgDim').value = w.dimension;
+            if (w.valueField) document.getElementById('cfgVal').value = w.valueField;
+            document.getElementById('detailModal').style.display = 'flex';
+        }
+
+        function applyWidgetConfig(index) {
+            const drillStr = document.getElementById('cfgDrill').value;
+            const drillArr = drillStr.split(',').map(s => s.trim()).filter(Boolean);
+            const updated = {
+                id: index >= 0 ? currentLayout.widgets[index].id : ('w_' + Date.now()),
+                title: document.getElementById('cfgTitle').value.trim(),
+                subtitle: document.getElementById('cfgSubtitle') ? document.getElementById('cfgSubtitle').value : undefined,
+                type: document.getElementById('cfgType').value,
+                dimension: document.getElementById('cfgDim').value,
+                secondaryDimension: currentColumns[1]?.name || '',
+                valueField: document.getElementById('cfgVal').value,
+                agg: document.getElementById('cfgAgg').value,
+                drillHierarchy: drillArr,
+                w: parseInt(document.getElementById('cfgW').value || '4', 10),
+                h: parseInt(document.getElementById('cfgH').value || '5', 10)
+            };
+
+            if (index >= 0) {
+                currentLayout.widgets[index] = Object.assign({}, currentLayout.widgets[index], updated);
+            } else {
+                currentLayout.widgets.push(updated);
+            }
+            closeModal();
+            renderAllWidgets();
+        }
+
+        async function saveUserCustomLayout() {
+            const dash = authorizedDashboards[activeDashboardIndex];
+            if (!dash) return;
+
+            const layoutStr = JSON.stringify(currentLayout);
+            const res = await fetch(`/api/dashboards/${dash.dashboard_id}/user-layout`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ layoutJson: layoutStr })
+            });
+            const data = await res.json();
+            alert(data.message || 'Kaydedildi.');
+            if (res.ok && data.success) {
+                dash.effective_layout_json = layoutStr;
+                dash.has_custom_layout = true;
+                document.getElementById('btnResetUserLayout').style.display = 'inline-flex';
+                isUserEditMode = false;
+                document.getElementById('userEditBanner').style.display = 'none';
+                document.getElementById('btnSaveUserLayout').style.display = 'none';
+                renderAllWidgets();
+            }
+        }
+
+        async function resetUserCustomLayout() {
+            const dash = authorizedDashboards[activeDashboardIndex];
+            if (!dash) return;
+            if (!confirm('Kişisel tasarımınızı sıfırlayıp varsayılan ana tasarıma dönmek istiyor musunuz?')) return;
+
+            const res = await fetch(`/api/dashboards/${dash.dashboard_id}/user-layout`, { method: 'DELETE' });
+            if (res.ok) {
+                await loadAuthorizedDashboards();
+                await loadAndRenderDashboard(activeDashboardIndex, false);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+
+        function toggleControlBar() {
+            const el = document.getElementById('controlBarSection');
+            el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+        }
+
+        async function logout() {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login';
+        }
+
+        // Yardımcı Hesaplama Fonksiyonları
+        function computeAggregate(rows, field, agg) {
+            if (!rows || rows.length === 0) return 0;
+            const a = (agg || 'sum').toLowerCase();
+            if (a === 'count') return rows.length;
+            let sum = 0, count = 0, min = Infinity, max = -Infinity;
+            rows.forEach(r => {
+                const raw = getRowValue(r, field);
+                const num = parseFloat(raw);
+                if (!isNaN(num)) {
+                    sum += num;
+                    count++;
+                    if (num < min) min = num;
+                    if (num > max) max = num;
+                }
+            });
+            if (count === 0) return 0;
+            if (a === 'avg') return sum / count;
+            if (a === 'min') return min;
+            if (a === 'max') return max;
+            return sum;
+        }
+
+        function groupAndAggregateComposite(rows, dimFields, valField, agg, topN) {
+            const cols = Array.isArray(dimFields) && dimFields.length > 0 ? dimFields : [dimFields || ''];
+            const map = new Map();
+            const a = (agg || 'sum').toLowerCase();
+
+            rows.forEach(r => {
+                const parts = cols.map(c => {
+                    const v = getRowValue(r, c);
+                    if (v === null || v === undefined || v === '') return 'Belirsiz';
+                    if (/ay\b/i.test(c) && !isNaN(Number(v))) return String(v).padStart(2, '0');
+                    return String(v);
+                });
+                const key = parts.join(' / ');
+                const num = parseFloat(getRowValue(r, valField));
+                const val = isNaN(num) ? 0 : num;
+                if (!map.has(key)) map.set(key, { sum: 0, count: 0, min: Infinity, max: -Infinity });
+                const entry = map.get(key);
+                entry.sum += val;
+                entry.count += 1;
+                if (!isNaN(num)) {
+                    if (num < entry.min) entry.min = num;
+                    if (num > entry.max) entry.max = num;
+                }
+            });
+
+            const arr = [];
+            for (const [k, v] of map.entries()) {
+                let finalVal = v.sum;
+                if (a === 'count') finalVal = v.count;
+                else if (a === 'avg') finalVal = v.count ? v.sum / v.count : 0;
+                else if (a === 'min') finalVal = v.min === Infinity ? 0 : v.min;
+                else if (a === 'max') finalVal = v.max === -Infinity ? 0 : v.max;
+                arr.push({ key: k, value: Math.round(finalVal * 100) / 100 });
+            }
+
+            const isTimeAxis = cols.some(c => /y[ıi]l|ay\b|tarih|tar\.|termin/i.test(String(c)));
+            if (isTimeAxis) {
+                arr.sort((aItem, bItem) => aItem.key.localeCompare(bItem.key, 'tr-TR', { numeric: true }));
+            } else {
+                arr.sort((aItem, bItem) => bItem.value - aItem.value);
+            }
+            return topN ? arr.slice(0, topN) : arr;
+        }
+
+        function groupAndAggregate(rows, dimField, valField, agg, topN) {
+            return groupAndAggregateComposite(rows, [dimField], valField, agg, topN);
+        }
+
+        function formatNumber(val) {
+            const num = Number(val || 0);
+            return num.toLocaleString('tr-TR', { maximumFractionDigits: 2 });
+        }
+
+        function formatCell(val) {
+            if (val === null || val === undefined) return '';
+            if (typeof val === 'number') return formatNumber(val);
+            const str = String(val);
+            if (/^\d{4}-\d{2}-\d{2}T/.test(str)) {
+                return str.substring(0, 10).split('-').reverse().join('.');
+            }
+            return escapeHtml(str);
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        initApp();
+    </script>
+</body>
+</html>
+

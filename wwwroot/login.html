@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpsWebBI - Giriş & Doğrulama</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --border: #334155;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --danger: #ef4444;
+            --badge-bg: rgba(59, 130, 246, 0.15);
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        body {
+            margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle at top left, #1e293b, #0f172a); color: var(--text); padding: 16px;
+        }
+        .login-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+            width: 100%; max-width: 420px; padding: 32px; box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+        }
+        .brand {
+            display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
+        }
+        .brand-logo {
+            width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem;
+        }
+        h1 { font-size: 1.35rem; margin: 0; }
+        p.subtitle { color: var(--muted); font-size: 0.9rem; margin: 6px 0 22px 0; }
+        .user-badge {
+            display: none; align-items: center; justify-content: space-between;
+            background: var(--badge-bg); border: 1px solid rgba(59, 130, 246, 0.35);
+            padding: 10px 14px; border-radius: 10px; margin-bottom: 16px; font-size: 0.92rem;
+        }
+        .user-badge strong { color: #93c5fd; }
+        .alert {
+            display: none; padding: 10px 14px; border-radius: 8px; font-size: 0.88rem; margin-bottom: 16px;
+            border: 1px solid rgba(239,68,68,0.4); background: rgba(239,68,68,0.12); color: #fca5a5;
+        }
+        .field { margin-bottom: 16px; }
+        label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+        input {
+            width: 100%; padding: 11px 14px; border-radius: 9px; border: 1px solid var(--border);
+            background: #0f172a; color: var(--text); font-size: 0.96rem; outline: none;
+        }
+        input:focus { border-color: var(--primary); }
+        input[readonly] { opacity: 0.7; cursor: not-allowed; }
+        button.btn-submit {
+            width: 100%; padding: 12px; border-radius: 9px; border: none;
+            background: var(--primary); color: #fff; font-weight: 600; font-size: 0.96rem;
+            cursor: pointer; margin-top: 6px; transition: background 0.15s;
+        }
+        button.btn-submit:hover { background: var(--primary-hover); }
+        .footer {
+            margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--border);
+            display: flex; justify-content: space-between; font-size: 0.83rem; color: var(--muted);
+        }
+        .footer a { color: #60a5fa; text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+        body.light-theme {
+            --bg: #f1f5f9; --card: #ffffff; --border: #cbd5e1; --text: #0f172a; --muted: #475569;
+            background: radial-gradient(circle at top left, #e2e8f0, #f1f5f9);
+        }
+        body.light-theme .login-card { box-shadow: 0 12px 32px rgba(15,23,42,0.12); }
+        body.light-theme input { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="brand" style="justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <div class="brand-logo" style="color:#fff;">BI</div>
+                <div>
+                    <h1>SpsWebBI</h1>
+                </div>
+            </div>
+            <button type="button" id="btnThemeToggle" onclick="toggleTheme()"
+                    style="background:transparent;border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:7px;cursor:pointer;font-size:0.78rem;font-weight:600;">
+                ☀️ Açık
+            </button>
+        </div>
+        <script>
+            function applySavedTheme() {
+                const saved = localStorage.getItem('sps_bi_theme') || 'dark';
+                document.body.classList.toggle('light-theme', saved === 'light');
+                const btn = document.getElementById('btnThemeToggle');
+                if (btn) btn.innerHTML = saved === 'light' ? '🌙 Koyu' : '☀️ Açık';
+            }
+            function toggleTheme() {
+                const next = document.body.classList.contains('light-theme') ? 'dark' : 'light';
+                localStorage.setItem('sps_bi_theme', next);
+                applySavedTheme();
+            }
+            applySavedTheme();
+        </script>
+        <p class="subtitle" id="subtitleText">İş Zekası ve Dinamik Raporlama Platformu</p>
+
+        <div id="lockedUserBadge" class="user-badge">
+            <span>Kullanıcı: <strong id="lockedUserText"></strong></span>
+            <span style="font-size:0.78rem;color:#94a3b8;">PIN / Şifre Doğrulama (8.4)</span>
+        </div>
+
+        <div id="errorBox" class="alert"></div>
+
+        <form id="loginForm" onsubmit="submitLogin(event)">
+            <div class="field" id="userCodeField">
+                <label for="userCode">Kullanıcı Kodu</label>
+                <input type="text" id="userCode" autocomplete="username" placeholder="Örn: admin veya A" required>
+            </div>
+
+            <div class="field">
+                <label for="password" id="passwordLabel">Şifre / PIN</label>
+                <input type="password" id="password" autocomplete="current-password" placeholder="Şifrenizi giriniz" required>
+            </div>
+
+            <button type="submit" class="btn-submit" id="btnLogin">Giriş Yap</button>
+        </form>
+
+        <div class="footer">
+            <span>Kapalı Devre Güvenli Oturum</span>
+            <a href="/db-settings">Veritabanı Ayarları</a>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramUser = urlParams.get('User') || urlParams.get('user') || '';
+        const paramSecurity = urlParams.get('Security') || urlParams.get('security') || '';
+        const paramMode = urlParams.get('Mode') || urlParams.get('mode') || '';
+
+        // Güvenlik: Adres çubuğundaki User, Security, Mode parametrelerini anında gizle
+        if (window.location.search) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        async function initEntryCheck() {
+            const query = new URLSearchParams();
+            if (paramUser) query.set('User', paramUser);
+            if (paramSecurity) query.set('Security', paramSecurity);
+            if (paramMode) query.set('Mode', paramMode);
+
+            try {
+                const res = await fetch('/api/auth/evaluate-entry?' + query.toString());
+                const data = await res.json();
+
+                if (!data.requiresAuth) {
+                    // Kural 8.1, 8.2, 8.3 veya aktif oturum: doğrudan ana gösterim ekranına yönlendir
+                    redirectAfterAuth(data.action, data.mode);
+                    return;
+                }
+
+                // Kural 8.4: User=A&Security=1 -> Kullanıcı kodu sabitlenmiş PIN/Şifre ekranı
+                if (data.lockUserCode && data.userCode) {
+                    document.getElementById('userCode').value = data.userCode;
+                    document.getElementById('userCodeField').style.display = 'none';
+                    const badge = document.getElementById('lockedUserBadge');
+                    badge.style.display = 'flex';
+                    document.getElementById('lockedUserText').textContent = data.userCode;
+                    document.getElementById('subtitleText').textContent = data.message || 'Lütfen şifre veya PIN kodunuzu doğrulayın.';
+                    document.getElementById('password').focus();
+                } else {
+                    document.getElementById('userCode').focus();
+                }
+            } catch (e) {
+                showError('Sunucu bağlantısı kurulamadı: ' + e.message);
+            }
+        }
+
+        async function submitLogin(e) {
+            e.preventDefault();
+            const errBox = document.getElementById('errorBox');
+            errBox.style.display = 'none';
+
+            const payload = {
+                userCode: document.getElementById('userCode').value.trim(),
+                password: document.getElementById('password').value,
+                mode: paramMode
+            };
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    showError(data.message || 'Giriş başarısız.');
+                    return;
+                }
+
+                redirectAfterAuth(data.action, data.mode);
+            } catch (err) {
+                showError('İstek sırasında hata oluştu: ' + err.message);
+            }
+        }
+
+        function redirectAfterAuth(action, mode) {
+            const targetParams = new URLSearchParams();
+            if (action === 'START_SLIDESHOW' || (mode && mode.toLowerCase() === 'slayt')) {
+                targetParams.set('Mode', 'Slayt');
+                targetParams.set('AutoStart', '1');
+            }
+            const qs = targetParams.toString();
+            window.location.href = '/app' + (qs ? '?' + qs : '');
+        }
+
+        function showError(msg) {
+            const errBox = document.getElementById('errorBox');
+            errBox.textContent = msg;
+            errBox.style.display = 'block';
+        }
+
+        initEntryCheck();
+    </script>
+</body>
+</html>
+

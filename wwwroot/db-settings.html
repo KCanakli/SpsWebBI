@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpsWebBI - MariaDB Bağlantı Ayarları</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --border: #334155;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        body {
+            margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle at top right, #1e293b, #0f172a); color: var(--text); padding: 16px;
+        }
+        .card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+            width: 100%; max-width: 520px; padding: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.45);
+        }
+        h1 { font-size: 1.35rem; margin: 0 0 6px 0; display: flex; align-items: center; gap: 10px; }
+        p.sub { color: var(--muted); font-size: 0.9rem; margin: 0 0 20px 0; }
+        .status-banner {
+            padding: 10px 14px; border-radius: 8px; font-size: 0.88rem; margin-bottom: 18px;
+            border: 1px solid var(--border); background: rgba(255,255,255,0.03);
+        }
+        .status-ok { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.1); color: #6ee7b7; }
+        .status-err { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.1); color: #fca5a5; }
+        .row { display: flex; gap: 12px; }
+        .field { margin-bottom: 14px; flex: 1; }
+        label { display: block; font-size: 0.84rem; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+        input {
+            width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);
+            background: #0f172a; color: var(--text); font-size: 0.95rem; outline: none;
+        }
+        input:focus { border-color: var(--primary); }
+        .actions { display: flex; gap: 10px; margin-top: 20px; }
+        button, a.btn {
+            flex: 1; padding: 11px 16px; border-radius: 8px; border: none; font-weight: 600;
+            font-size: 0.92rem; cursor: pointer; text-align: center; text-decoration: none;
+        }
+        .btn-test { background: #334155; color: var(--text); }
+        .btn-test:hover { background: #475569; }
+        .btn-save { background: var(--primary); color: #fff; }
+        .btn-save:hover { background: var(--primary-hover); }
+        .footer-links { margin-top: 18px; text-align: center; font-size: 0.86rem; }
+        .footer-links a { color: #60a5fa; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>MariaDB Bağlantı Ayarları</h1>
+        <p class="sub">Veritabanı bağlantı bilgileri Windows DPAPI ile şifrelenerek saklanır.</p>
+
+        <div id="statusBox" class="status-banner">Bağlantı durumu kontrol ediliyor...</div>
+
+        <div class="row">
+            <div class="field" style="flex: 2.2;">
+                <label for="server">Sunucu Adresi (IP / Host)</label>
+                <input type="text" id="server" placeholder="127.0.0.1" value="127.0.0.1">
+            </div>
+            <div class="field" style="flex: 1;">
+                <label for="port">Port</label>
+                <input type="number" id="port" placeholder="3323" value="3323">
+            </div>
+        </div>
+
+        <div class="field">
+            <label for="database">Veritabanı Adı (Şema)</label>
+            <input type="text" id="database" placeholder="spsteks" value="spsteks">
+        </div>
+
+        <div class="row">
+            <div class="field">
+                <label for="userId">Kullanıcı Adı</label>
+                <input type="text" id="userId" placeholder="root" value="root">
+            </div>
+            <div class="field">
+                <label for="password">Veritabanı Şifresi <span id="pwdHint" style="font-weight:normal;font-size:0.78rem;"></span></label>
+                <input type="password" id="password" placeholder="Değiştirmek için yeni şifre girin">
+            </div>
+        </div>
+
+        <div class="field" id="adminAuthField">
+            <label for="adminPassword">Sistem Admin Doğrulama Şifresi (Varsayılan: Admin123!)</label>
+            <input type="password" id="adminPassword" placeholder="Mevcut bağlantıyı değiştirmek için Admin şifresi">
+        </div>
+
+        <div class="actions">
+            <button type="button" class="btn-test" onclick="testConnection()">Bağlantıyı Test Et</button>
+            <button type="button" class="btn-save" onclick="saveConnection()">Kaydet ve Tabloları Doğrula</button>
+        </div>
+
+        <div class="footer-links">
+            <a href="/">← Ana Giriş / Gösterim Ekranına Dön</a>
+        </div>
+    </div>
+
+    <script>
+        async function loadSettings() {
+            const box = document.getElementById('statusBox');
+            try {
+                const res = await fetch('/api/db-settings');
+                const data = await res.json();
+                document.getElementById('server').value = data.server || '127.0.0.1';
+                document.getElementById('port').value = data.port || 3323;
+                document.getElementById('database').value = data.database || 'spsteks';
+                document.getElementById('userId').value = data.userId || 'root';
+                if (data.hasSavedPassword) {
+                    document.getElementById('pwdHint').textContent = '(Kayıtlı şifre var)';
+                }
+                box.className = 'status-banner ' + (data.isConnected ? 'status-ok' : 'status-err');
+                box.textContent = data.statusMessage;
+            } catch (e) {
+                box.className = 'status-banner status-err';
+                box.textContent = 'Sunucuya ulaşılamadı: ' + e.message;
+            }
+        }
+
+        function getPayload() {
+            return {
+                server: document.getElementById('server').value,
+                port: parseInt(document.getElementById('port').value || '3323', 10),
+                database: document.getElementById('database').value,
+                userId: document.getElementById('userId').value,
+                password: document.getElementById('password').value,
+                adminPassword: document.getElementById('adminPassword').value
+            };
+        }
+
+        async function testConnection() {
+            const box = document.getElementById('statusBox');
+            box.className = 'status-banner';
+            box.textContent = 'Bağlantı test ediliyor...';
+            const res = await fetch('/api/db-settings/test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(getPayload())
+            });
+            const data = await res.json();
+            box.className = 'status-banner ' + (data.success ? 'status-ok' : 'status-err');
+            box.textContent = data.message;
+        }
+
+        async function saveConnection() {
+            const box = document.getElementById('statusBox');
+            box.className = 'status-banner';
+            box.textContent = 'Kaydediliyor ve BI tabloları doğrulanıyor...';
+            const res = await fetch('/api/db-settings/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(getPayload())
+            });
+            const data = await res.json();
+            box.className = 'status-banner ' + (data.success ? 'status-ok' : 'status-err');
+            box.textContent = data.message;
+            if (data.success) {
+                document.getElementById('password').value = '';
+                document.getElementById('pwdHint').textContent = '(Kayıtlı şifre var)';
+            }
+        }
+
+        loadSettings();
+    </script>
+</body>
+</html>
+
