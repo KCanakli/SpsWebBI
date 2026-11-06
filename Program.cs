@@ -72,6 +72,12 @@ app.MapGet("/designer", async context =>
     await context.Response.SendFileAsync(Path.Combine(app.Environment.WebRootPath, "designer.html"));
 });
 
+app.MapGet("/designer-v2", context =>
+{
+    context.Response.Redirect("/designer");
+    return System.Threading.Tasks.Task.CompletedTask;
+});
+
 app.MapGet("/admin", async context =>
 {
     context.Response.ContentType = "text/html; charset=utf-8";

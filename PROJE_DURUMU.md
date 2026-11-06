@@ -1,6 +1,6 @@
 # SpsWebBI - Geliştirme Durumu ve Mimari Hafıza
 
-**Son Güncelleme:** 2026-11-05
+**Son Güncelleme:** 2026-11-06
 **Proje Yolu:** `c:\Projeler\SpsWebBI`
 
 ---
@@ -54,4 +54,15 @@
 - `DS_SIPARIS` (18 kolon, 290 satır) ve `DS_STOK` (10 kolon, 1127 satır) veri kaynakları sıfır C# DTO ile canlı `spsteks` veritabanından başarıyla çekildi.
 - Düz metin `?User=A&Security=0` sızma testi engellendi, AES-256 + HMAC-SHA256 imzalı `UT1_...` token ile `8.1`, `8.2`, `8.3`, `8.4`, `8.5` senaryoları uçtan uca doğrulandı.
 - Uygulama `http://localhost:5180` adresinde canlı olarak çalışmaktadır.
+
+---
+
+## Sıradaki Adım (Devam Eden Çalışma - 2026-11-06)
+
+### [x] Adım 9: `designer.html` (ve `app.html`) Tasarım Stüdyosu Ekran Yerleşiminin Yenilenmesi (%100 / %125 Ölçek, Alfabetik Kolonlar ve 2D Yoğun Grid)
+- **Çözülen Sorunlar:**
+  1. `wwwroot/designer.html` yan yana 2 tam boy bağımsız dikey panel (`2. Seçili Bileşen & Veri Yuvaları` ve `3. Veri Kaynağı Kolonları`) + çift modlu bileşen paleti (`Sol Dikey Ray` / `Üst Yatay Şerit`) + alt durum çubuğu (`Status Bar`) mimarisine geçirildi; eski tasarım kaldırıldı.
+  2. Veri kaynağı kolonları ve veri yuvası seçim kutuları Türkçe (`tr-TR`) alfabetik (`A → Z`) sıralı hale getirildi.
+  3. Tuval ızgarası (`designer.html` ve `app.html`) 2 boyutlu yoğun mikro-grid (`grid-auto-rows: 6px; grid-auto-flow: row dense;` ve `grid-row: span ...`) yapısına geçirildi; kısa KPI kartlarının altında kalan boşluklara diğer bileşenlerin otomatik veya sürükle-bırak ile yerleşmesi sağlandı.
+
 

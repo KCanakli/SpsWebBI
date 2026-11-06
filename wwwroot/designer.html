@@ -3,481 +3,619 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpsWebBI - DevExpress BI Tarzı Görsel Tasarım Stüdyosu</title>
+    <title>SpsWebBI - Analytics Studio (Görsel Tasarım Stüdyosu)</title>
     <script src="/lib/echarts.min.js"></script>
     <style>
         :root {
-            --bg: #0b1120;
-            --panel: #151f32;
-            --panel-alt: #1e293b;
-            --card: #162032;
-            --border: #334155;
+            --bg: #070b14;
+            --panel: #0d1424;
+            --panel-alt: #111a2e;
+            --card: #0f172a;
+            --border: #1e293b;
+            --border-bright: #334155;
             --text: #f8fafc;
             --muted: #94a3b8;
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
+            --primary: #0ea5e9;
+            --primary-hover: #0284c7;
             --accent: #10b981;
             --warning: #f59e0b;
             --danger: #ef4444;
         }
-        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
         body {
             margin: 0; background: var(--bg); color: var(--text);
             height: 100vh; display: flex; flex-direction: column; overflow: hidden;
         }
 
-        /* Üst Başlık ve Sekme Çubuğu */
+        /* 1. ÜST KOMPAKT STUDIO BAR (Resim 1 ve Resim 3 tarzı) */
         .studio-topbar {
-            background: #0f172a; border-bottom: 1px solid var(--border);
-            padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            height: 46px; min-height: 46px;
+            background: #090e1a; border-bottom: 1px solid var(--border);
+            padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
         }
-        .studio-brand { display: flex; align-items: center; gap: 12px; }
-        .brand-pill {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff;
-            font-weight: 800; padding: 5px 10px; border-radius: 7px; font-size: 0.88rem;
+        .studio-brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .brand-logo {
+            background: linear-gradient(135deg, #0ea5e9, #2563eb); color: #fff;
+            font-weight: 800; padding: 4px 9px; border-radius: 6px; font-size: 0.82rem; white-space: nowrap;
+            display: inline-flex; align-items: center; gap: 5px;
         }
-        .mode-tabs { display: flex; gap: 6px; background: #1e293b; padding: 4px; border-radius: 9px; border: 1px solid var(--border); }
+        .live-badge {
+            background: rgba(16, 185, 129, 0.16); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35);
+            font-size: 0.66rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.4px;
+        }
+        .topbar-center { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+        .topbar-right { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
+
+        .mode-tabs {
+            display: flex; gap: 3px; background: #111a2e; padding: 3px;
+            border-radius: 7px; border: 1px solid var(--border);
+        }
         .mode-tab {
-            padding: 6px 14px; border-radius: 6px; border: none; background: transparent;
-            color: var(--muted); font-weight: 700; font-size: 0.84rem; cursor: pointer; transition: all 0.15s;
+            padding: 4px 10px; border-radius: 5px; border: none; background: transparent;
+            color: var(--muted); font-weight: 700; font-size: 0.76rem; cursor: pointer; transition: all 0.15s; white-space: nowrap;
         }
         .mode-tab.active { background: var(--primary); color: #fff; }
+
         .btn {
-            padding: 6px 12px; border-radius: 7px; border: 1px solid var(--border);
-            background: #0f172a; color: var(--text); cursor: pointer; font-weight: 600;
-            font-size: 0.82rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+            padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border-bright);
+            background: #111a2e; color: var(--text); cursor: pointer; font-weight: 600;
+            font-size: 0.76rem; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
         }
-        .btn:hover { border-color: var(--primary); }
+        .btn:hover { border-color: var(--primary); color: #fff; }
         .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
         .btn-primary:hover { background: var(--primary-hover); }
         .btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
-        .btn-danger { background: rgba(239,68,68,0.15); border-color: var(--danger); color: #fca5a5; }
+        .btn-danger { background: rgba(239,68,68,0.14); border-color: rgba(239,68,68,0.5); color: #fca5a5; }
 
-        /* DevExpress Ribbon Benzeri Dashboard Özellik Çubuğu */
-        .ribbon-bar {
+        /* Üst Kompakt Dashboard Kimlik & Veri Kaynağı Çubuğu (Daraltılabilir) */
+        .dash-meta-bar {
             background: var(--panel-alt); border-bottom: 1px solid var(--border);
-            padding: 8px 16px; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px;
+            padding: 5px 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
         }
-        .r-field { display: flex; flex-direction: column; gap: 3px; }
-        .r-field label { font-size: 0.7rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
-        .r-field input, .r-field select {
-            padding: 6px 9px; border-radius: 6px; border: 1px solid var(--border);
-            background: #0f172a; color: var(--text); font-size: 0.84rem; outline: none;
+        .dash-meta-bar.collapsed { display: none; }
+        .meta-item { display: flex; align-items: center; gap: 5px; }
+        .meta-item label {
+            font-size: 0.68rem; color: var(--muted); font-weight: 700; text-transform: uppercase; white-space: nowrap;
+        }
+        .meta-item input, .meta-item select {
+            padding: 4px 8px; border-radius: 5px; border: 1px solid var(--border-bright);
+            background: #090e1a; color: var(--text); font-size: 0.78rem; outline: none;
+        }
+        .meta-item input:focus, .meta-item select:focus { border-color: var(--primary); }
+
+        /* SEÇENEK B (3. Resim): ÜST YATAY GÖRSEL PALETİ ŞERİDİ */
+        .top-palette-bar {
+            height: 38px; min-height: 38px;
+            background: #0b1220; border-bottom: 1px solid var(--border);
+            padding: 0 12px; display: none; align-items: center; gap: 5px; overflow-x: auto; user-select: none;
+        }
+        body.palette-top .top-palette-bar { display: flex; }
+        body.palette-top .left-rail-palette { display: none; }
+
+        .palette-label {
+            font-size: 0.68rem; font-weight: 800; color: var(--muted); text-transform: uppercase;
+            letter-spacing: 0.5px; margin-right: 6px; white-space: nowrap; display: flex; align-items: center; gap: 4px;
+        }
+        .top-tool-pill {
+            padding: 4px 9px; border-radius: 6px; border: 1px solid transparent;
+            background: transparent; color: #cbd5e1; font-size: 0.75rem; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 5px; cursor: grab; white-space: nowrap; transition: all 0.14s;
+        }
+        .top-tool-pill:hover { background: rgba(14, 165, 233, 0.12); border-color: rgba(14, 165, 233, 0.4); color: #fff; }
+        .top-tool-pill.active-type {
+            background: rgba(14, 165, 233, 0.18); border-color: #38bdf8; color: #38bdf8; font-weight: 700;
+        }
+        .top-tool-pill .active-tag {
+            font-size: 0.6rem; background: rgba(14, 165, 233, 0.3); color: #7dd3fc;
+            padding: 1px 4px; border-radius: 3px; font-weight: 800;
         }
 
-        /* Ana Çalışma Alanı (Sol Dock Panel + Sağ Canlı Tuval) */
+        /* ANA ÇALIŞMA ALANI: SOL İKON RAYI + SÜTUN 1 (VERİ YUVALARI) + SÜTUN 2 (KOLONLAR) + SAĞ TUVAL */
         .studio-workspace {
-            flex: 1; display: flex; overflow: hidden; position: relative;
+            flex: 1; display: flex; overflow: hidden; position: relative; min-height: 0;
         }
 
-        /* Sol DevExpress Dock Paneli (Toolbox + Data Items + Field List) */
-        .dock-sidebar {
-            width: 360px; min-width: 360px; background: var(--panel); border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; overflow-y: auto; user-select: none;
+        /* SEÇENEK A (1. ve 2. Resim): EN SOLDA DİKEY İKON ŞERİDİ (ACTIVITY RAIL) */
+        .left-rail-palette {
+            width: 56px; min-width: 56px; background: #080d19; border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; align-items: center; padding: 6px 3px; gap: 3px;
+            overflow-y: auto; overflow-x: hidden; user-select: none;
         }
-        .dock-section {
-            border-bottom: 1px solid var(--border); padding: 10px 12px;
+        .left-rail-palette::-webkit-scrollbar { width: 3px; }
+        .left-rail-palette::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+        .rail-tile {
+            width: 48px; min-height: 42px; padding: 4px 2px; border-radius: 7px;
+            border: 1px solid transparent; background: transparent; color: var(--muted);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+            cursor: grab; font-size: 0.62rem; font-weight: 600; text-align: center; transition: all 0.14s;
+            position: relative;
         }
-        .dock-sec-title {
-            font-size: 0.74rem; font-weight: 800; color: #93c5fd; text-transform: uppercase;
-            letter-spacing: 0.5px; margin: 0 0 8px 0; display: flex; align-items: center; justify-content: space-between;
+        .rail-tile:hover {
+            background: rgba(14, 165, 233, 0.12); color: #f8fafc; border-color: rgba(56, 189, 248, 0.35);
+        }
+        .rail-tile.active-type {
+            background: rgba(14, 165, 233, 0.18); color: #38bdf8; border-color: #0ea5e9; font-weight: 700;
+        }
+        .rail-tile.active-type::after {
+            content: ''; position: absolute; right: -3px; top: 8px; bottom: 8px; width: 3px;
+            background: #38bdf8; border-radius: 2px;
+        }
+        .rail-icon { font-size: 1rem; line-height: 1; }
+
+        /* YAN YANA TAM BOY BAĞIMSIZ DİKEY PANELLER (2. ve 3. BÖLÜM) */
+        .studio-column {
+            display: flex; flex-direction: column; height: 100%; min-height: 0;
+            background: var(--panel); border-right: 1px solid var(--border); user-select: none;
+            transition: width 0.15s ease, min-width 0.15s ease;
+        }
+        .studio-column.col-binding { width: 290px; min-width: 290px; }
+        .studio-column.col-fields { width: 255px; min-width: 255px; }
+        .studio-column.collapsed { width: 0 !important; min-width: 0 !important; overflow: hidden; border-right: none; }
+
+        .col-header {
+            height: 36px; min-height: 36px; padding: 0 10px;
+            background: rgba(15, 23, 42, 0.75); border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; gap: 6px;
+        }
+        .col-header-title {
+            font-size: 0.7rem; font-weight: 800; color: #38bdf8; text-transform: uppercase;
+            letter-spacing: 0.4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .col-badge {
+            font-size: 0.66rem; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+            background: rgba(14, 165, 233, 0.15); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.3);
+            white-space: nowrap;
+        }
+        .col-scroll-body {
+            flex: 1; overflow-y: auto; padding: 10px; min-height: 0;
+        }
+        .col-scroll-body::-webkit-scrollbar { width: 5px; }
+        .col-scroll-body::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        .col-footer {
+            height: 28px; min-height: 28px; padding: 0 10px;
+            border-top: 1px solid var(--border); background: #090e1a;
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 0.69rem; color: var(--muted);
         }
 
-        /* 1. Araç Kutusu (Toolbox) */
-        .toolbox-grid {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+        /* 2. SEÇİLİ BİLEŞEN & VERİ YUVALARI STİLLERİ */
+        .r-field { display: flex; flex-direction: column; gap: 3px; }
+        .r-field label {
+            font-size: 0.67rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
         }
-        .tool-tile {
-            background: #0f172a; border: 1px solid var(--border); border-radius: 7px;
-            padding: 7px 4px; display: flex; flex-direction: column; align-items: center; gap: 3px;
-            cursor: grab; font-size: 0.73rem; font-weight: 600; color: #e2e8f0; text-align: center;
-            transition: all 0.15s;
+        .r-field input, .r-field select {
+            padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border-bright);
+            background: #080d19; color: var(--text); font-size: 0.79rem; outline: none;
         }
-        .tool-tile:hover { border-color: var(--primary); background: rgba(59,130,246,0.12); transform: translateY(-1px); }
-        .tool-tile:active { cursor: grabbing; }
-        .tool-icon { font-size: 1.15rem; line-height: 1; }
+        .r-field input:focus, .r-field select:focus { border-color: var(--primary); }
 
-        /* 2. Veri Bağlama Yuvaları (Data Items / Drop Zones) */
         .drop-zone {
-            background: rgba(15, 23, 42, 0.75); border: 1.5px dashed #475569; border-radius: 8px;
-            padding: 7px; min-height: 44px; margin-bottom: 8px; transition: all 0.15s;
+            background: rgba(8, 13, 25, 0.75); border: 1.5px dashed #334155; border-radius: 8px;
+            padding: 7px; min-height: 42px; margin-bottom: 8px; transition: all 0.15s;
         }
         .drop-zone.drag-over {
             border-color: #38bdf8; background: rgba(56, 189, 248, 0.12);
             box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
         }
         .dz-label {
-            font-size: 0.71rem; font-weight: 700; color: var(--muted); text-transform: uppercase;
+            font-size: 0.68rem; font-weight: 800; color: #94a3b8; text-transform: uppercase;
             margin-bottom: 5px; display: flex; align-items: center; justify-content: space-between;
         }
         .dz-empty {
-            font-size: 0.76rem; color: #64748b; text-align: center; padding: 6px 4px; font-style: italic;
+            font-size: 0.74rem; color: #64748b; text-align: center; padding: 6px 4px; font-style: italic;
         }
         .bound-pill {
-            background: #1e293b; border: 1px solid #3b82f6; border-radius: 6px;
-            padding: 4px 8px; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;
-            font-size: 0.79rem; color: #f8fafc; gap: 6px;
+            background: #131f35; border: 1px solid rgba(56, 189, 248, 0.45); border-radius: 6px;
+            padding: 4px 6px; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;
+            font-size: 0.76rem; color: #f8fafc; gap: 4px;
         }
         .bound-pill:last-child { margin-bottom: 0; }
         .bound-pill select {
-            background: #0f172a; color: #6ee7b7; border: 1px solid var(--border);
-            border-radius: 4px; font-size: 0.72rem; padding: 1px 4px; font-weight: 700;
+            background: #080d19; color: #6ee7b7; border: 1px solid var(--border-bright);
+            border-radius: 4px; font-size: 0.7rem; padding: 2px 4px; font-weight: 700;
         }
         .bound-pill select.pill-col-select {
-            background: #0f172a; color: #f8fafc; border: 1px solid rgba(56, 189, 248, 0.45);
-            border-radius: 5px; font-size: 0.78rem; padding: 2px 6px; font-weight: 700;
-            flex: 1; min-width: 90px; max-width: 175px; cursor: pointer; outline: none;
-        }
-        .bound-pill select.pill-col-select:hover, .bound-pill select.pill-col-select:focus {
-            border-color: #38bdf8;
+            background: #080d19; color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4);
+            border-radius: 5px; font-size: 0.75rem; padding: 2px 5px; font-weight: 700;
+            flex: 1; min-width: 75px; max-width: 145px; cursor: pointer; outline: none;
         }
         .dz-add-select {
-            width: 100%; margin-top: 5px; padding: 4px 7px; border-radius: 5px;
-            border: 1px dashed #475569; background: rgba(15, 23, 42, 0.65); color: #93c5fd;
-            font-size: 0.74rem; font-weight: 600; cursor: pointer; outline: none;
+            width: 100%; margin-top: 5px; padding: 4px 6px; border-radius: 5px;
+            border: 1px dashed #334155; background: rgba(8, 13, 25, 0.65); color: #93c5fd;
+            font-size: 0.72rem; font-weight: 600; cursor: pointer; outline: none;
         }
-        .dz-add-select:hover, .dz-add-select:focus {
-            border-color: #38bdf8; color: #38bdf8; background: rgba(15, 23, 42, 0.95);
-        }
-        .pill-actions { display: flex; align-items: center; gap: 3px; }
+        .dz-add-select:hover { border-color: #38bdf8; color: #38bdf8; }
+        .pill-actions { display: flex; align-items: center; gap: 2px; }
         .pill-btn {
             background: transparent; border: none; color: #94a3b8; cursor: pointer;
-            font-size: 0.75rem; padding: 1px 4px; border-radius: 4px;
+            font-size: 0.73rem; padding: 1px 4px; border-radius: 4px;
         }
         .pill-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
         .pill-btn.del:hover { color: #fca5a5; }
 
-        /* 3. Veri Kaynağı Alan Listesi (Field List) */
-        .field-list-wrap {
-            flex: 1; display: flex; flex-direction: column; padding: 10px 12px; min-height: 180px;
+        /* 3. VERİ KAYNAĞI KOLONLARI LİSTESİ (Alfabetik + Aktif Kolon Vurgulu) */
+        .field-search-box {
+            padding: 8px 10px 4px 10px; border-bottom: 1px solid var(--border);
         }
-        .field-items-scroll {
-            flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; margin-top: 6px;
+        .field-search-box input {
+            width: 100%; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border-bright);
+            background: #080d19; color: #fff; font-size: 0.77rem; outline: none;
         }
-        .field-chip {
-            background: #0f172a; border: 1px solid var(--border); border-radius: 6px;
-            padding: 6px 9px; display: flex; align-items: center; justify-content: space-between;
-            cursor: grab; font-size: 0.81rem; transition: all 0.12s;
-        }
-        .field-chip:hover { border-color: #38bdf8; background: #162238; }
-        .field-chip:active { cursor: grabbing; }
-        .f-type-badge {
-            font-size: 0.68rem; font-weight: 700; padding: 1px 6px; border-radius: 4px; text-transform: uppercase;
-        }
-        .ft-number { background: rgba(59,130,246,0.2); color: #93c5fd; }
-        .ft-string { background: rgba(16,185,129,0.2); color: #6ee7b7; }
-        .ft-date { background: rgba(245,158,11,0.2); color: #fcd34d; }
+        .field-search-box input:focus { border-color: var(--primary); }
 
-        /* Sağ Canlı Tuval Alanı */
+        .field-chip {
+            background: #090f1d; border: 1px solid var(--border); border-radius: 6px;
+            padding: 5px 8px; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;
+            cursor: grab; font-size: 0.77rem; transition: all 0.12s; gap: 6px;
+        }
+        .field-chip:hover { border-color: #38bdf8; background: #111c33; }
+        .field-chip.is-bound {
+            background: rgba(14, 165, 233, 0.13); border-color: #0ea5e9; color: #7dd3fc;
+        }
+        .field-grip { color: #475569; font-size: 0.75rem; margin-right: 3px; }
+        .field-chip.is-bound .field-grip { color: #38bdf8; font-weight: 800; }
+        .f-type-badge {
+            font-size: 0.62rem; font-weight: 800; padding: 1px 5px; border-radius: 4px;
+            text-transform: uppercase; letter-spacing: 0.3px; white-space: nowrap;
+        }
+        .ft-number { background: rgba(14, 165, 233, 0.18); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.3); }
+        .ft-string { background: rgba(16, 185, 129, 0.18); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .ft-date { background: rgba(245, 158, 11, 0.18); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .quick-add-btn {
+            width: 20px; height: 20px; border-radius: 4px; border: 1px solid var(--border-bright);
+            background: #0f172a; color: #94a3b8; font-weight: 800; font-size: 0.76rem;
+            display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+        }
+        .quick-add-btn:hover { border-color: #38bdf8; color: #38bdf8; background: rgba(56, 189, 248, 0.15); }
+
+        /* SAĞ CANLI TUVAL ALANI (2 BOYUTLU YOĞUN MİKRO-GRİD: BOŞ ALANLARI OTOMATİK DOLDURUR) */
+        .canvas-wrapper {
+            flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden;
+        }
+        .canvas-toolbar {
+            height: 36px; min-height: 36px; padding: 0 12px;
+            background: #0a101d; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+            font-size: 0.74rem; color: var(--muted);
+        }
         .canvas-area {
-            flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 14px;
-            background: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
-            background-size: 20px 20px;
+            flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 12px;
+            background: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.055) 1px, transparent 0);
+            background-size: 18px 18px;
         }
         .dashboard-canvas {
-            display: grid; grid-template-columns: repeat(120, 1fr); gap: 8px;
-            align-content: start; min-height: 100%; padding-bottom: 40px;
+            display: grid;
+            grid-template-columns: repeat(120, 1fr);
+            grid-auto-rows: 6px;
+            grid-auto-flow: row dense;
+            gap: 8px;
+            align-content: start;
+            min-height: 100%;
+            padding-bottom: 36px;
         }
         .dashboard-canvas.canvas-drag-over {
             outline: 2px dashed #38bdf8; outline-offset: -4px; border-radius: 12px;
+            background: rgba(14, 165, 233, 0.03);
         }
 
-        /* Tuval Üzerindeki Widget Kartları (Seçim, Sürükleme, Köşeden Boyutlandırma) */
+        /* Tuval Üzerindeki Widget Kartları */
         .widget-card {
-            background: var(--card); border: 1.5px solid var(--border); border-radius: 11px;
+            background: var(--card); border: 1.5px solid var(--border-bright); border-radius: 10px;
             display: flex; flex-direction: column; overflow: hidden; position: relative;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.28); transition: border-color 0.15s, box-shadow 0.15s;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.32); transition: border-color 0.15s, box-shadow 0.15s;
+            height: 100%;
         }
         .widget-card.selected {
             border-color: #38bdf8;
-            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.35), 0 10px 25px rgba(0,0,0,0.4);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.35), 0 10px 25px rgba(0,0,0,0.45);
         }
         .widget-card.card-drop-target {
             border-color: #10b981;
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.4);
         }
         .widget-header {
-            padding: 8px 12px; background: rgba(15,23,42,0.65); border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding: 6px 10px; background: rgba(9, 14, 26, 0.72); border-bottom: 1px solid rgba(255,255,255,0.06);
             display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: move;
         }
-        .widget-title { font-size: 0.88rem; font-weight: 700; color: #e2e8f0; margin: 0; display: flex; align-items: center; gap: 6px; }
-        .drag-grip { color: #64748b; font-size: 0.95rem; cursor: grab; }
-        .size-badge {
-            font-size: 0.68rem; color: #94a3b8; background: #0f172a; border: 1px solid var(--border);
-            padding: 1px 6px; border-radius: 4px; font-weight: 600;
+        .widget-card.selected .widget-header {
+            background: rgba(14, 165, 233, 0.14); border-bottom-color: rgba(56, 189, 248, 0.25);
         }
-        .widget-body { flex: 1; padding: 12px; position: relative; min-height: 0; overflow: auto; }
+        .widget-title { font-size: 0.83rem; font-weight: 700; color: #e2e8f0; margin: 0; display: flex; align-items: center; gap: 6px; }
+        .drag-grip { color: #64748b; font-size: 0.9rem; cursor: grab; }
+        .size-badge {
+            font-size: 0.65rem; color: #94a3b8; background: #080d19; border: 1px solid var(--border-bright);
+            padding: 1px 5px; border-radius: 4px; font-weight: 600;
+        }
+        .widget-body { flex: 1; padding: 10px; position: relative; min-height: 0; overflow: auto; }
         .widget-body.table-scroll { padding: 0; overflow: auto; }
 
-        /* Köşeden ve Kenardan Boyutlandırma Tutamaçları (Resize Handles) */
+        /* Köşeden ve Kenardan Boyutlandırma Tutamaçları */
         .resize-handle-se {
-            position: absolute; right: 0; bottom: 0; width: 18px; height: 18px;
+            position: absolute; right: 0; bottom: 0; width: 16px; height: 16px;
             cursor: nwse-resize; z-index: 20; display: flex; align-items: flex-end; justify-content: flex-end;
-            padding: 2px 3px; color: #64748b; font-size: 0.7rem; user-select: none;
+            padding: 1px 2px; color: #64748b; font-size: 0.65rem; user-select: none;
             background: linear-gradient(135deg, transparent 50%, rgba(56,189,248,0.35) 50%);
         }
         .widget-card:hover .resize-handle-se, .widget-card.selected .resize-handle-se {
-            color: #38bdf8; background: linear-gradient(135deg, transparent 50%, rgba(56,189,248,0.75) 50%);
+            color: #38bdf8; background: linear-gradient(135deg, transparent 50%, rgba(56,189,248,0.85) 50%);
         }
         .resize-handle-e {
-            position: absolute; right: 0; top: 34px; bottom: 18px; width: 10px;
+            position: absolute; right: 0; top: 30px; bottom: 16px; width: 8px;
             cursor: col-resize; z-index: 18; transition: background 0.12s;
         }
-        .resize-handle-e:hover {
-            background: rgba(56, 189, 248, 0.35);
-        }
+        .resize-handle-e:hover { background: rgba(56, 189, 248, 0.35); }
         .resize-handle-s {
-            position: absolute; left: 0; right: 18px; bottom: 0; height: 9px;
+            position: absolute; left: 0; right: 16px; bottom: 0; height: 8px;
             cursor: row-resize; z-index: 18; transition: background 0.12s;
         }
-        .resize-handle-s:hover {
-            background: rgba(56, 189, 248, 0.35);
-        }
+        .resize-handle-s:hover { background: rgba(56, 189, 248, 0.35); }
 
-        /* KPI ve Tablo Stilleri (app.html ile birebir aynı) */
+        /* KPI ve Tablo Stilleri */
         .kpi-box {
             display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
             height: 100%; padding: 2px 6px;
         }
         .kpi-meta {
-            font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase;
-            letter-spacing: 0.4px; margin-bottom: 2px;
+            font-size: 0.7rem; color: #38bdf8; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.4px; margin-bottom: 3px;
         }
         .kpi-val {
-            font-size: clamp(1.45rem, 1.9vw, 1.95rem); font-weight: 800; color: #38bdf8;
+            font-size: clamp(1.35rem, 1.85vw, 1.9rem); font-weight: 800; color: #f8fafc;
             line-height: 1.15; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; white-space: nowrap;
         }
-        table.bi-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.82rem; }
+        table.bi-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.8rem; }
         table.bi-table thead th {
-            position: sticky; top: 0; z-index: 5; background: #0f172a; color: #93c5fd;
-            text-align: left; padding: 8px 10px; border-bottom: 2px solid var(--border);
+            position: sticky; top: 0; z-index: 5; background: #090e1a; color: #93c5fd;
+            text-align: left; padding: 7px 9px; border-bottom: 2px solid var(--border-bright);
             cursor: pointer; user-select: none; white-space: nowrap;
         }
         table.bi-table thead th:hover { background: #1e293b; color: #fff; }
-        table.bi-table thead th .sort-ind { display: inline-block; margin-left: 5px; font-size: 0.72rem; color: #38bdf8; }
-        table.bi-table td { padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #e2e8f0; }
-        table.bi-table tbody tr:hover td { background: rgba(59, 130, 246, 0.08); }
+        table.bi-table thead th .sort-ind { display: inline-block; margin-left: 5px; font-size: 0.7rem; color: #38bdf8; }
+        table.bi-table td { padding: 5px 9px; border-bottom: 1px solid rgba(255,255,255,0.05); color: #e2e8f0; }
+        table.bi-table tbody tr:hover td { background: rgba(14, 165, 233, 0.08); }
         table.bi-table tfoot td {
-            position: sticky; bottom: 0; z-index: 5; background: #1e293b; font-weight: 700; color: #6ee7b7;
-            padding: 7px 10px; border-top: 2px solid var(--border);
+            position: sticky; bottom: 0; z-index: 5; background: #111a2e; font-weight: 700; color: #6ee7b7;
+            padding: 6px 9px; border-top: 2px solid var(--border-bright);
         }
+
+        /* ALT DURUM ÇUBUĞU (Resim 1 tarzı Status Bar) */
+        .studio-statusbar {
+            height: 24px; min-height: 24px; background: #060911; border-top: 1px solid var(--border);
+            padding: 0 12px; display: flex; align-items: center; justify-content: space-between;
+            font-size: 0.69rem; color: var(--muted); user-select: none;
+        }
+        .status-left, .status-right { display: flex; align-items: center; gap: 12px; }
+        .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block; margin-right: 4px; }
 
         /* 2. Sekme: SQL Veri Kaynağı Editörü */
-        .sql-studio-container {
-            flex: 1; overflow-y: auto; padding: 18px; display: none;
-        }
+        .sql-studio-container { flex: 1; overflow-y: auto; padding: 16px; display: none; }
         .sql-box {
-            max-width: 1100px; margin: 0 auto; background: var(--panel); border: 1px solid var(--border);
-            border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px;
+            max-width: 1100px; margin: 0 auto; background: var(--panel); border: 1px solid var(--border-bright);
+            border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px;
         }
         .sql-box textarea {
-            width: 100%; min-height: 150px; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
-            background: #0f172a; color: #38bdf8; font-family: Consolas, monospace; font-size: 0.88rem; resize: vertical;
+            width: 100%; min-height: 140px; padding: 10px; border-radius: 8px; border: 1px solid var(--border-bright);
+            background: #080d19; color: #38bdf8; font-family: Consolas, monospace; font-size: 0.86rem; resize: vertical;
         }
         .status-toast {
-            position: fixed; bottom: 18px; right: 18px; padding: 10px 16px; border-radius: 9px;
-            background: #10b981; color: #fff; font-weight: 700; font-size: 0.86rem; z-index: 9999;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4); display: none;
+            position: fixed; bottom: 32px; right: 18px; padding: 9px 15px; border-radius: 8px;
+            background: #10b981; color: #fff; font-weight: 700; font-size: 0.82rem; z-index: 9999;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.45); display: none;
         }
 
-        /* AÇIK RENK TEMA (LIGHT THEME) STİLLERİ */
+        /* AÇIK TEMA (LIGHT THEME) UYUMU */
         body.light-theme {
             --bg: #f1f5f9;
             --panel: #ffffff;
             --panel-alt: #f8fafc;
             --card: #ffffff;
-            --border: #cbd5e1;
+            --border: #e2e8f0;
+            --border-bright: #cbd5e1;
             --text: #0f172a;
             --muted: #475569;
         }
-        body.light-theme .studio-topbar { background: #ffffff; box-shadow: 0 1px 4px rgba(15,23,42,0.06); }
+        body.light-theme .studio-topbar,
+        body.light-theme .top-palette-bar,
+        body.light-theme .left-rail-palette,
+        body.light-theme .col-header,
+        body.light-theme .col-footer,
+        body.light-theme .canvas-toolbar,
+        body.light-theme .studio-statusbar { background: #ffffff; color: #0f172a; }
         body.light-theme .mode-tabs { background: #f1f5f9; }
         body.light-theme .btn { background: #ffffff; color: #0f172a; border-color: #cbd5e1; }
         body.light-theme .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
         body.light-theme .btn-accent { background: var(--accent); color: #fff; border-color: var(--accent); }
-        body.light-theme .btn-danger { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+        body.light-theme .meta-item input,
+        body.light-theme .meta-item select,
         body.light-theme .r-field input,
         body.light-theme .r-field select,
-        body.light-theme #fieldSearchInput { background: #ffffff; color: #0f172a; border-color: #cbd5e1; }
-        body.light-theme .dock-sec-title { color: #1d4ed8; }
-        body.light-theme .tool-tile { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
-        body.light-theme .tool-tile:hover { background: #eff6ff; border-color: var(--primary); }
-        body.light-theme .drop-zone { background: #f8fafc; border-color: #94a3b8; }
-        body.light-theme .bound-pill { background: #eff6ff; color: #0f172a; border-color: #60a5fa; }
+        body.light-theme .field-search-box input { background: #ffffff; color: #0f172a; border-color: #cbd5e1; }
+        body.light-theme .rail-tile { color: #475569; }
+        body.light-theme .rail-tile.active-type { background: #e0f2fe; color: #0284c7; }
+        body.light-theme .top-tool-pill { color: #334155; }
+        body.light-theme .top-tool-pill.active-type { background: #e0f2fe; color: #0284c7; }
+        body.light-theme .drop-zone { background: #f8fafc; border-color: #cbd5e1; }
+        body.light-theme .bound-pill { background: #f0f9ff; color: #0f172a; border-color: #7dd3fc; }
         body.light-theme .bound-pill select { background: #ffffff; color: #047857; border-color: #cbd5e1; }
-        body.light-theme .bound-pill select.pill-col-select { background: #ffffff; color: #0f172a; border-color: #60a5fa; }
-        body.light-theme .dz-add-select { background: #ffffff; color: #1d4ed8; border-color: #94a3b8; }
-        body.light-theme .pill-btn { color: #475569; }
-        body.light-theme .pill-btn:hover { background: rgba(15,23,42,0.08); color: #0f172a; }
+        body.light-theme .bound-pill select.pill-col-select { background: #ffffff; color: #0284c7; border-color: #7dd3fc; }
+        body.light-theme .dz-add-select { background: #ffffff; color: #0284c7; border-color: #cbd5e1; }
         body.light-theme .field-chip { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
-        body.light-theme .field-chip:hover { background: #eff6ff; border-color: #3b82f6; }
-        body.light-theme .ft-number { background: #dbeafe; color: #1d4ed8; }
-        body.light-theme .ft-string { background: #d1fae5; color: #047857; }
-        body.light-theme .ft-date { background: #fef3c7; color: #b45309; }
+        body.light-theme .field-chip.is-bound { background: #e0f2fe; border-color: #0284c7; color: #0369a1; }
+        body.light-theme .quick-add-btn { background: #ffffff; color: #0284c7; border-color: #cbd5e1; }
         body.light-theme .canvas-area {
             background: radial-gradient(circle at 1px 1px, rgba(15,23,42,0.12) 1px, transparent 0);
-            background-size: 20px 20px;
+            background-size: 18px 18px;
         }
-        body.light-theme .widget-card { box-shadow: 0 4px 14px rgba(15,23,42,0.08); }
         body.light-theme .widget-header { background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
         body.light-theme .widget-title { color: #0f172a; }
         body.light-theme .size-badge { background: #ffffff; color: #475569; border-color: #cbd5e1; }
-        body.light-theme .kpi-val { color: #0284c7; }
-        body.light-theme table.bi-table thead th { background: #e2e8f0; color: #1e3a8a; border-bottom: 2px solid #cbd5e1; }
-        body.light-theme table.bi-table thead th:hover { background: #cbd5e1; color: #0f172a; }
+        body.light-theme .kpi-meta { color: #0284c7; }
+        body.light-theme .kpi-val { color: #0f172a; }
+        body.light-theme table.bi-table thead th { background: #e2e8f0; color: #1e3a8a; }
         body.light-theme table.bi-table td { color: #1e293b; border-bottom: 1px solid #e2e8f0; }
-        body.light-theme table.bi-table tbody tr:hover td { background: rgba(59,130,246,0.08); }
-        body.light-theme table.bi-table tfoot td { background: #f1f5f9; color: #047857; border-top: 2px solid #cbd5e1; }
-        body.light-theme .sql-box textarea { background: #f8fafc; color: #0369a1; border-color: #cbd5e1; }
+        body.light-theme table.bi-table tfoot td { background: #f1f5f9; color: #047857; }
     </style>
 </head>
 <body>
-    <!-- Üst Stüdyo Çubuğu -->
+    <!-- 1. ÜST STUDIO BAŞLIK ÇUBUĞU -->
     <header class="studio-topbar">
         <div class="studio-brand">
-            <span class="brand-pill">SpsWebBI Studio</span>
+            <span class="brand-logo">📊 Analytics Studio</span>
+            <select id="selExistingDash" onchange="onSelectExistingDash()"
+                    style="padding:4px 8px;border-radius:6px;border:1px solid var(--border-bright);background:#0f172a;color:#fff;font-weight:700;font-size:0.78rem;max-width:220px;">
+            </select>
+            <span class="live-badge">CANLI</span>
+            <button type="button" class="btn" onclick="toggleDashMetaBar()" title="Dashboard Kod/Başlık/Açıklama Bilgilerini Düzenle">
+                ⚙️ Şablon Bilgileri
+            </button>
+            <button type="button" class="btn" onclick="createNewBlankDashboard()" title="Yeni Boş Dashboard">+ Yeni</button>
+        </div>
+
+        <div class="topbar-center">
             <div class="mode-tabs">
                 <button type="button" class="mode-tab active" id="tabBtnVisual" onclick="switchStudioTab('visual')">
-                    1. Görsel Dashboard Tasarımcısı (Sürükle-Bırak)
+                    1. Görsel Tuval
                 </button>
                 <button type="button" class="mode-tab" id="tabBtnSql" onclick="switchStudioTab('sql')">
-                    2. Veri Kaynağı & SQL Sorgu Editörü
+                    2. SQL Veri Kaynağı Editörü
                 </button>
             </div>
+            <button type="button" class="btn" id="btnPaletteMode" onclick="togglePalettePosition()" title="Resim 1-2 (Sol Dikey Ray) ve Resim 3 (Üst Yatay Şerit) arasında geçiş yap">
+                📐 Palet: Sol Dikey
+            </button>
+            <button type="button" class="btn btn-accent" onclick="saveMasterDashboard()">
+                💾 Kaydet & Yayınla
+            </button>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;">
-            <button type="button" class="btn" id="btnThemeToggle" onclick="toggleTheme()">☀️ Açık Tema</button>
-            <a href="/app" class="btn">⬅ Gösterim Ekranına Dön</a>
+
+        <div class="topbar-right">
+            <div class="meta-item">
+                <label style="font-size:0.65rem;">Veri Kaynağı:</label>
+                <select id="dashDsId" onchange="onDesignerDataSourceChanged()"
+                        style="padding:4px 7px;border-radius:5px;border:1px solid var(--border-bright);background:#0f172a;color:#38bdf8;font-weight:700;font-size:0.75rem;max-width:170px;">
+                </select>
+            </div>
+            <button type="button" class="btn" id="btnThemeToggle" onclick="toggleTheme()">☀️ Açık</button>
+            <a href="/app" class="btn">⬅ Gösterim Ekranı</a>
             <a href="/admin" class="btn">Yetki & Süre Yönetimi</a>
         </div>
     </header>
 
-    <!-- SEKME 1: DEVEXPRESS BI TARZI GÖRSEL SÜRÜKLE-BIRAK TASARIMCI -->
-    <div id="visualDesignerView" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
-        <!-- Üst Dashboard Seçim ve Kayıt Şeridi -->
-        <section class="ribbon-bar">
-            <div class="r-field" style="min-width:220px;">
-                <label>Mevcut Dashboard Şablonu</label>
-                <select id="selExistingDash" onchange="onSelectExistingDash()"></select>
-            </div>
-            <button type="button" class="btn" style="height:33px;" onclick="createNewBlankDashboard()">+ Yeni Boş Dashboard</button>
+    <!-- SEKME 1: GÖRSEL TASARIMCI (YAN YANA TAM BOY PANELLER + 2D ESNEK TUVAL) -->
+    <div id="visualDesignerView" style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;">
 
-            <div class="r-field" style="min-width:140px;">
-                <label>Dashboard Kodu</label>
-                <input type="text" id="dashCode" placeholder="DASH_ORNEK">
+        <!-- Gizlenebilir Kompakt Şablon Bilgi Çubuğu -->
+        <section class="dash-meta-bar collapsed" id="dashMetaBar">
+            <div class="meta-item">
+                <label>Dashboard Kodu:</label>
+                <input type="text" id="dashCode" placeholder="DASH_ORNEK" style="width:130px;">
             </div>
-            <div class="r-field" style="min-width:210px;flex:1;">
-                <label>Dashboard Başlığı</label>
-                <input type="text" id="dashTitle" placeholder="Örn: Satış & Sipariş Analiz Paneli">
+            <div class="meta-item" style="flex:1;min-width:180px;">
+                <label>Başlık:</label>
+                <input type="text" id="dashTitle" placeholder="Örn: Üretim & Sipariş Paneli" style="width:100%;">
             </div>
-            <div class="r-field" style="min-width:210px;">
-                <label>Bağlı Veri Kaynağı (Datasource)</label>
-                <select id="dashDsId" onchange="onDesignerDataSourceChanged()"></select>
+            <div class="meta-item" style="flex:1;min-width:160px;">
+                <label>Açıklama:</label>
+                <input type="text" id="dashDesc" placeholder="Opsiyonel açıklama" style="width:100%;">
             </div>
-            <div class="r-field" style="min-width:180px;">
-                <label>Açıklama</label>
-                <input type="text" id="dashDesc" placeholder="Opsiyonel açıklama">
-            </div>
-            <button type="button" class="btn btn-danger" style="height:33px;" onclick="clearCanvasWidgets()">Tuvali Temizle</button>
-            <button type="button" class="btn btn-accent" style="height:33px;padding:0 16px;" onclick="saveMasterDashboard()">
-                💾 Ana Şablonu Kaydet
-            </button>
+            <button type="button" class="btn btn-danger" onclick="clearCanvasWidgets()">🗑️ Tuvali Temizle</button>
         </section>
 
-        <!-- Sol Dock Panel + Sağ Canlı Tuval -->
+        <!-- SEÇENEK B (3. Resim): ÜST YATAY GÖRSEL PALETİ ŞERİDİ -->
+        <nav class="top-palette-bar" id="topPaletteBar">
+            <span class="palette-label">🎨 Görsel Paleti</span>
+            <div id="topPaletteItems" style="display:flex;align-items:center;gap:4px;"></div>
+        </nav>
+
+        <!-- ANA ÇALIŞMA ALANI: SOL DİKEY RAY + 2. PANEL + 3. PANEL + SAĞ TUVAL -->
         <div class="studio-workspace">
-            <aside class="dock-sidebar">
-                <!-- BÖLÜM 1: ARAÇ KUTUSU (TOOLBOX) -->
-                <div class="dock-section">
-                    <div class="dock-sec-title">
-                        <span>1. Araç Kutusu (Tuvale Sürükle veya Tıkla)</span>
+
+            <!-- SEÇENEK A (1. ve 2. Resim): EN SOLDA DİKEY İKON ŞERİDİ -->
+            <aside class="left-rail-palette" id="leftRailPalette"></aside>
+
+            <!-- SÜTUN 1: 2. SEÇİLİ BİLEŞEN & VERİ YUVALARI (TAM BOY BAĞIMSIZ PANEL) -->
+            <section class="studio-column col-binding" id="colBindingPanel">
+                <div class="col-header">
+                    <span class="col-header-title">⇄ 2. Seçili Bileşen & Veri Yuvaları</span>
+                    <div style="display:flex;align-items:center;gap:4px;">
+                        <span class="col-badge" id="selectedWidgetBadge">Seçili Yok</span>
+                        <button type="button" class="pill-btn" onclick="toggleColumnCollapse('colBindingPanel')" title="Paneli Daralt">«</button>
                     </div>
-                    <div class="toolbox-grid">
-                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'bar')" onclick="addWidgetFromToolbox('bar')">
-                            <span class="tool-icon">📊</span><span>Sütun</span>
-                        </div>
-                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'stackedBar')" onclick="addWidgetFromToolbox('stackedBar')">
-                            <span class="tool-icon">📚</span><span>Yığılmış</span>
-                        </div>
-                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'horizontalBar')" onclick="addWidgetFromToolbox('horizontalBar')">
-                            <span class="tool-icon">📉</span><span>Yatay Bar</span>
-                        </div>
-                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'line')" onclick="addWidgetFromToolbox('line')">
-                            <span class="tool-icon">📈</span><span>Çizgi</span>
-                        </div>
-                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'area')" onclick="addWidgetFromToolbox('area')">
-                            <span class="tool-icon">⛰️</span><span>Alan</span>
-                        </div>
-                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'pie')" onclick="addWidgetFromToolbox('pie')">
-                            <span class="tool-icon">🥧</span><span>Pasta</span>
-                        </div>
-                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'donut')" onclick="addWidgetFromToolbox('donut')">
-                            <span class="tool-icon">🍩</span><span>Halka</span>
-                        </div>
-                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'gauge')" onclick="addWidgetFromToolbox('gauge')">
-                            <span class="tool-icon">🎯</span><span>İbre</span>
-                        </div>
-                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'treemap')" onclick="addWidgetFromToolbox('treemap')">
-                            <span class="tool-icon">🟩</span><span>Treemap</span>
-                        </div>
-                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'heatmap')" onclick="addWidgetFromToolbox('heatmap')">
-                            <span class="tool-icon">🔥</span><span>Isı Haritası</span>
-                        </div>
-                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'kpi')" onclick="addWidgetFromToolbox('kpi')">
-                            <span class="tool-icon">🔢</span><span>KPI Kartı</span>
-                        </div>
-                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'table')" onclick="addWidgetFromToolbox('table')">
-                            <span class="tool-icon">📋</span><span>Tablo</span>
-                        </div>
-                        <div class="tool-tile" draggable="true" ondragstart="onToolboxDragStart(event, 'pivot')" onclick="addWidgetFromToolbox('pivot')">
-                            <span class="tool-icon">🧮</span><span>Pivot</span>
-                        </div>
+                </div>
+                <div class="col-scroll-body" id="dataBindingContent">
+                    <div class="dz-empty">Tuvalden bir bileşene tıklayın veya paletten yeni bileşen ekleyin.</div>
+                </div>
+            </section>
+
+            <!-- SÜTUN 2: 3. VERİ KAYNAĞI KOLONLARI (TAM BOY BAĞIMSIZ PANEL - ALFABETİK) -->
+            <section class="studio-column col-fields" id="colFieldsPanel">
+                <div class="col-header">
+                    <span class="col-header-title">3. Veri Kaynağı Kolonları (A-Z)</span>
+                    <div style="display:flex;align-items:center;gap:4px;">
+                        <span class="col-badge" id="fieldCountBadge">0 KOLON</span>
+                        <button type="button" class="pill-btn" onclick="toggleColumnCollapse('colFieldsPanel')" title="Paneli Daralt">«</button>
+                    </div>
+                </div>
+                <div class="field-search-box">
+                    <input type="text" id="fieldSearchInput" placeholder="🔍 Kolon ara (A-Z)..." oninput="renderFieldList()">
+                </div>
+                <div class="col-scroll-body" id="fieldListContainer" style="padding:6px 8px;"></div>
+                <div class="col-footer">
+                    <span id="footerDsName" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Veri Kaynağı</span>
+                    <a href="javascript:void(0)" onclick="onDesignerDataSourceChanged()" style="color:#38bdf8;text-decoration:none;font-weight:700;">Yenile (F5)</a>
+                </div>
+            </section>
+
+            <!-- SAĞ CANLI TUVAL ÇALIŞMA ALANI -->
+            <main class="canvas-wrapper">
+                <div class="canvas-toolbar">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <button type="button" class="btn" id="btnRestoreBinding" style="display:none;padding:2px 7px;font-size:0.7rem;" onclick="toggleColumnCollapse('colBindingPanel')">
+                            » 2. Veri Yuvalarını Aç
+                        </button>
+                        <button type="button" class="btn" id="btnRestoreFields" style="display:none;padding:2px 7px;font-size:0.7rem;" onclick="toggleColumnCollapse('colFieldsPanel')">
+                            » 3. Kolon Listesini Aç
+                        </button>
+                        <span>📐 <strong>Tuval Çalışma Alanı</strong> &nbsp;|&nbsp; 2D Yoğun Grid (Boş Alanlara Sürükle-Bırak Aktif)</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span id="liveRowCountInfo" style="color:#34d399;font-weight:700;"></span>
                     </div>
                 </div>
 
-                <!-- BÖLÜM 2: SEÇİLİ BİLEŞEN VERİ BAĞLAMA YUVALARI (DATA ITEMS) -->
-                <div class="dock-section" id="dataBindingSection">
-                    <div class="dock-sec-title">
-                        <span>2. Seçili Bileşen & Veri Yuvaları</span>
-                        <span id="selectedWidgetBadge" style="color:#38bdf8;font-size:0.7rem;">Seçili Yok</span>
+                <div class="canvas-area">
+                    <div class="dashboard-canvas" id="designerCanvas"
+                         ondragover="onCanvasDragOver(event)"
+                         ondragleave="onCanvasDragLeave(event)"
+                         ondrop="onCanvasDrop(event)">
                     </div>
-                    <div id="dataBindingContent">
-                        <div class="dz-empty">Tuvalden bir bileşene tıklayın veya araç kutusundan yeni bileşen ekleyin.</div>
-                    </div>
-                </div>
-
-                <!-- BÖLÜM 3: VERİ KAYNAĞI ALAN LİSTESİ (FIELD LIST) -->
-                <div class="field-list-wrap">
-                    <div class="dock-sec-title" style="margin-bottom:4px;">
-                        <span>3. Veri Kaynağı Kolonları (Sürükle Bırak)</span>
-                        <span id="fieldCountBadge" style="color:#6ee7b7;">0 Kolon</span>
-                    </div>
-                    <input type="text" id="fieldSearchInput" placeholder="Kolon ara..." oninput="renderFieldList()"
-                           style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:#0f172a;color:#fff;font-size:0.8rem;">
-                    <div class="field-items-scroll" id="fieldListContainer"></div>
-                </div>
-            </aside>
-
-            <!-- SAĞ CANLI TASARIM TUVALİ -->
-            <main class="canvas-area">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:0.8rem;color:var(--muted);">
-                    <span>💡 <strong>İpucu:</strong> Bileşenleri başlığından (⠿) sürükleyerek yer değiştirin, sağ alt köşesinden (◢) çekerek boyutlandırın, sol listeden kolonları sürükleyip bileşenlerin veya veri yuvalarının içine bırakın.</span>
-                    <span id="liveRowCountInfo" style="color:#6ee7b7;font-weight:700;"></span>
-                </div>
-                <div class="dashboard-canvas" id="designerCanvas"
-                     ondragover="onCanvasDragOver(event)"
-                     ondragleave="onCanvasDragLeave(event)"
-                     ondrop="onCanvasDrop(event)">
                 </div>
             </main>
         </div>
+
+        <!-- ALT DURUM ÇUBUĞU (Resim 1'deki Status Bar) -->
+        <footer class="studio-statusbar">
+            <div class="status-left">
+                <span><span class="status-dot"></span>Durum: <strong>Hazır</strong></span>
+                <span>|</span>
+                <span id="statusSelectedInfo">Seçili Öğe: Yok</span>
+                <span>|</span>
+                <span id="statusSizeInfo">Boyut: -</span>
+            </div>
+            <div class="status-right">
+                <span>İpucu: Bileşenleri başlığından (⠿) tutup istediğiniz boş alana veya kartın üzerine sürükleyebilirsiniz</span>
+                <span>|</span>
+                <span>SpsWebBI Analytics Studio</span>
+            </div>
+        </footer>
     </div>
 
     <!-- SEKME 2: VERİ KAYNAĞI VE SQL SORGU EDİTÖRÜ -->
     <div id="sqlEditorView" class="sql-studio-container">
         <div class="sql-box">
             <div style="display:flex;justify-content:space-between;align-items:center;">
-                <h2 style="margin:0;font-size:1.1rem;color:#93c5fd;">SQL Veri Kaynağı & Dinamik Filtre Parametresi Tanımlama (Madde 2.4 & 2.5)</h2>
+                <h2 style="margin:0;font-size:1.05rem;color:#38bdf8;">SQL Veri Kaynağı & Dinamik Filtre Parametresi Tanımlama (Madde 2.4 & 2.5)</h2>
                 <button type="button" class="btn" onclick="clearDataSourceForm()">+ Yeni Veri Kaynağı</button>
             </div>
 
@@ -512,10 +650,10 @@
             </div>
 
             <div>
-                <label style="font-size:0.78rem;color:var(--muted);font-weight:700;display:block;margin-bottom:6px;">
+                <label style="font-size:0.75rem;color:var(--muted);font-weight:700;display:block;margin-bottom:6px;">
                     FİLTRE PARAMETRELERİ (@Parametreler ve Açılır Liste Lookup SQL)
                 </label>
-                <table class="bi-table" style="border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+                <table class="bi-table" style="border:1px solid var(--border-bright);border-radius:8px;overflow:hidden;">
                     <thead>
                         <tr>
                             <th>Parametre (@)</th>
@@ -531,11 +669,11 @@
             </div>
 
             <div>
-                <label style="font-size:0.78rem;color:var(--muted);font-weight:700;display:block;margin-bottom:6px;">
+                <label style="font-size:0.75rem;color:var(--muted);font-weight:700;display:block;margin-bottom:6px;">
                     ALGILANAN KOLONLAR VE ÖNİZLEME
                 </label>
                 <div id="detectedSchemaBox" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"></div>
-                <div id="sqlPreviewTableWrap" style="max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:8px;"></div>
+                <div id="sqlPreviewTableWrap" style="max-height:250px;overflow:auto;border:1px solid var(--border-bright);border-radius:8px;"></div>
             </div>
         </div>
     </div>
@@ -543,12 +681,27 @@
     <div class="status-toast" id="statusToast"></div>
 
     <script>
+        const TOOLBOX_ITEMS = [
+            { type: 'bar', icon: '📊', label: 'Sütun' },
+            { type: 'stackedBar', icon: '📚', label: 'Yığılmış' },
+            { type: 'horizontalBar', icon: '📉', label: 'Yatay' },
+            { type: 'line', icon: '📈', label: 'Çizgi' },
+            { type: 'area', icon: '⛰️', label: 'Alan' },
+            { type: 'treemap', icon: '🟩', label: 'Treemap' },
+            { type: 'pivot', icon: '🧮', label: 'Pivot' },
+            { type: 'kpi', icon: '🔢', label: 'KPI' },
+            { type: 'pie', icon: '🥧', label: 'Pasta' },
+            { type: 'donut', icon: '🍩', label: 'Halka' },
+            { type: 'gauge', icon: '🎯', label: 'İbre' },
+            { type: 'heatmap', icon: '🔥', label: 'Isı Har.' },
+            { type: 'table', icon: '📋', label: 'Tablo' }
+        ];
+
         let allDataSources = [];
         let allDashboards = [];
         let currentDsId = null;
         let currentDashId = null;
 
-        // Görsel Tasarımcı Durumu
         let designerLayout = { widgets: [] };
         let selectedWidgetId = null;
         let liveColumns = [];
@@ -556,9 +709,25 @@
         let chartInstances = [];
         let widgetDrillState = {};
         let widgetSortState = {};
+        let dragPayload = null;
 
-        // Sürükle-Bırak Durumu
-        let dragPayload = null; // { kind: 'toolbox'|'field'|'widget', value: ... }
+        function getSortedColumns() {
+            return [...liveColumns].sort((a, b) =>
+                String(a.name || '').localeCompare(String(b.name || ''), 'tr-TR', { sensitivity: 'base', numeric: true })
+            );
+        }
+
+        function calcWidgetGridMetrics(w) {
+            const colSpan12 = Math.min(12, Math.max(1.0, Math.round((Number(w.w) || (w.type === 'kpi' ? 3 : 4)) * 10) / 10));
+            const gridSpan120 = Math.min(120, Math.max(10, Math.round(colSpan12 * 10)));
+            const hUnits = Math.min(16, Math.max(1.2, Math.round((Number(w.h) || (w.type === 'kpi' ? 2 : 4)) * 20) / 20));
+            const rowHeight = w.type === 'kpi'
+                ? Math.max(82, Math.round(hUnits * 58))
+                : Math.max(115, Math.round(hUnits * 58));
+            // grid-auto-rows: 6px, gap: 8px => her satır adımı 14px (rowSpan * 14 - 8 ≈ rowHeight)
+            const rowSpan = Math.max(6, Math.round((rowHeight + 8) / 14));
+            return { colSpan12, gridSpan120, hUnits, rowHeight, rowSpan };
+        }
 
         function isLightTheme() {
             return document.body.classList.contains('light-theme');
@@ -568,7 +737,7 @@
             const saved = localStorage.getItem('sps_bi_theme') || 'dark';
             document.body.classList.toggle('light-theme', saved === 'light');
             const btn = document.getElementById('btnThemeToggle');
-            if (btn) btn.innerHTML = saved === 'light' ? '🌙 Koyu Tema' : '☀️ Açık Tema';
+            if (btn) btn.innerHTML = saved === 'light' ? '🌙 Koyu' : '☀️ Açık';
         }
 
         function toggleTheme() {
@@ -577,7 +746,77 @@
             applySavedTheme();
             renderDesignerCanvas();
         }
+
+        function applySavedPaletteMode() {
+            const mode = localStorage.getItem('sps_studio_palette_pos') || 'left';
+            document.body.classList.toggle('palette-top', mode === 'top');
+            const btn = document.getElementById('btnPaletteMode');
+            if (btn) {
+                btn.innerHTML = mode === 'top' ? '📐 Palet: Üst Yatay (Resim 3)' : '📐 Palet: Sol Dikey (Resim 1-2)';
+            }
+        }
+
+        function togglePalettePosition() {
+            const isTop = document.body.classList.contains('palette-top');
+            localStorage.setItem('sps_studio_palette_pos', isTop ? 'left' : 'top');
+            applySavedPaletteMode();
+            setTimeout(() => chartInstances.forEach(c => { try { c.resize(); } catch (_) {} }), 80);
+        }
+
+        function toggleDashMetaBar() {
+            document.getElementById('dashMetaBar').classList.toggle('collapsed');
+            setTimeout(() => chartInstances.forEach(c => { try { c.resize(); } catch (_) {} }), 80);
+        }
+
+        function toggleColumnCollapse(panelId) {
+            const el = document.getElementById(panelId);
+            if (!el) return;
+            const collapsed = el.classList.toggle('collapsed');
+            if (panelId === 'colBindingPanel') {
+                document.getElementById('btnRestoreBinding').style.display = collapsed ? 'inline-flex' : 'none';
+            } else if (panelId === 'colFieldsPanel') {
+                document.getElementById('btnRestoreFields').style.display = collapsed ? 'inline-flex' : 'none';
+            }
+            setTimeout(() => chartInstances.forEach(c => { try { c.resize(); } catch (_) {} }), 160);
+        }
+
+        function renderPalettes() {
+            const w = getSelectedWidget();
+            const activeType = w ? w.type : null;
+
+            const leftRail = document.getElementById('leftRailPalette');
+            const topBar = document.getElementById('topPaletteItems');
+            leftRail.innerHTML = '';
+            topBar.innerHTML = '';
+
+            TOOLBOX_ITEMS.forEach(item => {
+                const isActive = item.type === activeType;
+
+                const tile = document.createElement('div');
+                tile.className = 'rail-tile' + (isActive ? ' active-type' : '');
+                tile.draggable = true;
+                tile.title = `${item.label} eklemek için tıklayın veya tuvale sürükleyin`;
+                tile.innerHTML = `<span class="rail-icon">${item.icon}</span><span>${item.label}</span>`;
+                tile.addEventListener('dragstart', e => onToolboxDragStart(e, item.type));
+                tile.addEventListener('click', () => addWidgetFromToolbox(item.type));
+                leftRail.appendChild(tile);
+
+                const pill = document.createElement('div');
+                pill.className = 'top-tool-pill' + (isActive ? ' active-type' : '');
+                pill.draggable = true;
+                pill.title = `${item.label} eklemek için tıklayın veya tuvale sürükleyin`;
+                pill.innerHTML = `
+                    <span>${item.icon}</span>
+                    <span>${item.label}</span>
+                    ${isActive ? '<span class="active-tag">AKTİF</span>' : ''}`;
+                pill.addEventListener('dragstart', e => onToolboxDragStart(e, item.type));
+                pill.addEventListener('click', () => addWidgetFromToolbox(item.type));
+                topBar.appendChild(pill);
+            });
+        }
+
         applySavedTheme();
+        applySavedPaletteMode();
 
         window.addEventListener('resize', () => {
             chartInstances.forEach(c => { try { c.resize(); } catch (_) {} });
@@ -603,6 +842,7 @@
         }
 
         async function initDesigner() {
+            renderPalettes();
             const me = await fetch('/api/auth/me');
             if (!me.ok) { window.location.href = '/login'; return; }
             const user = await me.json();
@@ -651,7 +891,7 @@
             const selDash = document.getElementById('selExistingDash');
             selDash.innerHTML = '<option value="">-- Yeni Dashboard Oluştur --</option>';
             allDashboards.forEach(d => {
-                selDash.innerHTML += `<option value="${d.dashboard_id}">${escapeHtml(d.code)} - ${escapeHtml(d.title)}</option>`;
+                selDash.innerHTML += `<option value="${d.dashboard_id}">${escapeHtml(d.title)} (${escapeHtml(d.code)})</option>`;
             });
             if (currentDashId) selDash.value = currentDashId;
         }
@@ -686,6 +926,7 @@
             document.getElementById('dashCode').value = 'DASH_' + Math.floor(100 + Math.random() * 900);
             document.getElementById('dashTitle').value = 'Yeni Analiz Dashboard';
             document.getElementById('dashDesc').value = '';
+            document.getElementById('dashMetaBar').classList.remove('collapsed');
             designerLayout = { widgets: [] };
             selectedWidgetId = null;
             const dsId = parseInt(document.getElementById('dashDsId').value || '0', 10);
@@ -693,6 +934,7 @@
             else {
                 renderDesignerCanvas();
                 renderDataBindingPanel();
+                renderFieldList();
             }
         }
 
@@ -702,6 +944,7 @@
             selectedWidgetId = null;
             renderDesignerCanvas();
             renderDataBindingPanel();
+            renderFieldList();
         }
 
         async function onDesignerDataSourceChanged() {
@@ -712,6 +955,9 @@
         }
 
         async function loadLiveDataSourceData(datasourceId) {
+            const dsObj = allDataSources.find(x => x.datasource_id === datasourceId);
+            document.getElementById('footerDsName').textContent = dsObj ? `Kaynak: ${dsObj.code}` : 'Veri Kaynağı';
+
             const res = await fetch(`/api/datasources/${datasourceId}/execute`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -721,7 +967,7 @@
             if (res.ok && data.success) {
                 liveColumns = data.columns || [];
                 liveRows = data.rows || [];
-                document.getElementById('liveRowCountInfo').textContent = `Canlı Veri: ${liveRows.length} kayıt, ${liveColumns.length} kolon yüklendi`;
+                document.getElementById('liveRowCountInfo').textContent = `● Canlı Veri: ${liveRows.length} kayıt, ${liveColumns.length} kolon`;
             } else {
                 liveColumns = [];
                 liveRows = [];
@@ -732,28 +978,47 @@
             renderDataBindingPanel();
         }
 
-        // BÖLÜM 3: ALAN LİSTESİ (FIELD LIST) ÇİZİMİ VE SÜRÜKLEME
+        function getBoundColumnsForSelectedWidget() {
+            const w = getSelectedWidget();
+            const set = new Set();
+            if (!w) return set;
+            getWidgetMetrics(w).forEach(m => { if (m.field) set.add(m.field); });
+            if (w.dimension) set.add(w.dimension);
+            if (w.secondaryDimension) set.add(w.secondaryDimension);
+            if (Array.isArray(w.drillHierarchy)) w.drillHierarchy.forEach(c => set.add(c));
+            if (Array.isArray(w.columns)) w.columns.forEach(c => set.add(c));
+            return set;
+        }
+
+        // BÖLÜM 3: TAM BOY VERİ KAYNAĞI KOLON LİSTESİ (ALFABETİK A-Z SIRALI)
         function renderFieldList() {
             const q = (document.getElementById('fieldSearchInput').value || '').toLowerCase().trim();
             const container = document.getElementById('fieldListContainer');
             container.innerHTML = '';
-            document.getElementById('fieldCountBadge').textContent = `${liveColumns.length} Kolon`;
+            document.getElementById('fieldCountBadge').textContent = `${liveColumns.length} KOLON`;
 
-            liveColumns
+            const boundCols = getBoundColumnsForSelectedWidget();
+            const sortedCols = getSortedColumns();
+
+            sortedCols
                 .filter(c => !q || c.name.toLowerCase().includes(q))
                 .forEach(c => {
+                    const isBound = boundCols.has(c.name);
                     const chip = document.createElement('div');
-                    chip.className = 'field-chip';
+                    chip.className = 'field-chip' + (isBound ? ' is-bound' : '');
                     chip.draggable = true;
 
                     const typeClass = c.dataType === 'number' ? 'ft-number' : (c.dataType === 'date' ? 'ft-date' : 'ft-string');
-                    const typeIcon = c.dataType === 'number' ? '🔢 Sayı' : (c.dataType === 'date' ? '📅 Tarih' : '🔤 Metin');
+                    const typeLabel = c.dataType === 'number' ? '# SAYI' : (c.dataType === 'date' ? '📅 TARİH' : 'METİN');
 
                     chip.innerHTML = `
-                        <span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(c.name)}</span>
-                        <div style="display:flex;align-items:center;gap:5px;">
-                            <span class="f-type-badge ${typeClass}">${typeIcon}</span>
-                            <button type="button" class="pill-btn" title="Seçili bileşene ekle" style="color:#38bdf8;font-weight:800;">+</button>
+                        <div style="display:flex;align-items:center;min-width:0;flex:1;">
+                            <span class="field-grip">${isBound ? '✓' : '⠿'}</span>
+                            <span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(c.name)}">${escapeHtml(c.name)}</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:4px;">
+                            <span class="f-type-badge ${typeClass}">${typeLabel}</span>
+                            <button type="button" class="quick-add-btn" title="Seçili bileşene hızlı ekle">${isBound ? '←' : '+'}</button>
                         </div>`;
 
                     chip.addEventListener('dragstart', e => {
@@ -770,28 +1035,58 @@
                 });
         }
 
-        // BÖLÜM 1: ARAÇ KUTUSUNDAN BİLEŞEN EKLEME (SÜRÜKLE VEYA TIKLA)
         function onToolboxDragStart(e, widgetType) {
             dragPayload = { kind: 'toolbox', widgetType };
             e.dataTransfer.setData('text/plain', widgetType);
         }
 
         function onCanvasDragOver(e) {
-            if (dragPayload && dragPayload.kind === 'toolbox') {
+            if (dragPayload && (dragPayload.kind === 'toolbox' || dragPayload.kind === 'widget')) {
                 e.preventDefault();
                 document.getElementById('designerCanvas').classList.add('canvas-drag-over');
             }
         }
 
-        function onCanvasDragLeave(e) {
+        function onCanvasDragLeave() {
             document.getElementById('designerCanvas').classList.remove('canvas-drag-over');
+        }
+
+        function findInsertionIndexByPoint(dropX, dropY, draggedIdx) {
+            const cards = Array.from(document.querySelectorAll('#designerCanvas .widget-card'));
+            let insertAfterIdx = -1;
+            for (const cardEl of cards) {
+                const idx = parseInt(cardEl.dataset.widgetIndex || '-1', 10);
+                if (idx < 0 || idx === draggedIdx) continue;
+                const r = cardEl.getBoundingClientRect();
+                // Kart bırakılan noktanın tamamen üstündeyse VEYA aynı yatay hizada olup solundaysa
+                const isAbove = r.bottom <= dropY + 14;
+                const isSameBandLeft = r.top <= dropY + 14 && r.left < dropX;
+                if (isAbove || isSameBandLeft) {
+                    insertAfterIdx = idx;
+                }
+            }
+            return insertAfterIdx + 1;
         }
 
         function onCanvasDrop(e) {
             document.getElementById('designerCanvas').classList.remove('canvas-drag-over');
-            if (dragPayload && dragPayload.kind === 'toolbox') {
+            if (!dragPayload) return;
+
+            if (dragPayload.kind === 'toolbox') {
                 e.preventDefault();
                 addWidgetFromToolbox(dragPayload.widgetType);
+                dragPayload = null;
+            } else if (dragPayload.kind === 'widget') {
+                e.preventDefault();
+                const fromIdx = dragPayload.fromIndex;
+                if (fromIdx >= 0 && fromIdx < designerLayout.widgets.length) {
+                    let targetIdx = findInsertionIndexByPoint(e.clientX, e.clientY, fromIdx);
+                    const moved = designerLayout.widgets.splice(fromIdx, 1)[0];
+                    if (targetIdx > fromIdx) targetIdx--;
+                    targetIdx = Math.max(0, Math.min(designerLayout.widgets.length, targetIdx));
+                    designerLayout.widgets.splice(targetIdx, 0, moved);
+                    renderDesignerCanvas();
+                }
                 dragPayload = null;
             }
         }
@@ -865,6 +1160,7 @@
             selectedWidgetId = newWidget.id;
             renderDesignerCanvas();
             renderDataBindingPanel();
+            renderFieldList();
             showToast(`${titles[type]} tuvale eklendi.`);
         }
 
@@ -878,24 +1174,41 @@
                 el.classList.toggle('selected', el.dataset.widgetId === id);
             });
             renderDataBindingPanel();
+            renderFieldList();
         }
 
-        // BÖLÜM 2: DEVEXPRESS TARZI VERİ BAĞLAMA YUVALARI (DATA ITEMS PANELİ)
+        function updateStatusBar() {
+            const w = getSelectedWidget();
+            const selEl = document.getElementById('statusSelectedInfo');
+            const sizeEl = document.getElementById('statusSizeInfo');
+            if (!w) {
+                selEl.innerHTML = 'Seçili Öğe: <strong>Yok</strong>';
+                sizeEl.textContent = 'Boyut: -';
+                return;
+            }
+            selEl.innerHTML = `Seçili Öğe: <strong>${escapeHtml(w.type.toUpperCase())} (${w.w}x${w.h}) - ${escapeHtml(w.title || '')}</strong>`;
+            sizeEl.textContent = `Grid Genişlik: ${w.w}/12 | Yükseklik: ${w.h} birim`;
+        }
+
+        // BÖLÜM 2: SEÇİLİ BİLEŞEN & VERİ YUVALARI PANELİ
         function renderDataBindingPanel() {
+            renderPalettes();
+            updateStatusBar();
+
             const w = getSelectedWidget();
             const badge = document.getElementById('selectedWidgetBadge');
             const box = document.getElementById('dataBindingContent');
 
             if (!w) {
                 badge.textContent = 'Seçili Yok';
-                box.innerHTML = '<div class="dz-empty">Tuvalden bir bileşene tıklayın veya araç kutusundan yeni bileşen ekleyin.</div>';
+                box.innerHTML = '<div class="dz-empty">Tuvalden bir bileşene tıklayın veya paletten yeni bileşen ekleyin.</div>';
                 return;
             }
 
             badge.textContent = `${w.type.toUpperCase()} (${w.w}x${w.h})`;
 
             let html = `
-                <div style="display:grid;grid-template-columns:1fr 125px;gap:6px;margin-bottom:8px;">
+                <div style="display:grid;grid-template-columns:1fr 112px;gap:6px;margin-bottom:8px;">
                     <div class="r-field">
                         <label>Bileşen Başlığı</label>
                         <input type="text" value="${escapeHtml(w.title || '')}" oninput="updateSelectedWidgetProp('title', this.value)">
@@ -904,15 +1217,15 @@
                         <label>Görsel Tipi</label>
                         <select onchange="updateSelectedWidgetProp('type', this.value, true)">
                             <option value="bar" ${w.type === 'bar' ? 'selected' : ''}>📊 Sütun</option>
-                            <option value="stackedBar" ${w.type === 'stackedBar' ? 'selected' : ''}>📚 Yığılmış Sütun</option>
-                            <option value="horizontalBar" ${w.type === 'horizontalBar' ? 'selected' : ''}>📉 Yatay Sütun</option>
+                            <option value="stackedBar" ${w.type === 'stackedBar' ? 'selected' : ''}>📚 Yığılmış</option>
+                            <option value="horizontalBar" ${w.type === 'horizontalBar' ? 'selected' : ''}>📉 Yatay Bar</option>
                             <option value="line" ${w.type === 'line' ? 'selected' : ''}>📈 Çizgi</option>
-                            <option value="area" ${w.type === 'area' ? 'selected' : ''}>⛰️ Alan (Area)</option>
+                            <option value="area" ${w.type === 'area' ? 'selected' : ''}>⛰️ Alan</option>
                             <option value="pie" ${w.type === 'pie' ? 'selected' : ''}>🥧 Pasta</option>
                             <option value="donut" ${w.type === 'donut' ? 'selected' : ''}>🍩 Halka</option>
-                            <option value="gauge" ${w.type === 'gauge' ? 'selected' : ''}>🎯 İbre (Gauge)</option>
+                            <option value="gauge" ${w.type === 'gauge' ? 'selected' : ''}>🎯 İbre</option>
                             <option value="treemap" ${w.type === 'treemap' ? 'selected' : ''}>🟩 Treemap</option>
-                            <option value="heatmap" ${w.type === 'heatmap' ? 'selected' : ''}>🔥 Isı Haritası</option>
+                            <option value="heatmap" ${w.type === 'heatmap' ? 'selected' : ''}>🔥 Isı Har.</option>
                             <option value="kpi" ${w.type === 'kpi' ? 'selected' : ''}>🔢 KPI Kartı</option>
                             <option value="table" ${w.type === 'table' ? 'selected' : ''}>📋 Tablo</option>
                             <option value="pivot" ${w.type === 'pivot' ? 'selected' : ''}>🧮 Pivot</option>
@@ -931,7 +1244,7 @@
                         <div class="r-field" style="margin-bottom:8px;">
                             <div style="display:flex;justify-content:space-between;align-items:center;">
                                 <label>KPI Alt Etiketi (Üstteki Küçük Yazı)</label>
-                                <button type="button" class="pill-btn del" style="font-size:0.68rem;" onclick="updateSelectedWidgetProp('subtitle', '', true)">Gizle (Boşalt)</button>
+                                <button type="button" class="pill-btn del" style="font-size:0.66rem;color:#38bdf8;" onclick="updateSelectedWidgetProp('subtitle', '', true)">Gizle (Boşalt)</button>
                             </div>
                             <input type="text" id="kpiSubtitleInput" value="${escapeHtml(currentSub)}"
                                    placeholder="Boş bırakırsanız gizlenir..."
@@ -946,8 +1259,7 @@
                 html += renderSingleDimDropZone(w, 'secondaryDimension', 'Sütun Boyutu (Column Dimension)');
                 html += renderValueDropZone(w, 'Değer / Ölçüm (Values)');
             } else {
-                // Tüm Grafik Tipleri (bar, stackedBar, horizontalBar, line, area, pie, donut, treemap, heatmap)
-                html += renderValueDropZone(w, 'Değer / Ölçüm (Values / Measures - Çoklu)');
+                html += renderValueDropZone(w, 'Değer / Ölçüm (Values - Çoklu)');
                 html += renderDrillHierarchyDropZone(w);
             }
 
@@ -960,11 +1272,12 @@
             if (placeholderText) {
                 html += `<option value="">${escapeHtml(placeholderText)}</option>`;
             }
-            const colNames = liveColumns.map(c => c.name);
+            const sortedCols = getSortedColumns();
+            const colNames = sortedCols.map(c => c.name);
             if (selectedCol && !colNames.includes(selectedCol)) {
                 html += `<option value="${escapeHtml(selectedCol)}" selected>${escapeHtml(selectedCol)}</option>`;
             }
-            liveColumns.forEach(c => {
+            sortedCols.forEach(c => {
                 const isSel = c.name === selectedCol ? 'selected' : '';
                 html += `<option value="${escapeHtml(c.name)}" ${isSel}>${escapeHtml(c.name)}</option>`;
             });
@@ -1005,10 +1318,10 @@
             return `
                 <div class="drop-zone" data-slot="value">
                     <div class="dz-label">
-                        <span>🔢 ${labelText}</span>
+                        <span>{ } ${labelText}</span>
                         ${metrics.length > 0 ? `<button type="button" class="pill-btn del" onclick="clearMetricItems()">Temizle</button>` : ''}
                     </div>
-                    ${pills || `<div class="dz-empty">Kolonu buraya sürükleyin veya aşağıdaki listeden seçin</div>`}
+                    ${pills || `<div class="dz-empty">Kolonu sürükleyin veya listeden seçin</div>`}
                     ${addDropdown}
                 </div>`;
         }
@@ -1045,7 +1358,7 @@
                         <select class="pill-col-select" title="Boyut kolonunu listeden değiştirin" onchange="updateDrillField(${i}, this.value)">
                             ${buildColumnOptionsHtml(col)}
                         </select>
-                        <small style="color:#93c5fd;white-space:nowrap;font-size:0.68rem;">(${roleTag})</small>
+                        <small style="color:#93c5fd;white-space:nowrap;font-size:0.65rem;">(${roleTag})</small>
                         <div class="pill-actions">
                             ${i > 0 ? `<button type="button" class="pill-btn" onclick="moveDrillItem(${i}, -1)" title="Yukarı">▲</button>` : ''}
                             ${i < list.length - 1 ? `<button type="button" class="pill-btn" onclick="moveDrillItem(${i}, 1)" title="Aşağı">▼</button>` : ''}
@@ -1057,10 +1370,10 @@
             return `
                 <div class="drop-zone" data-slot="drill">
                     <div class="dz-label" style="flex-wrap:wrap;gap:4px;">
-                        <span>🔤 Boyut & Kırılım (Arguments / Series)</span>
+                        <span>🔤 Boyut & Kırılım (Arguments)</span>
                         ${list.length > 1 ? `
                         <select onchange="updateSelectedWidgetProp('multiDimMode', this.value, true)"
-                                style="background:#0f172a;color:#38bdf8;border:1px solid var(--border);border-radius:4px;font-size:0.7rem;padding:2px 4px;font-weight:700;">
+                                style="background:#080d19;color:#38bdf8;border:1px solid var(--border-bright);border-radius:4px;font-size:0.68rem;padding:2px 4px;font-weight:700;width:100%;margin-top:3px;">
                             <option value="combined" ${mode === 'combined' ? 'selected' : ''}>🔗 Birlikte Göster (Örn: Yıl / Ay)</option>
                             <option value="series" ${mode === 'series' ? 'selected' : ''}>🎨 Seri / Renk Grubu Yap</option>
                             <option value="drill" ${mode === 'drill' ? 'selected' : ''}>🔍 Çift Tık Alt Kırılım (Drill-Down)</option>
@@ -1082,7 +1395,7 @@
             cols.forEach((col, i) => {
                 pills += `
                     <div class="bound-pill">
-                        <span>${i + 1}. <strong>${escapeHtml(col)}</strong></span>
+                        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${i + 1}. <strong>${escapeHtml(col)}</strong></span>
                         <div class="pill-actions">
                             ${i > 0 ? `<button type="button" class="pill-btn" onclick="moveTableCol(${i}, -1)">▲</button>` : ''}
                             ${i < cols.length - 1 ? `<button type="button" class="pill-btn" onclick="moveTableCol(${i}, 1)">▼</button>` : ''}
@@ -1092,11 +1405,11 @@
             });
 
             return `
-                <div class="drop-zone" data-slot="tableCols" style="max-height:210px;overflow-y:auto;">
+                <div class="drop-zone" data-slot="tableCols">
                     <div class="dz-label">
                         <span>📋 Tablo Sütunları (${cols.length})</span>
                         <div style="display:flex;gap:4px;">
-                            <button type="button" class="pill-btn" style="color:#38bdf8;" onclick="setAllTableCols()">+ Tümünü Ekle</button>
+                            <button type="button" class="pill-btn" style="color:#38bdf8;" onclick="setAllTableCols()">+ Tümü</button>
                             <button type="button" class="pill-btn del" onclick="clearTableCols()">Temizle</button>
                         </div>
                     </div>
@@ -1170,6 +1483,7 @@
             delete widgetDrillState[w.id];
             renderDesignerCanvas();
             renderDataBindingPanel();
+            renderFieldList();
         }
 
         function autoAssignFieldToSelectedWidget(colName, dataType) {
@@ -1207,6 +1521,7 @@
             }
             renderDesignerCanvas();
             renderDataBindingPanel();
+            renderFieldList();
         }
 
         function updateDrillField(idx, newCol) {
@@ -1223,6 +1538,7 @@
             delete widgetDrillState[w.id];
             renderDesignerCanvas();
             renderDataBindingPanel();
+            renderFieldList();
         }
 
         function updateMetricAgg(idx, newAgg) {
@@ -1261,6 +1577,7 @@
             syncPrimaryMetricProps(w);
             renderDesignerCanvas();
             renderDataBindingPanel();
+            renderFieldList();
         }
 
         function clearMetricItems() {
@@ -1270,6 +1587,7 @@
             syncPrimaryMetricProps(w);
             renderDesignerCanvas();
             renderDataBindingPanel();
+            renderFieldList();
         }
 
         function updateSelectedWidgetProp(prop, val, rerenderAll = false) {
@@ -1286,6 +1604,7 @@
             if (prop === 'title') {
                 const cardTitle = document.querySelector(`#designerCanvas .widget-card[data-widget-id="${w.id}"] .w-title-text`);
                 if (cardTitle) cardTitle.textContent = val;
+                updateStatusBar();
                 return;
             }
             if (prop === 'subtitle') {
@@ -1299,6 +1618,7 @@
             if (rerenderAll) {
                 renderDesignerCanvas();
                 renderDataBindingPanel();
+                renderFieldList();
             }
         }
 
@@ -1326,6 +1646,7 @@
             delete widgetDrillState[w.id];
             renderDesignerCanvas();
             renderDataBindingPanel();
+            renderFieldList();
         }
 
         function moveTableCol(idx, dir) {
@@ -1348,6 +1669,7 @@
             w.columns.splice(idx, 1);
             renderDesignerCanvas();
             renderDataBindingPanel();
+            renderFieldList();
         }
 
         function setAllTableCols() {
@@ -1356,6 +1678,7 @@
             w.columns = liveColumns.map(c => c.name);
             renderDesignerCanvas();
             renderDataBindingPanel();
+            renderFieldList();
         }
 
         function clearTableCols() {
@@ -1364,9 +1687,10 @@
             w.columns = [];
             renderDesignerCanvas();
             renderDataBindingPanel();
+            renderFieldList();
         }
 
-        // SAĞ CANLI TUVAL ÇİZİMİ, SÜRÜKLE-BIRAK YER DEĞİŞTİRME VE KÖŞEDEN BOYUTLANDIRMA
+        // SAĞ CANLI TUVAL ÇİZİMİ (2 BOYUTLU YOĞUN MİKRO-GRİD)
         function renderDesignerCanvas() {
             chartInstances.forEach(c => { try { c.dispose(); } catch (_) {} });
             chartInstances = [];
@@ -1378,15 +1702,15 @@
             if (widgets.length === 0) {
                 const noDs = allDataSources.length === 0;
                 canvas.innerHTML = `
-                    <div style="grid-column:span 120;border:2px dashed #334155;border-radius:14px;padding:60px 20px;text-align:center;color:#94a3b8;">
+                    <div style="grid-column:span 120;grid-row:span 18;border:2px dashed #334155;border-radius:14px;padding:60px 20px;text-align:center;color:#94a3b8;">
                         <div style="font-size:2rem;margin-bottom:8px;">📐</div>
-                        <div style="font-size:1.05rem;font-weight:700;color:#e2e8f0;">
+                        <div style="font-size:1.02rem;font-weight:700;color:#e2e8f0;">
                             ${noDs ? 'Henüz Tanımlı SQL Veri Kaynağı Yok' : 'Dashboard Tuvali Boş'}
                         </div>
-                        <div style="font-size:0.86rem;margin-top:6px;margin-bottom:14px;">
+                        <div style="font-size:0.84rem;margin-top:6px;margin-bottom:14px;">
                             ${noDs
-                                ? 'Rapor tasarlamaya başlamak için önce bir SQL Veri Kaynağı (SELECT sorgusu) tanımlayın.'
-                                : 'Soldaki <strong>Araç Kutusu</strong>\'ndan bir grafik, KPI kartı veya tabloyu buraya sürükleyip bırakın.'}
+                                ? 'Rapor tasarlamaya başlamak için önce bir SQL Veri Kaynağı tanımlayın.'
+                                : 'Görsel Paletten bir grafik, KPI kartı veya tabloyu tıklayın ya da buraya sürükleyip bırakın.'}
                         </div>
                         ${noDs ? `<button type="button" class="btn btn-primary" onclick="switchStudioTab('sql')">➕ İlk SQL Veri Kaynağını Tanımla</button>` : ''}
                     </div>`;
@@ -1399,23 +1723,16 @@
                 card.dataset.widgetId = w.id;
                 card.dataset.widgetIndex = idx;
 
-                const colSpan12 = Math.min(12, Math.max(1.0, Math.round((Number(w.w) || (w.type === 'kpi' ? 3 : 4)) * 10) / 10));
-                const gridSpan120 = Math.min(120, Math.max(10, Math.round(colSpan12 * 10)));
-                const hUnits = Math.min(16, Math.max(1.2, Math.round((Number(w.h) || (w.type === 'kpi' ? 2 : 4)) * 20) / 20));
-                const rowHeight = w.type === 'kpi'
-                    ? Math.max(82, Math.round(hUnits * 58))
-                    : Math.max(115, Math.round(hUnits * 58));
+                const { colSpan12, gridSpan120, hUnits, rowSpan } = calcWidgetGridMetrics(w);
                 card.style.gridColumn = `span ${gridSpan120}`;
-                card.style.height = `${rowHeight}px`;
+                card.style.gridRow = `span ${rowSpan}`;
 
-                // Karta tıklayınca seç
-                card.addEventListener('mousedown', e => {
+                card.addEventListener('mousedown', () => {
                     if (w.id !== selectedWidgetId) {
                         selectWidget(w.id);
                     }
                 });
 
-                // Kart başlığı (Sürükle-Bırak ile yer değiştirme)
                 const header = document.createElement('div');
                 header.className = 'widget-header';
                 header.draggable = true;
@@ -1425,14 +1742,15 @@
                     e.dataTransfer.setData('text/plain', String(idx));
                 });
 
-                // Kart üzerine başka bir kart veya kolon sürüklendiğinde
                 card.addEventListener('dragover', e => {
                     if (!dragPayload) return;
                     if (dragPayload.kind === 'widget' && dragPayload.fromIndex !== idx) {
                         e.preventDefault();
+                        e.stopPropagation();
                         card.classList.add('card-drop-target');
                     } else if (dragPayload.kind === 'field') {
                         e.preventDefault();
+                        e.stopPropagation();
                         card.classList.add('card-drop-target');
                     }
                 });
@@ -1461,7 +1779,7 @@
 
                 header.innerHTML = `
                     <div class="widget-title">
-                        <span class="drag-grip" title="Sürükleyerek yerini değiştirin">⠿</span>
+                        <span class="drag-grip" title="Sürükleyerek boş alanlara veya başka kartın yerine taşıyın">⠿</span>
                         <span class="w-title-text">${escapeHtml(w.title || 'Bileşen')}</span>
                     </div>
                     <div style="display:flex;align-items:center;gap:6px;">
@@ -1475,7 +1793,6 @@
                     ? 'widget-body table-scroll'
                     : 'widget-body';
 
-                // Köşeden ve kenardan fareyle boyutlandırma tutamaçları
                 const handleSE = document.createElement('div');
                 handleSE.className = 'resize-handle-se';
                 handleSE.title = 'Fareyle çekerek genişlik ve yüksekliği ayarlayın';
@@ -1524,9 +1841,9 @@
             }
             renderDesignerCanvas();
             renderDataBindingPanel();
+            renderFieldList();
         }
 
-        // FAREYLE SÜRÜKLEYEREK KART BOYUTLANDIRMA (ULTRA-HASSAS 120 MİKRO-SÜTUNLU RESIZE ENGINE)
         function attachResizeBehavior(cardEl, widgetObj, handleEl, allowW, allowH) {
             handleEl.addEventListener('mousedown', e => {
                 e.preventDefault();
@@ -1535,9 +1852,7 @@
 
                 const canvasEl = document.getElementById('designerCanvas');
                 const canvasWidth = canvasEl.clientWidth || 1200;
-                // 120 mikro-sütun: her 0.1 adım (~8-10px) son derece yumuşak ve hassas genişlik değişimi sağlar
                 const microColPx = canvasWidth / 120;
-                // Dikeyde her 0.05 satır (~3px) piksel hassasiyetinde yükseklik değişimi sağlar
                 const microRowPx = 2.9;
 
                 const startX = e.clientX;
@@ -1551,8 +1866,8 @@
                         const newW = Math.min(12, Math.max(1.0, Math.round((startW + deltaMicroCols * 0.1) * 10) / 10));
                         if (newW !== widgetObj.w) {
                             widgetObj.w = newW;
-                            const span120 = Math.min(120, Math.max(10, Math.round(newW * 10)));
-                            cardEl.style.gridColumn = `span ${span120}`;
+                            const { gridSpan120 } = calcWidgetGridMetrics(widgetObj);
+                            cardEl.style.gridColumn = `span ${gridSpan120}`;
                         }
                     }
                     if (allowH) {
@@ -1560,14 +1875,13 @@
                         const newH = Math.min(16, Math.max(1.2, Math.round((startH + deltaMicroRows * 0.05) * 20) / 20));
                         if (newH !== widgetObj.h) {
                             widgetObj.h = newH;
-                            const pxH = widgetObj.type === 'kpi'
-                                ? Math.max(82, Math.round(newH * 58))
-                                : Math.max(115, Math.round(newH * 58));
-                            cardEl.style.height = `${pxH}px`;
+                            const { rowSpan } = calcWidgetGridMetrics(widgetObj);
+                            cardEl.style.gridRow = `span ${rowSpan}`;
                         }
                     }
                     const badge = document.getElementById(`sizeBadge_${widgetObj.id}`);
                     if (badge) badge.textContent = `${widgetObj.w}/12 × ${widgetObj.h}`;
+                    updateStatusBar();
                     chartInstances.forEach(c => { try { c.resize(); } catch (_) {} });
                 }
 
@@ -1583,7 +1897,6 @@
             });
         }
 
-        // BİLEŞEN İÇERİĞİNİ CANLI VERİYLE ÇİZME
         function renderWidgetContent(w, container) {
             let rows = liveRows;
             const metrics = getWidgetMetrics(w);
@@ -1612,8 +1925,8 @@
                         const v = computeAggregate(rows, m.field, aggType);
                         itemsHtml += `
                             <div style="flex:1;min-width:110px;padding:4px 8px;border-left:2px solid rgba(56,189,248,0.45);">
-                                <div class="kpi-meta" style="margin-bottom:1px;font-size:0.68rem;">${escapeHtml(m.field)} (${aggShort})</div>
-                                <div class="kpi-val" style="font-size:clamp(1.15rem, 1.5vw, 1.55rem);">${formatNumber(v)}</div>
+                                <div class="kpi-meta" style="margin-bottom:1px;font-size:0.66rem;">${escapeHtml(m.field)} (${aggShort})</div>
+                                <div class="kpi-val" style="font-size:clamp(1.1rem, 1.45vw, 1.5rem);">${formatNumber(v)}</div>
                             </div>`;
                     });
                     container.innerHTML = `
@@ -1654,9 +1967,7 @@
 
             const mode = w.multiDimMode || 'combined';
             let workingRows = baseRows;
-            let activeDims = hierarchy.length > 0 ? hierarchy : [''];
 
-            // Drill-down aktifse filtreleri uygula
             const drillState = widgetDrillState[w.id];
             if (drillState && drillState.level > 0 && Array.isArray(drillState.filters)) {
                 drillState.filters.forEach(f => {
@@ -1676,9 +1987,8 @@
             const axisTextColor = isLight ? '#334155' : '#94a3b8';
             const legendTextColor = isLight ? '#1e293b' : '#cbd5e1';
             const splitLineColor = isLight ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.06)';
-            const palette = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f43f5e', '#84cc16'];
+            const palette = ['#0ea5e9', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4', '#f43f5e', '#84cc16'];
 
-            // 1. İBRE (GAUGE) GRAFİĞİ
             if (w.type === 'gauge') {
                 const val = Math.round(computeAggregate(workingRows, primaryMetric.field, primaryMetric.agg) * 100) / 100;
                 chart.setOption({
@@ -1697,7 +2007,6 @@
                 return;
             }
 
-            // 2. ISI HARİTASI (HEATMAP)
             if (w.type === 'heatmap') {
                 const dimX = hierarchy[0] || w.dimension || '';
                 const dimY = hierarchy[1] || w.secondaryDimension || dimX;
@@ -1727,7 +2036,6 @@
                 return;
             }
 
-            // 3. TREEMAP GRAFİĞİ
             if (w.type === 'treemap') {
                 const dimKeyCols = (mode === 'combined' && hierarchy.length > 1) ? hierarchy : [hierarchy[0] || w.dimension || ''];
                 const grouped = groupAndAggregateComposite(workingRows, dimKeyCols, primaryMetric.field, primaryMetric.agg, w.topN || 25);
@@ -1744,7 +2052,6 @@
                 return;
             }
 
-            // 4. PASTA VE HALKA GRAFİKLERİ
             const isPie = w.type === 'pie' || w.type === 'donut';
             if (isPie) {
                 const currentLevel = drillState ? drillState.level : 0;
@@ -1769,8 +2076,6 @@
                 return;
             }
 
-            // 5. SÜTUN, YIĞILMIŞ SÜTUN, YATAY SÜTUN, ÇİZGİ VE ALAN GRAFİKLERİ
-            // Senaryo A: Çoklu Boyut "Seri / Renk Grubu (series)" modundaysa (Örn: X ekseni = Sip. Ay, Seri = Sip. Yıl)
             if (mode === 'series' && hierarchy.length >= 2) {
                 const xDim = hierarchy[0];
                 const seriesDim = hierarchy[1];
@@ -1817,9 +2122,7 @@
                     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, confine: true },
                     legend: { type: 'scroll', top: 0, textStyle: { color: legendTextColor, fontSize: 11 } },
                     toolbox: {
-                        show: true,
-                        right: 8,
-                        top: 0,
+                        show: true, right: 8, top: 0,
                         iconStyle: { borderColor: axisTextColor },
                         feature: {
                             magicType: { type: ['line', 'bar', 'stack'], title: { line: 'Çizgi', bar: 'Sütun', stack: 'Yığılmış' } },
@@ -1836,7 +2139,6 @@
                 return;
             }
 
-            // Senaryo B: Birleşik Eksen (Örn: Sip. Yıl + Sip. Ay birlikte) VEYA Çoklu Değer/Ölçüm (Örn: Sip. Mt + Sip. Kg birlikte)
             const currentLevel = drillState ? drillState.level : 0;
             const activeDimCols = (mode === 'combined' && hierarchy.length > 1)
                 ? hierarchy
@@ -1864,8 +2166,8 @@
                     data: categoryKeys.map(k => valMap.get(k) ?? 0),
                     itemStyle: effectiveMetrics.length === 1 && !isLine ? {
                         color: new echarts.graphic.LinearGradient(isHoriz ? 1 : 0, 0, 0, isHoriz ? 0 : 1, [
-                            { offset: 0, color: '#3b82f6' },
-                            { offset: 1, color: '#1d4ed8' }
+                            { offset: 0, color: '#0ea5e9' },
+                            { offset: 1, color: '#2563eb' }
                         ]),
                         borderRadius: isHoriz ? [0, 4, 4, 0] : [4, 4, 0, 0]
                     } : undefined
@@ -1889,9 +2191,7 @@
                 tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, confine: true },
                 legend: effectiveMetrics.length > 1 ? { type: 'scroll', top: 0, textStyle: { color: legendTextColor, fontSize: 11 } } : undefined,
                 toolbox: {
-                    show: true,
-                    right: 8,
-                    top: 0,
+                    show: true, right: 8, top: 0,
                     iconStyle: { borderColor: axisTextColor },
                     feature: {
                         magicType: { type: ['line', 'bar', 'stack'], title: { line: 'Çizgi', bar: 'Sütun', stack: 'Yığılmış' } },
@@ -1945,7 +2245,7 @@
                 : liveColumns.map(c => c.name);
 
             if (cols.length === 0) {
-                container.innerHTML = '<div class="dz-empty" style="padding:24px;">Tabloya kolon eklemek için sol listeden kolon sürükleyin.</div>';
+                container.innerHTML = '<div class="dz-empty" style="padding:24px;">Tabloya kolon eklemek için sol listeden kolon sürükleyin veya + butonuna tıklayın.</div>';
                 return;
             }
 
@@ -2029,11 +2329,11 @@
             container.innerHTML = html;
         }
 
-        // ANA DASHBOARD ŞABLONUNU MARIADB'YE KAYDETME
         async function saveMasterDashboard() {
             const code = document.getElementById('dashCode').value.trim();
             const title = document.getElementById('dashTitle').value.trim();
             if (!code || !title) {
+                document.getElementById('dashMetaBar').classList.remove('collapsed');
                 showToast('Dashboard kodu ve başlığı zorunludur!', true);
                 return;
             }
@@ -2062,7 +2362,7 @@
             }
         }
 
-        // SEKME 2: SQL VERİ KAYNAĞI EDİTÖRÜ FONKSİYONLARI
+        // SEKME 2: SQL VERİ KAYNAĞI EDİTÖRÜ
         function onSelectExistingDs() {
             const id = parseInt(document.getElementById('selExistingDs').value || '0', 10);
             const ds = allDataSources.find(x => x.datasource_id === id);
@@ -2097,17 +2397,17 @@
             const tbody = document.getElementById('paramsTableBody');
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><input type="text" class="p-name" value="${escapeHtml(name)}" placeholder="Ulke" style="width:100%;background:#0f172a;color:#fff;border:1px solid var(--border);padding:5px;border-radius:5px;"></td>
-                <td><input type="text" class="p-label" value="${escapeHtml(label)}" placeholder="Ülke" style="width:100%;background:#0f172a;color:#fff;border:1px solid var(--border);padding:5px;border-radius:5px;"></td>
+                <td><input type="text" class="p-name" value="${escapeHtml(name)}" placeholder="Ulke" style="width:100%;background:#080d19;color:#fff;border:1px solid var(--border-bright);padding:5px;border-radius:5px;"></td>
+                <td><input type="text" class="p-label" value="${escapeHtml(label)}" placeholder="Ülke" style="width:100%;background:#080d19;color:#fff;border:1px solid var(--border-bright);padding:5px;border-radius:5px;"></td>
                 <td>
-                    <select class="p-type" style="background:#0f172a;color:#fff;border:1px solid var(--border);padding:5px;border-radius:5px;">
+                    <select class="p-type" style="background:#080d19;color:#fff;border:1px solid var(--border-bright);padding:5px;border-radius:5px;">
                         <option value="select" ${type === 'select' ? 'selected' : ''}>Açılır Liste (Select)</option>
                         <option value="date" ${type === 'date' ? 'selected' : ''}>Tarih (Date)</option>
                         <option value="text" ${type === 'text' ? 'selected' : ''}>Metin (Text)</option>
                         <option value="number" ${type === 'number' ? 'selected' : ''}>Sayı (Number)</option>
                     </select>
                 </td>
-                <td><input type="text" class="p-lookup" value="${escapeHtml(lookupSql)}" placeholder="SELECT DISTINCT Ulke AS val, Ulke AS txt FROM ..." style="width:100%;background:#0f172a;color:#fff;border:1px solid var(--border);padding:5px;border-radius:5px;"></td>
+                <td><input type="text" class="p-lookup" value="${escapeHtml(lookupSql)}" placeholder="SELECT DISTINCT Ulke AS val, Ulke AS txt FROM ..." style="width:100%;background:#080d19;color:#fff;border:1px solid var(--border-bright);padding:5px;border-radius:5px;"></td>
                 <td><button type="button" class="pill-btn del" onclick="this.closest('tr').remove()">✕</button></td>`;
             tbody.appendChild(tr);
         }
@@ -2183,7 +2483,6 @@
             }
         }
 
-        // YARDIMCI HESAPLAMA VE FORMAT FONKSİYONLARI
         function getRowValue(row, colName) {
             if (!row || !colName) return null;
             if (colName in row) return row[colName];
@@ -2247,7 +2546,6 @@
                 arr.push({ key: k, value: Math.round(finalVal * 100) / 100 });
             }
 
-            // Eğer eksen Yıl / Ay veya Tarih içeriyorsa kronolojik sırala, değilse büyüklüğe göre sırala
             const isTimeAxis = cols.some(c => /y[ıi]l|ay\b|tarih|tar\.|termin/i.test(String(c)));
             if (isTimeAxis) {
                 arr.sort((aItem, bItem) => aItem.key.localeCompare(bItem.key, 'tr-TR', { numeric: true }));
@@ -2255,10 +2553,6 @@
                 arr.sort((aItem, bItem) => bItem.value - aItem.value);
             }
             return topN ? arr.slice(0, topN) : arr;
-        }
-
-        function groupAndAggregate(rows, dimField, valField, agg, topN) {
-            return groupAndAggregateComposite(rows, [dimField], valField, agg, topN);
         }
 
         function formatNumber(val) {
