@@ -729,6 +729,12 @@
                 titleWrap.style.display = 'flex';
                 titleWrap.style.flexDirection = 'column';
                 titleWrap.style.gap = '2px';
+                titleWrap.style.flex = '1';
+                const isTableType = w.type === 'table' || w.type === 'pivot';
+                if (!isTableType && w.align) {
+                    titleWrap.style.textAlign = w.align;
+                    titleWrap.style.alignItems = w.align === 'center' ? 'center' : (w.align === 'right' ? 'flex-end' : 'flex-start');
+                }
 
                 const hTitle = document.createElement('h3');
                 hTitle.className = 'widget-title';
@@ -907,31 +913,34 @@
             }
 
             if (w.type === 'kpi') {
+                const effAlign = getColumnAlign(primaryMetric.field, w.align || 'left');
+                const flexAlign = effAlign === 'center' ? 'center' : (effAlign === 'right' ? 'flex-end' : 'flex-start');
                 if (metrics.length <= 1) {
                     const aggType = (primaryMetric.agg || 'sum').toLowerCase();
                     const aggLabel = aggType === 'count' ? 'KAYIT SAYISI' : (aggType === 'avg' ? 'ORTALAMA' : (aggType === 'max' ? 'MAKSİMUM' : (aggType === 'min' ? 'MİNİMUM' : 'GENEL TOPLAM')));
                     const effectiveSub = w.subtitle !== undefined ? w.subtitle : aggLabel;
                     const val = computeAggregate(rows, primaryMetric.field, aggType);
                     container.innerHTML = `
-                        <div class="kpi-box">
+                        <div class="kpi-box" style="align-items:${flexAlign};text-align:${effAlign};width:100%;">
                             <div class="kpi-meta" style="display:${effectiveSub && effectiveSub.trim() !== '' ? 'block' : 'none'};">${escapeHtml(effectiveSub)}</div>
-                            <div class="kpi-val">${formatNumber(val)}</div>
+                            <div class="kpi-val">${escapeHtml(formatValueByColumn(val, primaryMetric.field, 'number'))}</div>
                         </div>`;
                 } else {
                     const customSub = w.subtitle !== undefined && w.subtitle.trim() !== '' ? w.subtitle : '';
                     let itemsHtml = '';
                     metrics.forEach(m => {
+                        const mAlign = getColumnAlign(m.field, w.align || 'left');
                         const aggType = (m.agg || 'sum').toLowerCase();
                         const aggShort = aggType === 'count' ? 'ADET' : (aggType === 'avg' ? 'ORT.' : (aggType === 'max' ? 'MAKS' : (aggType === 'min' ? 'MİN' : 'TOPLAM')));
                         const v = computeAggregate(rows, m.field, aggType);
                         itemsHtml += `
-                            <div style="flex:1;min-width:110px;padding:4px 8px;border-left:2px solid rgba(56,189,248,0.45);">
+                            <div style="flex:1;min-width:110px;padding:4px 8px;border-left:2px solid rgba(56,189,248,0.45);text-align:${mAlign};">
                                 <div class="kpi-meta" style="margin-bottom:1px;font-size:0.68rem;">${escapeHtml(m.field)} (${aggShort})</div>
-                                <div class="kpi-val" style="font-size:clamp(1.15rem, 1.5vw, 1.55rem);">${formatNumber(v)}</div>
+                                <div class="kpi-val" style="font-size:clamp(1.15rem, 1.5vw, 1.55rem);">${escapeHtml(formatValueByColumn(v, m.field, 'number'))}</div>
                             </div>`;
                     });
                     container.innerHTML = `
-                        <div class="kpi-box" style="justify-content:center;gap:6px;width:100%;">
+                        <div class="kpi-box" style="justify-content:center;align-items:${flexAlign};text-align:${effAlign};gap:6px;width:100%;">
                             ${customSub ? `<div class="kpi-meta">${escapeHtml(customSub)}</div>` : ''}
                             <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;width:100%;">${itemsHtml}</div>
                         </div>`;
@@ -984,14 +993,14 @@
                 const val = Math.round(computeAggregate(rows, primaryMetric.field, primaryMetric.agg) * 100) / 100;
                 chart.setOption({
                     backgroundColor: 'transparent',
-                    tooltip: { formatter: '{a} <br/>{b}: {c}' },
+                    tooltip: { formatter: p => `${escapeHtml(p.seriesName)}<br/>${escapeHtml(p.name)}: <strong>${escapeHtml(formatValueByColumn(p.value, primaryMetric.field, 'number'))}</strong>` },
                     series: [{
                         name: w.title || primaryMetric.field,
                         type: 'gauge',
                         max: val > 0 ? Math.ceil(val * 1.25) : 100,
                         progress: { show: true, width: 12 },
                         axisLine: { lineStyle: { width: 12 } },
-                        detail: { valueAnimation: true, formatter: v => formatNumber(v), color: '#38bdf8', fontSize: 16 },
+                        detail: { valueAnimation: true, formatter: v => formatValueByColumn(v, primaryMetric.field, 'number'), color: '#38bdf8', fontSize: 16 },
                         data: [{ value: val, name: primaryMetric.field || 'Değer' }]
                     }]
                 });
@@ -1002,15 +1011,15 @@
             if (w.type === 'heatmap') {
                 const dimX = hierarchy[0] || w.dimension || '';
                 const dimY = hierarchy[1] || w.secondaryDimension || dimX;
-                const xKeys = [...new Set(rows.map(r => String(getRowValue(r, dimX) ?? 'Belirsiz')))].slice(0, 20);
-                const yKeys = [...new Set(rows.map(r => String(getRowValue(r, dimY) ?? 'Belirsiz')))].slice(0, 15);
+                const xKeys = [...new Set(rows.map(r => formatDimensionValue(getRowValue(r, dimX), dimX)))].slice(0, 20);
+                const yKeys = [...new Set(rows.map(r => formatDimensionValue(getRowValue(r, dimY), dimY)))].slice(0, 15);
                 const heatData = [];
                 let maxVal = 0;
                 xKeys.forEach((xk, xi) => {
                     yKeys.forEach((yk, yi) => {
                         const matched = rows.filter(r =>
-                            String(getRowValue(r, dimX) ?? 'Belirsiz') === xk &&
-                            String(getRowValue(r, dimY) ?? 'Belirsiz') === yk);
+                            formatDimensionValue(getRowValue(r, dimX), dimX) === xk &&
+                            formatDimensionValue(getRowValue(r, dimY), dimY) === yk);
                         const v = Math.round(computeAggregate(matched, primaryMetric.field, primaryMetric.agg) * 100) / 100;
                         if (v > maxVal) maxVal = v;
                         heatData.push([xi, yi, v]);
@@ -1018,12 +1027,12 @@
                 });
                 chart.setOption({
                     backgroundColor: 'transparent',
-                    tooltip: { position: 'top' },
+                    tooltip: { position: 'top', formatter: p => `${escapeHtml(xKeys[p.value[0]] || '')} / ${escapeHtml(yKeys[p.value[1]] || '')}: <strong>${escapeHtml(formatValueByColumn(p.value[2], primaryMetric.field, 'number'))}</strong>` },
                     grid: { left: 12, right: 20, top: 20, bottom: 28, containLabel: true },
                     xAxis: { type: 'category', data: xKeys, splitArea: { show: true } },
                     yAxis: { type: 'category', data: yKeys, splitArea: { show: true } },
                     visualMap: { min: 0, max: maxVal || 100, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, itemWidth: 10, itemHeight: 60 },
-                    series: [{ type: 'heatmap', data: heatData, label: { show: xKeys.length <= 10 } }]
+                    series: [{ type: 'heatmap', data: heatData, label: { show: xKeys.length <= 10, formatter: p => formatValueByColumn(p.value[2], primaryMetric.field, 'number') } }]
                 });
                 return;
             }
@@ -1034,7 +1043,7 @@
                 const grouped = groupAndAggregateComposite(rows, dimCols, primaryMetric.field, primaryMetric.agg, w.topN || 25);
                 chart.setOption({
                     backgroundColor: 'transparent',
-                    tooltip: { formatter: info => `${escapeHtml(info.name)}: <strong>${formatNumber(info.value)}</strong>` },
+                    tooltip: { formatter: info => `${escapeHtml(info.name)}: <strong>${escapeHtml(formatValueByColumn(info.value, primaryMetric.field, 'number'))}</strong>` },
                     series: [{
                         type: 'treemap',
                         roam: false,
@@ -1053,8 +1062,8 @@
                 chart.setOption({
                     backgroundColor: 'transparent',
                     color: palette,
-                    tooltip: { trigger: 'item', confine: true, formatter: p => `${escapeHtml(p.name)}: <strong>${formatNumber(p.value)}</strong> (%${p.percent})` },
-                    legend: { type: 'scroll', bottom: 0, textStyle: { color: legendTextColor, fontSize: 11 } },
+                    tooltip: { trigger: 'item', confine: true, formatter: p => `${escapeHtml(p.name)}: <strong>${escapeHtml(formatValueByColumn(p.value, primaryMetric.field, 'number'))}</strong> (%${p.percent})` },
+                    legend: { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 11 } },
                     series: [{
                         type: 'pie',
                         radius: w.type === 'donut' ? ['38%', '68%'] : '65%',
@@ -1067,9 +1076,9 @@
                 // 5A. SERİ / RENK GRUPLAMA MODU
                 const xDim = hierarchy[0];
                 const seriesDim = hierarchy[1];
-                const xKeys = [...new Set(rows.map(r => String(getRowValue(r, xDim) ?? 'Belirsiz')))];
+                const xKeys = [...new Set(rows.map(r => formatDimensionValue(getRowValue(r, xDim), xDim)))];
                 xKeys.sort((a, b) => a.localeCompare(b, 'tr-TR', { numeric: true }));
-                const seriesKeys = [...new Set(rows.map(r => String(getRowValue(r, seriesDim) ?? 'Belirsiz')))].slice(0, 12);
+                const seriesKeys = [...new Set(rows.map(r => formatDimensionValue(getRowValue(r, seriesDim), seriesDim)))].slice(0, 12);
                 seriesKeys.sort((a, b) => a.localeCompare(b, 'tr-TR', { numeric: true }));
 
                 const isLine = w.type === 'line' || w.type === 'area';
@@ -1084,20 +1093,32 @@
                     smooth: true,
                     data: xKeys.map(xk => {
                         const matched = rows.filter(r =>
-                            String(getRowValue(r, xDim) ?? 'Belirsiz') === xk &&
-                            String(getRowValue(r, seriesDim) ?? 'Belirsiz') === sk);
+                            formatDimensionValue(getRowValue(r, xDim), xDim) === xk &&
+                            formatDimensionValue(getRowValue(r, seriesDim), seriesDim) === sk);
                         return Math.round(computeAggregate(matched, primaryMetric.field, primaryMetric.agg) * 100) / 100;
                     })
                 }));
 
                 const catAxis = { type: 'category', data: xKeys, axisLabel: { color: axisTextColor, rotate: (!isHoriz && xKeys.length > 6) ? 25 : 0 } };
-                const valAxis = { type: 'value', axisLabel: { color: axisTextColor }, splitLine: { lineStyle: { color: splitLineColor } } };
+                const valAxis = { type: 'value', axisLabel: { color: axisTextColor, formatter: v => formatValueByColumn(v, primaryMetric.field, 'number') }, splitLine: { lineStyle: { color: splitLineColor } } };
 
                 chart.setOption({
                     backgroundColor: 'transparent',
                     color: palette,
-                    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, confine: true },
-                    legend: { type: 'scroll', top: 0, textStyle: { color: legendTextColor, fontSize: 11 } },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
+                        confine: true,
+                        formatter: params => {
+                            if (!Array.isArray(params) || params.length === 0) return '';
+                            let res = `<strong>${escapeHtml(params[0].axisValueLabel || params[0].name || '')}</strong>`;
+                            params.forEach(p => {
+                                res += `<br/>${p.marker || ''} ${escapeHtml(p.seriesName)}: <strong>${escapeHtml(formatValueByColumn(p.value, primaryMetric.field, 'number'))}</strong>`;
+                            });
+                            return res;
+                        }
+                    },
+                    legend: { type: 'scroll', top: 0, left: w.align || 'auto', textStyle: { color: legendTextColor, fontSize: 11 } },
                     toolbox: {
                         show: true, right: 8, top: 0, iconStyle: { borderColor: axisTextColor },
                         feature: {
@@ -1148,13 +1169,26 @@
                 });
 
                 const catAxis = { type: 'category', data: categoryKeys, axisLabel: { color: axisTextColor, rotate: (!isHoriz && categoryKeys.length > 5) ? 20 : 0 } };
-                const valAxis = { type: 'value', axisLabel: { color: axisTextColor }, splitLine: { lineStyle: { color: splitLineColor } } };
+                const valAxis = { type: 'value', axisLabel: { color: axisTextColor, formatter: v => formatValueByColumn(v, effectiveMetrics[0].field, 'number') }, splitLine: { lineStyle: { color: splitLineColor } } };
 
                 chart.setOption({
                     backgroundColor: 'transparent',
                     color: palette,
-                    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, confine: true },
-                    legend: effectiveMetrics.length > 1 ? { type: 'scroll', top: 0, textStyle: { color: legendTextColor, fontSize: 11 } } : undefined,
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
+                        confine: true,
+                        formatter: params => {
+                            if (!Array.isArray(params) || params.length === 0) return '';
+                            let res = `<strong>${escapeHtml(params[0].axisValueLabel || params[0].name || '')}</strong>`;
+                            params.forEach((p, idx) => {
+                                const mCol = effectiveMetrics[idx]?.field || effectiveMetrics[0].field;
+                                res += `<br/>${p.marker || ''} ${escapeHtml(p.seriesName)}: <strong>${escapeHtml(formatValueByColumn(p.value, mCol, 'number'))}</strong>`;
+                            });
+                            return res;
+                        }
+                    },
+                    legend: effectiveMetrics.length > 1 ? { type: 'scroll', top: 0, left: w.align || 'auto', textStyle: { color: legendTextColor, fontSize: 11 } } : undefined,
                     toolbox: {
                         show: true, right: 8, top: 0, iconStyle: { borderColor: axisTextColor },
                         feature: {
@@ -1209,7 +1243,7 @@
                 renderAllWidgets();
             } else {
                 // En alt kırılımda çift tıklandığında o değere ait tüm satır detaylarını (Drill-Through) aç
-                const detailRows = currentRows.filter(r => String(getRowValue(r, currentDim) ?? '') === String(clickedVal));
+                const detailRows = currentRows.filter(r => formatDimensionValue(getRowValue(r, currentDim), currentDim) === String(clickedVal) || String(getRowValue(r, currentDim) ?? '') === String(clickedVal));
                 openDrillThroughModal(`${w.title} — ${currentDim}: ${clickedVal} Detayları (${detailRows.length} Kayıt)`, detailRows);
             }
         }
@@ -1284,18 +1318,20 @@
                 html += '<tr>';
                 cols.forEach(c => {
                     const v = getRowValue(r, c);
-                    html += `<td>${formatCell(v)}</td>`;
+                    const cAlign = getColumnAlign(c, w.align || 'left');
+                    html += `<td style="text-align:${cAlign};">${formatCell(v, c)}</td>`;
                 });
                 html += '</tr>';
             });
             html += '</tbody><tfoot><tr>';
             cols.forEach((c, idx) => {
                 const colMeta = currentColumns.find(x => x.name.toLowerCase() === c.toLowerCase());
-                if (colMeta && colMeta.dataType === 'number' && !c.toLowerCase().endsWith('_id')) {
+                const cAlign = getColumnAlign(c, w.align || 'left');
+                if (colMeta && colMeta.dataType === 'number' && !c.toLowerCase().endsWith('_id') && !/y[ıi]l|ay\b/i.test(c)) {
                     const sum = computeAggregate(rows, c, 'sum');
-                    html += `<td>${formatNumber(sum)}</td>`;
+                    html += `<td style="text-align:${cAlign};">${escapeHtml(formatValueByColumn(sum, c, 'number'))}</td>`;
                 } else {
-                    html += `<td>${idx === 0 ? 'Toplam (' + rows.length + ')' : ''}</td>`;
+                    html += `<td style="text-align:${cAlign};">${idx === 0 ? 'Toplam (' + rows.length + ')' : ''}</td>`;
                 }
             });
             html += '</tr></tfoot></table>';
@@ -1325,25 +1361,28 @@
             const colDim = w.secondaryDimension || (currentColumns[1]?.name ?? '');
             const valField = w.valueField || (currentColumns.find(c => c.dataType === 'number')?.name ?? '');
 
-            const rowKeys = [...new Set(rows.map(r => String(getRowValue(r, rowDim) ?? 'Belirsiz')))].slice(0, 50);
-            const colKeys = [...new Set(rows.map(r => String(getRowValue(r, colDim) ?? 'Belirsiz')))].slice(0, 15);
+            const rowAlign = getColumnAlign(rowDim, w.align || 'left');
+            const valAlign = getColumnAlign(valField, w.align || 'right');
+
+            const rowKeys = [...new Set(rows.map(r => formatDimensionValue(getRowValue(r, rowDim), rowDim)))].slice(0, 50);
+            const colKeys = [...new Set(rows.map(r => formatDimensionValue(getRowValue(r, colDim), colDim)))].slice(0, 15);
 
             let html = `<table class="bi-table"><thead><tr><th>${escapeHtml(rowDim)} \\ ${escapeHtml(colDim)}</th>`;
             colKeys.forEach(ck => { html += `<th>${escapeHtml(ck)}</th>`; });
-            html += '<th>Toplam</th></tr></thead><tbody>';
+            html += `<th>Toplam</th></tr></thead><tbody>`;
 
             rowKeys.forEach(rk => {
                 let rowSum = 0;
-                html += `<tr><td><strong>${escapeHtml(rk)}</strong></td>`;
+                html += `<tr><td style="text-align:${rowAlign};"><strong>${escapeHtml(rk)}</strong></td>`;
                 colKeys.forEach(ck => {
                     const matching = rows.filter(r =>
-                        String(getRowValue(r, rowDim) ?? 'Belirsiz') === rk &&
-                        String(getRowValue(r, colDim) ?? 'Belirsiz') === ck);
+                        formatDimensionValue(getRowValue(r, rowDim), rowDim) === rk &&
+                        formatDimensionValue(getRowValue(r, colDim), colDim) === ck);
                     const cellVal = computeAggregate(matching, valField, w.agg || 'sum');
                     rowSum += cellVal;
-                    html += `<td>${formatNumber(cellVal)}</td>`;
+                    html += `<td style="text-align:${valAlign};">${escapeHtml(formatValueByColumn(cellVal, valField, 'number'))}</td>`;
                 });
-                html += `<td><strong>${formatNumber(rowSum)}</strong></td></tr>`;
+                html += `<td style="text-align:${valAlign};"><strong>${escapeHtml(formatValueByColumn(rowSum, valField, 'number'))}</strong></td></tr>`;
             });
             html += '</tbody></table>';
             container.innerHTML = html;
@@ -1556,18 +1595,49 @@
             return sum;
         }
 
+        function getColumnMeta(colName) {
+            if (!colName) return null;
+            return currentColumns.find(x => x.name.toLowerCase() === String(colName).toLowerCase()) || null;
+        }
+
+        function getColumnFormat(colName) {
+            if (!colName || !currentLayout || !currentLayout.columnFormats) return '';
+            if (colName in currentLayout.columnFormats) return currentLayout.columnFormats[colName] || '';
+            const foundKey = Object.keys(currentLayout.columnFormats).find(k => k.toLowerCase() === String(colName).toLowerCase());
+            return foundKey ? (currentLayout.columnFormats[foundKey] || '') : '';
+        }
+
+        function getColumnAlign(colName, fallback = '') {
+            if (!colName || !currentLayout || !currentLayout.columnAlignments) return fallback;
+            if (colName in currentLayout.columnAlignments) return currentLayout.columnAlignments[colName] || fallback;
+            const foundKey = Object.keys(currentLayout.columnAlignments).find(k => k.toLowerCase() === String(colName).toLowerCase());
+            return foundKey ? (currentLayout.columnAlignments[foundKey] || fallback) : fallback;
+        }
+
+        function formatDimensionValue(val, colName) {
+            if (val === null || val === undefined || val === '') return 'Belirsiz';
+            const meta = getColumnMeta(colName);
+            const fmt = getColumnFormat(colName);
+            const dType = meta ? meta.dataType : '';
+            if (dType === 'date' || (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}(?:[T\s]|$)/.test(val))) {
+                return formatDateByMask(val, fmt);
+            }
+            if (dType === 'number' || typeof val === 'number') {
+                if (!fmt && /ay\b/i.test(String(colName || '')) && !isNaN(Number(val))) {
+                    return String(val).padStart(2, '0');
+                }
+                return formatNumberByMask(val, fmt);
+            }
+            return String(val);
+        }
+
         function groupAndAggregateComposite(rows, dimFields, valField, agg, topN) {
             const cols = Array.isArray(dimFields) && dimFields.length > 0 ? dimFields : [dimFields || ''];
             const map = new Map();
             const a = (agg || 'sum').toLowerCase();
 
             rows.forEach(r => {
-                const parts = cols.map(c => {
-                    const v = getRowValue(r, c);
-                    if (v === null || v === undefined || v === '') return 'Belirsiz';
-                    if (/ay\b/i.test(c) && !isNaN(Number(v))) return String(v).padStart(2, '0');
-                    return String(v);
-                });
+                const parts = cols.map(c => formatDimensionValue(getRowValue(r, c), c));
                 const key = parts.join(' / ');
                 const num = parseFloat(getRowValue(r, valField));
                 const val = isNaN(num) ? 0 : num;
@@ -1604,19 +1674,133 @@
             return groupAndAggregateComposite(rows, [dimField], valField, agg, topN);
         }
 
-        function formatNumber(val) {
-            const num = Number(val || 0);
-            return num.toLocaleString('tr-TR', { maximumFractionDigits: 2 });
+        function formatNumberByMask(val, fmt) {
+            if (val === null || val === undefined || val === '') return '';
+            const num = Number(val);
+            if (isNaN(num)) return String(val);
+
+            const mask = String(fmt || '').trim();
+            if (!mask || mask === 'raw') {
+                const clean = Math.round(num * 10000) / 10000;
+                return String(clean);
+            }
+
+            const m = mask.match(/^([^0#.,]*)([0#.,]+)([^0#.,]*)$/);
+            if (!m) {
+                return String(Math.round(num * 10000) / 10000);
+            }
+
+            const prefix = m[1] || '';
+            const core = m[2] || '0';
+            const suffix = m[3] || '';
+
+            let intPart = core;
+            let decPart = '';
+            const lastDot = core.lastIndexOf('.');
+            const lastComma = core.lastIndexOf(',');
+            const lastSep = Math.max(lastDot, lastComma);
+
+            if (lastSep >= 0) {
+                const afterSep = core.substring(lastSep + 1);
+                const beforeSep = core.substring(0, lastSep);
+                const isThousandsOnly = (lastDot < 0 || lastComma < 0) && afterSep.length === 3 && afterSep.includes('#');
+                if (!isThousandsOnly) {
+                    intPart = beforeSep;
+                    decPart = afterSep;
+                }
+            }
+
+            const useGrouping = intPart.includes(',') || intPart.includes('.');
+            const minFrac = (decPart.match(/0/g) || []).length;
+            const maxFrac = decPart.length;
+
+            const formatted = num.toLocaleString('tr-TR', {
+                useGrouping: useGrouping,
+                minimumFractionDigits: minFrac,
+                maximumFractionDigits: maxFrac
+            });
+            return `${prefix}${formatted}${suffix}`;
         }
 
-        function formatCell(val) {
-            if (val === null || val === undefined) return '';
-            if (typeof val === 'number') return formatNumber(val);
-            const str = String(val);
-            if (/^\d{4}-\d{2}-\d{2}T/.test(str)) {
-                return str.substring(0, 10).split('-').reverse().join('.');
+        function formatDateByMask(val, fmt) {
+            if (val === null || val === undefined || val === '') return '';
+            const str = String(val).trim();
+            const mask = String(fmt || '').trim() || 'dd.MM.yyyy';
+
+            let yyyy = '', MM = '', dd = '', HH = '00', min = '00', ss = '00';
+            const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2})(?::(\d{2}))?)?/);
+            if (isoMatch) {
+                yyyy = isoMatch[1];
+                MM = isoMatch[2];
+                dd = isoMatch[3];
+                HH = isoMatch[4] || '00';
+                min = isoMatch[5] || '00';
+                ss = isoMatch[6] || '00';
+            } else {
+                const d = new Date(str);
+                if (isNaN(d.getTime())) return str;
+                yyyy = String(d.getFullYear());
+                MM = String(d.getMonth() + 1).padStart(2, '0');
+                dd = String(d.getDate()).padStart(2, '0');
+                HH = String(d.getHours()).padStart(2, '0');
+                min = String(d.getMinutes()).padStart(2, '0');
+                ss = String(d.getSeconds()).padStart(2, '0');
             }
-            return escapeHtml(str);
+
+            const yy = yyyy.slice(-2);
+            const hasHour = /H|h/.test(mask);
+
+            return mask.replace(/yyyy|YYYY|yy|YY|MM|mm|dd|DD|HH|hh|ss|SS/g, token => {
+                switch (token) {
+                    case 'yyyy':
+                    case 'YYYY': return yyyy;
+                    case 'yy':
+                    case 'YY': return yy;
+                    case 'MM': return MM;
+                    case 'mm': return hasHour ? min : MM;
+                    case 'dd':
+                    case 'DD': return dd;
+                    case 'HH':
+                    case 'hh': return HH;
+                    case 'ss':
+                    case 'SS': return ss;
+                    default: return token;
+                }
+            });
+        }
+
+        function formatValueByColumn(val, colName, forceType = '') {
+            if (val === null || val === undefined || val === '') return '';
+            const meta = getColumnMeta(colName);
+            const dType = forceType || (meta ? meta.dataType : '');
+            const fmt = getColumnFormat(colName);
+
+            if (dType === 'date' || (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}(?:[T\s]|$)/.test(val))) {
+                return formatDateByMask(val, fmt);
+            }
+            if (dType === 'number' || typeof val === 'number') {
+                return formatNumberByMask(val, fmt);
+            }
+            return String(val);
+        }
+
+        function formatNumber(val, colName = '') {
+            return formatNumberByMask(val, colName ? getColumnFormat(colName) : '');
+        }
+
+        function formatCell(val, colName = '') {
+            if (val === null || val === undefined) return '';
+            const meta = getColumnMeta(colName);
+            const dType = meta ? meta.dataType : '';
+            const fmt = getColumnFormat(colName);
+
+            if (dType === 'date' || (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}(?:[T\s]|$)/.test(String(val)))) {
+                return escapeHtml(formatDateByMask(val, fmt));
+            }
+            if (dType === 'number' || typeof val === 'number') {
+                return escapeHtml(formatNumberByMask(val, fmt));
+            }
+            return escapeHtml(String(val));
         }
 
         function escapeHtml(str) {

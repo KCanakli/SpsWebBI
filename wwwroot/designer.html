@@ -148,8 +148,8 @@
             background: var(--panel); border-right: 1px solid var(--border); user-select: none;
             transition: width 0.18s ease, min-width 0.18s ease;
         }
-        .studio-column.col-binding { width: 290px; min-width: 290px; }
-        .studio-column.col-fields { width: 255px; min-width: 255px; }
+        .studio-column.col-binding { width: 340px; min-width: 340px; }
+        .studio-column.col-fields { width: 265px; min-width: 265px; }
         .studio-column.collapsed {
             width: 30px !important; min-width: 30px !important; overflow: hidden;
             background: #080d19; border-right: 1px solid var(--border-bright); cursor: pointer;
@@ -218,12 +218,12 @@
         }
 
         /* 2. SEÇİLİ BİLEŞEN & VERİ YUVALARI STİLLERİ */
-        .r-field { display: flex; flex-direction: column; gap: 3px; }
+        .r-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
         .r-field label {
             font-size: 0.67rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
         }
         .r-field input, .r-field select {
-            padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border-bright);
+            width: 100%; min-width: 0; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border-bright);
             background: #080d19; color: var(--text); font-size: 0.79rem; outline: none;
         }
         .r-field input:focus, .r-field select:focus { border-color: var(--primary); }
@@ -245,10 +245,56 @@
         }
         .bound-pill {
             background: #131f35; border: 1px solid rgba(56, 189, 248, 0.45); border-radius: 6px;
-            padding: 4px 6px; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;
+            padding: 4px 6px; margin-bottom: 5px; display: flex; flex-direction: column; align-items: stretch;
             font-size: 0.76rem; color: #f8fafc; gap: 4px;
         }
         .bound-pill:last-child { margin-bottom: 0; }
+        .bound-pill-top {
+            display: flex; align-items: center; justify-content: space-between; gap: 4px; width: 100%;
+        }
+        .bound-pill-fmt {
+            display: flex; align-items: center; gap: 4px; width: 100%;
+            padding-top: 3px; border-top: 1px dashed rgba(56, 189, 248, 0.22);
+        }
+        .bound-pill-fmt.hover-only { display: none; }
+        .bound-pill:hover .bound-pill-fmt.hover-only,
+        .bound-pill:focus-within .bound-pill-fmt.hover-only,
+        .bound-pill.has-fmt .bound-pill-fmt.hover-only {
+            display: flex;
+        }
+        .inline-fmt-label {
+            font-size: 0.65rem; color: #93c5fd; font-weight: 700; white-space: nowrap;
+        }
+        .inline-fmt-input {
+            flex: 1; min-width: 0; background: #080d19; color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 4px;
+            padding: 2px 6px; font-size: 0.71rem; font-family: Consolas, monospace; outline: none;
+        }
+        .inline-fmt-input:focus {
+            border-color: #38bdf8; box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.35);
+        }
+        .inline-fmt-input::placeholder {
+            color: #64748b; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.67rem;
+        }
+        .align-btn-group {
+            display: inline-flex; align-items: center; background: #080d19;
+            border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 4px; overflow: hidden; flex-shrink: 0;
+        }
+        .align-btn {
+            background: transparent; border: none; color: #cbd5e1; cursor: pointer;
+            padding: 3px 6px; display: inline-flex; align-items: center; justify-content: center;
+            transition: all 0.12s; height: 22px; min-width: 24px;
+        }
+        .align-btn svg {
+            width: 14px; height: 14px; display: block; flex-shrink: 0; pointer-events: none;
+        }
+        .align-btn + .align-btn {
+            border-left: 1px solid rgba(56, 189, 248, 0.25);
+        }
+        .align-btn:hover { background: rgba(56, 189, 248, 0.2); color: #fff; }
+        .align-btn.active {
+            background: var(--primary); color: #fff;
+        }
         .bound-pill select {
             background: #080d19; color: #6ee7b7; border: 1px solid var(--border-bright);
             border-radius: 4px; font-size: 0.7rem; padding: 2px 4px; font-weight: 700;
@@ -256,7 +302,7 @@
         .bound-pill select.pill-col-select {
             background: #080d19; color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4);
             border-radius: 5px; font-size: 0.75rem; padding: 2px 5px; font-weight: 700;
-            flex: 1; min-width: 75px; max-width: 145px; cursor: pointer; outline: none;
+            flex: 1; min-width: 65px; cursor: pointer; outline: none;
         }
         .dz-add-select {
             width: 100%; margin-top: 5px; padding: 4px 6px; border-radius: 5px;
@@ -264,7 +310,7 @@
             font-size: 0.72rem; font-weight: 600; cursor: pointer; outline: none;
         }
         .dz-add-select:hover { border-color: #38bdf8; color: #38bdf8; }
-        .pill-actions { display: flex; align-items: center; gap: 2px; }
+        .pill-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
         .pill-btn {
             background: transparent; border: none; color: #94a3b8; cursor: pointer;
             font-size: 0.73rem; padding: 1px 4px; border-radius: 4px;
@@ -284,8 +330,20 @@
 
         .field-chip {
             background: #090f1d; border: 1px solid var(--border); border-radius: 6px;
-            padding: 5px 8px; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;
-            cursor: grab; font-size: 0.77rem; transition: all 0.12s; gap: 6px;
+            padding: 5px 8px; margin-bottom: 4px; display: flex; flex-direction: column; align-items: stretch;
+            cursor: grab; font-size: 0.77rem; transition: all 0.12s; gap: 4px;
+        }
+        .field-chip-top {
+            display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%;
+        }
+        .field-chip-fmt {
+            display: none; align-items: center; gap: 4px; width: 100%;
+            padding-top: 3px; border-top: 1px dashed rgba(56, 189, 248, 0.22);
+        }
+        .field-chip:hover .field-chip-fmt,
+        .field-chip:focus-within .field-chip-fmt,
+        .field-chip.has-fmt .field-chip-fmt {
+            display: flex;
         }
         .field-chip:hover { border-color: #38bdf8; background: #111c33; }
         .field-chip.is-bound {
@@ -749,6 +807,68 @@
         </div>
     </div>
 
+    <!-- Kolon Formatlama (Sayı / Tarih Biçimi) Modal Penceresi -->
+    <div id="colFormatModal" style="display:none;position:fixed;inset:0;background:rgba(2,6,23,0.75);backdrop-filter:blur(3px);z-index:9998;align-items:center;justify-content:center;">
+        <div style="background:var(--panel);border:1px solid var(--border-bright);border-radius:10px;width:430px;max-width:94vw;box-shadow:0 20px 50px rgba(0,0,0,0.65);overflow:hidden;">
+            <div style="padding:11px 14px;background:var(--panel-header);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+                <div style="font-size:0.82rem;font-weight:800;color:var(--accent);display:flex;align-items:center;gap:6px;">
+                    <span>⚙️ Kolon Görünüm Formatı</span>
+                    <span id="fmtModalColBadge" class="f-type-badge ft-number"></span>
+                </div>
+                <button type="button" class="pill-btn del" onclick="closeColumnFormatModal()">✕</button>
+            </div>
+            <div style="padding:14px;display:flex;flex-direction:column;gap:11px;">
+                <div>
+                    <div style="font-size:0.7rem;color:var(--muted);font-weight:700;margin-bottom:3px;">SEÇİLİ KOLON</div>
+                    <div id="fmtModalColName" style="font-size:0.92rem;font-weight:800;color:var(--text);"></div>
+                </div>
+                <div class="r-field" id="fmtModalFormatFields">
+                    <label>Hazır Format Şablonları</label>
+                    <select id="fmtModalPresetSelect" onchange="onFormatPresetSelected(this.value)" style="padding:6px 8px;font-size:0.78rem;"></select>
+                    <label id="fmtModalCustomLabel" style="margin-top:6px;">Özel Format Maskesi (Serbest Giriş)</label>
+                    <input type="text" id="fmtModalCustomInput" oninput="updateFormatModalPreview()" placeholder="Örn: #,##0.00 veya dd.MM.yy" style="padding:6px 8px;font-size:0.8rem;font-family:Consolas,monospace;">
+                    <small id="fmtModalHint" style="color:var(--muted);font-size:0.68rem;line-height:1.35;margin-top:2px;"></small>
+                </div>
+                <div class="r-field">
+                    <label>Hücre / Alan Hizalaması (Excel Stili)</label>
+                    <div id="fmtModalAlignGroup" style="display:flex;gap:6px;margin-top:2px;"></div>
+                </div>
+                <div style="background:var(--input-bg);border:1px solid var(--border-bright);border-radius:6px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;">
+                    <span style="font-size:0.7rem;color:var(--muted);font-weight:700;">CANLI ÖNİZLEME:</span>
+                    <span id="fmtModalPreviewVal" style="font-size:0.9rem;font-weight:800;color:#38bdf8;font-family:Consolas,monospace;flex:1;margin-left:10px;"></span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:4px;">
+                    <button type="button" class="btn btn-danger" onclick="resetColumnFormatModal()">Varsayılana Sıfırla</button>
+                    <div style="display:flex;gap:6px;">
+                        <button type="button" class="btn" onclick="closeColumnFormatModal()">İptal</button>
+                        <button type="button" class="btn btn-success" onclick="applyColumnFormatModal()">✔ Formatı Uygula</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <datalist id="fmtDatalist_number">
+        <option value="#,##0">Binlik Ayraçlı Tam Sayı (Örn: 40.903)</option>
+        <option value="#,##0.0">Binlik + 1 Ondalık (Örn: 40.903,5)</option>
+        <option value="#,##0.00">Binlik + 2 Ondalık (Örn: 40.903,25)</option>
+        <option value="#,##0.##">Binlik + Esnek Ondalık</option>
+        <option value="0.00">Binliksiz 2 Ondalık (Örn: 2026,00)</option>
+        <option value="₺#,##0.00">Para Birimi TL</option>
+        <option value="$#,##0.00">Para Birimi USD</option>
+        <option value="€#,##0.00">Para Birimi EUR</option>
+        <option value="%0.0">Yüzde Oran</option>
+    </datalist>
+    <datalist id="fmtDatalist_date">
+        <option value="dd.MM.yyyy">Varsayılan Tarih (06.11.2026)</option>
+        <option value="dd.MM.yy">Kısa Yıl Noktalı (06.11.26)</option>
+        <option value="dd/MM/yyyy">Eğik Çizgili (06/11/2026)</option>
+        <option value="dd/MM/yy">Kısa Eğik Çizgili (06/11/26)</option>
+        <option value="yyyy-MM-dd">ISO Standart (2026-11-06)</option>
+        <option value="MM.yyyy">Ay ve Yıl (11.2026)</option>
+        <option value="dd.MM.yyyy HH:mm">Tarih ve Saat</option>
+    </datalist>
+
     <div class="status-toast" id="statusToast"></div>
 
     <script>
@@ -773,7 +893,9 @@
         let currentDsId = null;
         let currentDashId = null;
 
-        let designerLayout = { widgets: [] };
+        let designerLayout = { widgets: [], columnFormats: {} };
+        let activeFormatModalCol = null;
+        let activeFormatModalType = 'number';
         let selectedWidgetId = null;
         let liveColumns = [];
         let liveRows = [];
@@ -1091,8 +1213,14 @@
             try {
                 designerLayout = JSON.parse(d.layout_json || '{"widgets":[]}');
                 if (!Array.isArray(designerLayout.widgets)) designerLayout.widgets = [];
+                if (!designerLayout.columnFormats || typeof designerLayout.columnFormats !== 'object') {
+                    designerLayout.columnFormats = {};
+                }
+                if (!designerLayout.columnAlignments || typeof designerLayout.columnAlignments !== 'object') {
+                    designerLayout.columnAlignments = {};
+                }
             } catch (_) {
-                designerLayout = { widgets: [] };
+                designerLayout = { widgets: [], columnFormats: {}, columnAlignments: {} };
             }
 
             selectedWidgetId = designerLayout.widgets[0]?.id || null;
@@ -1106,7 +1234,7 @@
             document.getElementById('dashTitle').value = 'Yeni Analiz Dashboard';
             document.getElementById('dashDesc').value = '';
             document.getElementById('dashMetaBar').classList.remove('collapsed');
-            designerLayout = { widgets: [] };
+            designerLayout = { widgets: [], columnFormats: {}, columnAlignments: {} };
             selectedWidgetId = null;
             const dsId = parseInt(document.getElementById('dashDsId').value || '0', 10);
             if (dsId > 0) await loadLiveDataSourceData(dsId);
@@ -1161,12 +1289,166 @@
             const w = getSelectedWidget();
             const set = new Set();
             if (!w) return set;
+
+            if (w.type === 'table') {
+                const cols = Array.isArray(w.columns) ? w.columns : liveColumns.map(c => c.name);
+                cols.forEach(c => { if (c) set.add(c); });
+                return set;
+            }
+
+            if (w.type === 'kpi' || w.type === 'gauge') {
+                getWidgetMetrics(w).forEach(m => { if (m.field) set.add(m.field); });
+                return set;
+            }
+
+            if (w.type === 'pivot') {
+                if (w.dimension) set.add(w.dimension);
+                if (w.secondaryDimension) set.add(w.secondaryDimension);
+                getWidgetMetrics(w).forEach(m => { if (m.field) set.add(m.field); });
+                return set;
+            }
+
             getWidgetMetrics(w).forEach(m => { if (m.field) set.add(m.field); });
-            if (w.dimension) set.add(w.dimension);
-            if (w.secondaryDimension) set.add(w.secondaryDimension);
-            if (Array.isArray(w.drillHierarchy)) w.drillHierarchy.forEach(c => set.add(c));
-            if (Array.isArray(w.columns)) w.columns.forEach(c => set.add(c));
+            getWidgetHierarchy(w).forEach(c => { if (c) set.add(c); });
             return set;
+        }
+
+        function getColumnMeta(colName) {
+            if (!colName) return null;
+            return liveColumns.find(x => x.name.toLowerCase() === String(colName).toLowerCase()) || null;
+        }
+
+        function getColumnFormat(colName) {
+            if (!colName || !designerLayout || !designerLayout.columnFormats) return '';
+            if (colName in designerLayout.columnFormats) return designerLayout.columnFormats[colName] || '';
+            const foundKey = Object.keys(designerLayout.columnFormats).find(k => k.toLowerCase() === String(colName).toLowerCase());
+            return foundKey ? (designerLayout.columnFormats[foundKey] || '') : '';
+        }
+
+        function setColumnFormat(colName, fmtStr) {
+            if (!colName) return;
+            if (!designerLayout.columnFormats || typeof designerLayout.columnFormats !== 'object') {
+                designerLayout.columnFormats = {};
+            }
+            const clean = String(fmtStr || '').trim();
+            const existingKey = Object.keys(designerLayout.columnFormats).find(k => k.toLowerCase() === String(colName).toLowerCase());
+            if (existingKey && existingKey !== colName) delete designerLayout.columnFormats[existingKey];
+            if (!clean) {
+                delete designerLayout.columnFormats[colName];
+            } else {
+                designerLayout.columnFormats[colName] = clean;
+            }
+        }
+
+        // EXCEL TARZI HİZALAMA (SOLA YASLA, ORTALA, SAĞA YASLA) İKONLARI VE MOTORU
+        const ALIGN_ICONS = {
+            left: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="3.5" x2="14" y2="3.5"/><line x1="2" y1="8" x2="9.5" y2="8"/><line x1="2" y1="12.5" x2="12.5" y2="12.5"/></svg>`,
+            center: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="3.5" x2="14" y2="3.5"/><line x1="4.5" y1="8" x2="11.5" y2="8"/><line x1="3" y1="12.5" x2="13" y2="12.5"/></svg>`,
+            right: `<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="3.5" x2="14" y2="3.5"/><line x1="6.5" y1="8" x2="14" y2="8"/><line x1="3.5" y1="12.5" x2="14" y2="12.5"/></svg>`
+        };
+
+        function getColumnAlign(colName, fallback = '') {
+            if (!colName || !designerLayout || !designerLayout.columnAlignments) return fallback;
+            if (colName in designerLayout.columnAlignments) return designerLayout.columnAlignments[colName] || fallback;
+            const foundKey = Object.keys(designerLayout.columnAlignments).find(k => k.toLowerCase() === String(colName).toLowerCase());
+            return foundKey ? (designerLayout.columnAlignments[foundKey] || fallback) : fallback;
+        }
+
+        function setColumnAlign(colName, alignVal) {
+            if (!colName) return;
+            if (!designerLayout.columnAlignments || typeof designerLayout.columnAlignments !== 'object') {
+                designerLayout.columnAlignments = {};
+            }
+            const clean = String(alignVal || '').trim();
+            const existingKey = Object.keys(designerLayout.columnAlignments).find(k => k.toLowerCase() === String(colName).toLowerCase());
+            const currentVal = existingKey ? designerLayout.columnAlignments[existingKey] : '';
+            if (existingKey && existingKey !== colName) delete designerLayout.columnAlignments[existingKey];
+            if (!clean || currentVal === clean) {
+                delete designerLayout.columnAlignments[colName];
+            } else {
+                designerLayout.columnAlignments[colName] = clean;
+            }
+        }
+
+        function onInlineAlignClick(colName, alignVal) {
+            setColumnAlign(colName, alignVal);
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+            renderFieldList();
+        }
+
+        function buildAlignButtonsHtml(colName) {
+            if (!colName) return '';
+            const cur = getColumnAlign(colName, '');
+            const safeCol = escapeHtml(colName).replace(/'/g, "\\'");
+            return `
+                <div class="align-btn-group" title="Kolon Hizalaması (Sola Yasla / Ortala / Sağa Yasla)" onclick="event.stopPropagation()">
+                    <button type="button" class="align-btn ${cur === 'left' ? 'active' : ''}" title="Sola Yasla" onclick="onInlineAlignClick('${safeCol}', 'left')">${ALIGN_ICONS.left}</button>
+                    <button type="button" class="align-btn ${cur === 'center' ? 'active' : ''}" title="Ortala" onclick="onInlineAlignClick('${safeCol}', 'center')">${ALIGN_ICONS.center}</button>
+                    <button type="button" class="align-btn ${cur === 'right' ? 'active' : ''}" title="Sağa Yasla" onclick="onInlineAlignClick('${safeCol}', 'right')">${ALIGN_ICONS.right}</button>
+                </div>`;
+        }
+
+        function setWidgetAlign(alignVal) {
+            const w = getSelectedWidget();
+            if (!w) return;
+            w.align = (w.align === alignVal) ? '' : alignVal;
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+        }
+
+        function buildWidgetAlignButtonsHtml(w) {
+            const cur = (w && w.align) ? w.align : '';
+            return `
+                <div class="align-btn-group" title="Bileşen / Başlık / KPI / Grafik Hizalaması">
+                    <button type="button" class="align-btn ${cur === 'left' ? 'active' : ''}" title="Sola Yasla" onclick="setWidgetAlign('left')">${ALIGN_ICONS.left}</button>
+                    <button type="button" class="align-btn ${cur === 'center' ? 'active' : ''}" title="Ortala" onclick="setWidgetAlign('center')">${ALIGN_ICONS.center}</button>
+                    <button type="button" class="align-btn ${cur === 'right' ? 'active' : ''}" title="Sağa Yasla" onclick="setWidgetAlign('right')">${ALIGN_ICONS.right}</button>
+                </div>`;
+        }
+
+        function onInlineFormatInput(colName, fmtVal) {
+            setColumnFormat(colName, fmtVal);
+            renderDesignerCanvas();
+            // Sadece 3. Kolonlar rozetlerini güncelle (aktif input odağını kaybetmemek için sol paneli yeniden çizme)
+            renderFieldList();
+        }
+
+        function buildInlineFormatRowHtml(colName, forceType = '', hoverOnly = false) {
+            if (!colName) return '';
+            const meta = getColumnMeta(colName);
+            const dType = forceType || (meta ? meta.dataType : '');
+            const isFormattable = dType === 'number' || dType === 'date';
+            const cls = hoverOnly ? 'bound-pill-fmt hover-only' : 'bound-pill-fmt';
+
+            if (!isFormattable) {
+                return `
+                    <div class="${cls}" style="justify-content:space-between;">
+                        <span class="inline-fmt-label">Hizala:</span>
+                        ${buildAlignButtonsHtml(colName)}
+                    </div>`;
+            }
+
+            const fmt = getColumnFormat(colName);
+            const safeCol = escapeHtml(colName).replace(/'/g, "\\'");
+            const placeholder = dType === 'date'
+                ? 'dd.MM.yyyy (Örn: dd.MM.yy)'
+                : 'Formatsız (Örn: #,##0)';
+            const listId = dType === 'date' ? 'fmtDatalist_date' : 'fmtDatalist_number';
+
+            return `
+                <div class="${cls}">
+                    <span class="inline-fmt-label">Biçim:</span>
+                    <input type="text" class="inline-fmt-input" list="${listId}"
+                           value="${escapeHtml(fmt)}"
+                           placeholder="${escapeHtml(placeholder)}"
+                           title="Format maskesi yazın veya çift tıklayıp hazır şablon seçin"
+                           oninput="onInlineFormatInput('${safeCol}', this.value)"
+                           onclick="event.stopPropagation()">
+                    ${buildAlignButtonsHtml(colName)}
+                    <button type="button" class="pill-btn" style="color:#38bdf8;" title="Format ve Hizalama Penceresini Aç"
+                            onclick="event.stopPropagation(); openColumnFormatModal('${safeCol}', '${dType}')">⚙</button>
+                </div>`;
         }
 
         // BÖLÜM 3: TAM BOY VERİ KAYNAĞI KOLON LİSTESİ (ALFABETİK A-Z SIRALI)
@@ -1183,31 +1465,99 @@
                 .filter(c => !q || c.name.toLowerCase().includes(q))
                 .forEach(c => {
                     const isBound = boundCols.has(c.name);
+                    const fmt = getColumnFormat(c.name);
+                    const colAlign = getColumnAlign(c.name, '');
+                    const isFormattable = c.dataType === 'number' || c.dataType === 'date';
+
                     const chip = document.createElement('div');
-                    chip.className = 'field-chip' + (isBound ? ' is-bound' : '');
+                    chip.className = 'field-chip' + (isBound ? ' is-bound' : '') + ((fmt || colAlign) ? ' has-fmt' : '');
                     chip.draggable = true;
 
                     const typeClass = c.dataType === 'number' ? 'ft-number' : (c.dataType === 'date' ? 'ft-date' : 'ft-string');
-                    const typeLabel = c.dataType === 'number' ? '# SAYI' : (c.dataType === 'date' ? '📅 TARİH' : 'METİN');
+                    const alignArrow = colAlign === 'left' ? ' ⇤' : (colAlign === 'center' ? ' ⇔' : (colAlign === 'right' ? ' ⇥' : ''));
+                    const typeLabel = c.dataType === 'number'
+                        ? (fmt ? `# ${fmt}${alignArrow}` : `# SAYI${alignArrow} ⚙`)
+                        : (c.dataType === 'date' ? (fmt ? `📅 ${fmt}${alignArrow}` : `📅 TARİH${alignArrow} ⚙`) : `METİN${alignArrow}`);
+                    const badgeTitle = c.dataType === 'number'
+                        ? `Sayı formatı ve hizalamasını ayarlamak için tıklayın (Şu an: ${fmt || 'Formatsız / Ham'})`
+                        : (c.dataType === 'date' ? `Tarih formatı ve hizalamasını ayarlamak için tıklayın (Şu an: ${fmt || 'dd.MM.yyyy'})` : 'Metin Kolonu Hizalama Ayarı');
 
-                    chip.innerHTML = `
-                        <div style="display:flex;align-items:center;min-width:0;flex:1;">
-                            <span class="field-grip">${isBound ? '✓' : '⠿'}</span>
-                            <span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(c.name)}">${escapeHtml(c.name)}</span>
-                        </div>
-                        <div style="display:flex;align-items:center;gap:4px;">
-                            <span class="f-type-badge ${typeClass}">${typeLabel}</span>
-                            <button type="button" class="quick-add-btn" title="Seçili bileşene hızlı ekle">${isBound ? '←' : '+'}</button>
+                    const safeCol = escapeHtml(c.name).replace(/'/g, "\\'");
+                    const listId = c.dataType === 'date' ? 'fmtDatalist_date' : 'fmtDatalist_number';
+                    const placeholder = c.dataType === 'date' ? 'dd.MM.yyyy (Örn: dd.MM.yy)' : 'Formatsız (Örn: #,##0)';
+
+                    const fmtBarHtml = isFormattable ? `
+                        <div class="field-chip-fmt" draggable="false">
+                            <span class="inline-fmt-label">Biçim:</span>
+                            <input type="text" class="inline-fmt-input" list="${listId}"
+                                   value="${escapeHtml(fmt)}"
+                                   placeholder="${escapeHtml(placeholder)}"
+                                   onclick="event.stopPropagation()">
+                            ${buildAlignButtonsHtml(c.name)}
+                            <button type="button" class="pill-btn" style="color:#38bdf8;" title="Format ve Hizalama Penceresi"
+                                    onclick="event.stopPropagation(); openColumnFormatModal('${safeCol}', '${c.dataType}')">⚙</button>
+                        </div>` : `
+                        <div class="field-chip-fmt" draggable="false" style="justify-content:space-between;">
+                            <span class="inline-fmt-label">Hizalama:</span>
+                            ${buildAlignButtonsHtml(c.name)}
                         </div>`;
 
+                    chip.innerHTML = `
+                        <div class="field-chip-top">
+                            <div style="display:flex;align-items:center;min-width:0;flex:1;">
+                                <span class="field-grip">${isBound ? '✓' : '⠿'}</span>
+                                <span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(c.name)}">${escapeHtml(c.name)}</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:4px;">
+                                <span class="f-type-badge ${typeClass} fmt-trigger" style="cursor:pointer;${(fmt || colAlign) ? 'outline:1px solid #38bdf8;' : ''}" title="${escapeHtml(badgeTitle)}">${escapeHtml(typeLabel)}</span>
+                                <button type="button" class="quick-add-btn" title="${isBound ? 'Seçili bileşenden çıkar' : 'Seçili bileşene hızlı ekle'}">${isBound ? '←' : '+'}</button>
+                            </div>
+                        </div>
+                        ${fmtBarHtml}`;
+
                     chip.addEventListener('dragstart', e => {
+                        if (e.target && (e.target.tagName === 'INPUT' || e.target.closest('.align-btn-group'))) {
+                            e.preventDefault();
+                            return;
+                        }
                         dragPayload = { kind: 'field', column: c.name, dataType: c.dataType };
                         e.dataTransfer.setData('text/plain', c.name);
                     });
 
-                    chip.querySelector('button').addEventListener('click', e => {
+                    chip.querySelector('.fmt-trigger').addEventListener('click', e => {
                         e.stopPropagation();
-                        autoAssignFieldToSelectedWidget(c.name, c.dataType);
+                        openColumnFormatModal(c.name, c.dataType);
+                    });
+
+                    if (isFormattable) {
+                        const fmtInp = chip.querySelector('.inline-fmt-input');
+                        if (fmtInp) {
+                            fmtInp.addEventListener('mousedown', e => e.stopPropagation());
+                            fmtInp.addEventListener('input', e => {
+                                setColumnFormat(c.name, e.target.value);
+                                const badgeEl = chip.querySelector('.fmt-trigger');
+                                const curFmt = getColumnFormat(c.name);
+                                const curAlign = getColumnAlign(c.name, '');
+                                const arr = curAlign === 'left' ? ' ⇤' : (curAlign === 'center' ? ' ⇔' : (curAlign === 'right' ? ' ⇥' : ''));
+                                chip.classList.toggle('has-fmt', !!(curFmt || curAlign));
+                                if (badgeEl) {
+                                    badgeEl.textContent = c.dataType === 'number'
+                                        ? (curFmt ? `# ${curFmt}${arr}` : `# SAYI${arr} ⚙`)
+                                        : (curFmt ? `📅 ${curFmt}${arr}` : `📅 TARİH${arr} ⚙`);
+                                }
+                                renderDesignerCanvas();
+                                renderDataBindingPanel();
+                            });
+                        }
+                    }
+
+                    chip.querySelector('.quick-add-btn').addEventListener('click', e => {
+                        e.stopPropagation();
+                        if (isBound) {
+                            unassignFieldFromSelectedWidget(c.name);
+                        } else {
+                            autoAssignFieldToSelectedWidget(c.name, c.dataType);
+                        }
                     });
 
                     container.appendChild(chip);
@@ -1252,11 +1602,21 @@
         }
 
         function getWidgetMetrics(w) {
-            if (Array.isArray(w.valueMetrics) && w.valueMetrics.length > 0) {
-                return w.valueMetrics;
+            if (Array.isArray(w.valueMetrics)) {
+                return w.valueMetrics.filter(m => m && m.field);
             }
             if (w.valueField) {
                 return [{ field: w.valueField, agg: w.agg || 'sum' }];
+            }
+            return [];
+        }
+
+        function getWidgetHierarchy(w) {
+            if (Array.isArray(w.drillHierarchy)) {
+                return w.drillHierarchy.filter(Boolean);
+            }
+            if (w.dimension) {
+                return [w.dimension];
             }
             return [];
         }
@@ -1368,7 +1728,7 @@
             badge.textContent = `${w.type.toUpperCase()} (${w.w}x${w.h})`;
 
             let html = `
-                <div style="display:grid;grid-template-columns:1fr 112px;gap:6px;margin-bottom:8px;">
+                <div style="display:grid;grid-template-columns:1fr 112px;gap:6px;margin-bottom:6px;">
                     <div class="r-field">
                         <label>Bileşen Başlığı</label>
                         <input type="text" value="${escapeHtml(w.title || '')}" oninput="updateSelectedWidgetProp('title', this.value)">
@@ -1391,6 +1751,10 @@
                             <option value="pivot" ${w.type === 'pivot' ? 'selected' : ''}>🧮 Pivot</option>
                         </select>
                     </div>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(15,23,42,0.55);border:1px solid rgba(51,65,85,0.65);border-radius:6px;padding:4px 8px;margin-bottom:8px;">
+                    <span style="font-size:0.68rem;font-weight:700;color:#94a3b8;text-transform:uppercase;">Bileşen Hizalaması:</span>
+                    ${buildWidgetAlignButtonsHtml(w)}
                 </div>`;
 
             if (w.type === 'kpi' || w.type === 'gauge') {
@@ -1449,23 +1813,27 @@
             let pills = '';
             metrics.forEach((m, i) => {
                 const agg = m.agg || 'sum';
+                const hasFmt = !!(getColumnFormat(m.field) || getColumnAlign(m.field));
                 pills += `
-                    <div class="bound-pill">
-                        <select class="pill-col-select" title="Kolonu listeden değiştirin" onchange="updateMetricField(${i}, this.value)">
-                            ${buildColumnOptionsHtml(m.field)}
-                        </select>
-                        <div class="pill-actions">
-                            <select onchange="updateMetricAgg(${i}, this.value)">
-                                <option value="sum" ${agg === 'sum' ? 'selected' : ''}>Toplam (SUM)</option>
-                                <option value="avg" ${agg === 'avg' ? 'selected' : ''}>Ortalama (AVG)</option>
-                                <option value="count" ${agg === 'count' ? 'selected' : ''}>Adet (COUNT)</option>
-                                <option value="max" ${agg === 'max' ? 'selected' : ''}>Maks (MAX)</option>
-                                <option value="min" ${agg === 'min' ? 'selected' : ''}>Min (MIN)</option>
+                    <div class="bound-pill ${hasFmt ? 'has-fmt' : ''}">
+                        <div class="bound-pill-top">
+                            <select class="pill-col-select" title="Kolonu listeden değiştirin" onchange="updateMetricField(${i}, this.value)">
+                                ${buildColumnOptionsHtml(m.field)}
                             </select>
-                            ${i > 0 ? `<button type="button" class="pill-btn" onclick="moveMetricItem(${i}, -1)" title="Yukarı">▲</button>` : ''}
-                            ${i < metrics.length - 1 ? `<button type="button" class="pill-btn" onclick="moveMetricItem(${i}, 1)" title="Aşağı">▼</button>` : ''}
-                            <button type="button" class="pill-btn del" onclick="removeMetricItem(${i})" title="Kaldır">✕</button>
+                            <div class="pill-actions">
+                                <select onchange="updateMetricAgg(${i}, this.value)">
+                                    <option value="sum" ${agg === 'sum' ? 'selected' : ''}>Toplam (SUM)</option>
+                                    <option value="avg" ${agg === 'avg' ? 'selected' : ''}>Ortalama (AVG)</option>
+                                    <option value="count" ${agg === 'count' ? 'selected' : ''}>Adet (COUNT)</option>
+                                    <option value="max" ${agg === 'max' ? 'selected' : ''}>Maks (MAX)</option>
+                                    <option value="min" ${agg === 'min' ? 'selected' : ''}>Min (MIN)</option>
+                                </select>
+                                ${i > 0 ? `<button type="button" class="pill-btn" onclick="moveMetricItem(${i}, -1)" title="Yukarı">▲</button>` : ''}
+                                ${i < metrics.length - 1 ? `<button type="button" class="pill-btn" onclick="moveMetricItem(${i}, 1)" title="Aşağı">▼</button>` : ''}
+                                <button type="button" class="pill-btn del" onclick="removeMetricItem(${i})" title="Kaldır">✕</button>
+                            </div>
                         </div>
+                        ${buildInlineFormatRowHtml(m.field, 'number', false)}
                     </div>`;
             });
 
@@ -1488,21 +1856,27 @@
 
         function renderSingleDimDropZone(w, propName, labelText) {
             const val = w[propName] || '';
+            const hasFmt = !!(getColumnFormat(val) || getColumnAlign(val));
             return `
                 <div class="drop-zone" data-slot="${propName}">
-                    <div class="dz-label"><span>🔤 ${labelText}</span></div>
-                    <div class="bound-pill">
-                        <select class="pill-col-select" style="max-width:100%;" onchange="assignFieldToSlot('${propName}', this.value)">
-                            ${buildColumnOptionsHtml(val, '-- Listeden Boyut Kolonu Seçin --')}
-                        </select>
+                    <div class="dz-label">
+                        <span>🔤 ${labelText}</span>
+                        ${val ? `<button type="button" class="pill-btn del" onclick="clearSingleDimSlot('${propName}')">Temizle</button>` : ''}
+                    </div>
+                    <div class="bound-pill ${hasFmt ? 'has-fmt' : ''}">
+                        <div class="bound-pill-top">
+                            <select class="pill-col-select" style="max-width:100%;" onchange="assignFieldToSlot('${propName}', this.value)">
+                                ${buildColumnOptionsHtml(val, '-- Listeden Boyut Kolonu Seçin --')}
+                            </select>
+                            ${val ? `<div class="pill-actions"><button type="button" class="pill-btn del" onclick="clearSingleDimSlot('${propName}')" title="Kaldır">✕</button></div>` : ''}
+                        </div>
+                        ${buildInlineFormatRowHtml(val, '', false)}
                     </div>
                 </div>`;
         }
 
         function renderDrillHierarchyDropZone(w) {
-            const list = (Array.isArray(w.drillHierarchy) && w.drillHierarchy.length > 0)
-                ? w.drillHierarchy
-                : (w.dimension ? [w.dimension] : []);
+            const list = getWidgetHierarchy(w);
 
             const mode = w.multiDimMode || 'combined';
             let pills = '';
@@ -1513,17 +1887,21 @@
                     else if (mode === 'series') roleTag = i === 1 ? 'Seri Grubu' : `${i + 1}. Kırılım`;
                     else roleTag = `${i + 1}. Kırılım`;
                 }
+                const hasFmt = !!(getColumnFormat(col) || getColumnAlign(col));
                 pills += `
-                    <div class="bound-pill">
-                        <select class="pill-col-select" title="Boyut kolonunu listeden değiştirin" onchange="updateDrillField(${i}, this.value)">
-                            ${buildColumnOptionsHtml(col)}
-                        </select>
-                        <small style="color:#93c5fd;white-space:nowrap;font-size:0.65rem;">(${roleTag})</small>
-                        <div class="pill-actions">
-                            ${i > 0 ? `<button type="button" class="pill-btn" onclick="moveDrillItem(${i}, -1)" title="Yukarı">▲</button>` : ''}
-                            ${i < list.length - 1 ? `<button type="button" class="pill-btn" onclick="moveDrillItem(${i}, 1)" title="Aşağı">▼</button>` : ''}
-                            <button type="button" class="pill-btn del" onclick="removeDrillItem(${i})" title="Kaldır">✕</button>
+                    <div class="bound-pill ${hasFmt ? 'has-fmt' : ''}">
+                        <div class="bound-pill-top">
+                            <select class="pill-col-select" title="Boyut kolonunu listeden değiştirin" onchange="updateDrillField(${i}, this.value)">
+                                ${buildColumnOptionsHtml(col)}
+                            </select>
+                            <small style="color:#93c5fd;white-space:nowrap;font-size:0.65rem;">(${roleTag})</small>
+                            <div class="pill-actions">
+                                ${i > 0 ? `<button type="button" class="pill-btn" onclick="moveDrillItem(${i}, -1)" title="Yukarı">▲</button>` : ''}
+                                ${i < list.length - 1 ? `<button type="button" class="pill-btn" onclick="moveDrillItem(${i}, 1)" title="Aşağı">▼</button>` : ''}
+                                <button type="button" class="pill-btn del" onclick="removeDrillItem(${i})" title="Kaldır">✕</button>
+                            </div>
                         </div>
+                        ${buildInlineFormatRowHtml(col, '', false)}
                     </div>`;
             });
 
@@ -1531,6 +1909,7 @@
                 <div class="drop-zone" data-slot="drill">
                     <div class="dz-label" style="flex-wrap:wrap;gap:4px;">
                         <span>🔤 Boyut & Kırılım (Arguments)</span>
+                        ${list.length > 0 ? `<button type="button" class="pill-btn del" onclick="clearDrillItems()">Temizle</button>` : ''}
                         ${list.length > 1 ? `
                         <select onchange="updateSelectedWidgetProp('multiDimMode', this.value, true)"
                                 style="background:#080d19;color:#38bdf8;border:1px solid var(--border-bright);border-radius:4px;font-size:0.68rem;padding:2px 4px;font-weight:700;width:100%;margin-top:3px;">
@@ -1547,20 +1926,24 @@
         }
 
         function renderTableColumnsDropZone(w) {
-            const cols = Array.isArray(w.columns) && w.columns.length > 0
+            const cols = Array.isArray(w.columns)
                 ? w.columns
                 : liveColumns.map(c => c.name);
 
             let pills = '';
             cols.forEach((col, i) => {
+                const hasFmt = !!(getColumnFormat(col) || getColumnAlign(col));
                 pills += `
-                    <div class="bound-pill">
-                        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${i + 1}. <strong>${escapeHtml(col)}</strong></span>
-                        <div class="pill-actions">
-                            ${i > 0 ? `<button type="button" class="pill-btn" onclick="moveTableCol(${i}, -1)">▲</button>` : ''}
-                            ${i < cols.length - 1 ? `<button type="button" class="pill-btn" onclick="moveTableCol(${i}, 1)">▼</button>` : ''}
-                            <button type="button" class="pill-btn del" onclick="removeTableCol(${i})">✕</button>
+                    <div class="bound-pill ${hasFmt ? 'has-fmt' : ''}">
+                        <div class="bound-pill-top">
+                            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${i + 1}. <strong>${escapeHtml(col)}</strong></span>
+                            <div class="pill-actions">
+                                ${i > 0 ? `<button type="button" class="pill-btn" onclick="moveTableCol(${i}, -1)">▲</button>` : ''}
+                                ${i < cols.length - 1 ? `<button type="button" class="pill-btn" onclick="moveTableCol(${i}, 1)">▼</button>` : ''}
+                                <button type="button" class="pill-btn del" onclick="removeTableCol(${i})">✕</button>
+                            </div>
                         </div>
+                        ${buildInlineFormatRowHtml(col, '', true)}
                     </div>`;
             });
 
@@ -1573,7 +1956,10 @@
                             <button type="button" class="pill-btn del" onclick="clearTableCols()">Temizle</button>
                         </div>
                     </div>
-                    ${pills || '<div class="dz-empty">Tabloda görmek istediğiniz kolonları buraya sürükleyin</div>'}
+                    ${pills || '<div class="dz-empty">Tablo boş — görmek istediğiniz sütunları buraya sürükleyin veya aşağıdan seçin</div>'}
+                    <select class="dz-add-select" onchange="if(this.value){assignFieldToSlot('tableCols', this.value); this.value='';}">
+                        ${buildColumnOptionsHtml('', '+ Listeden Sütun Seçerek Ekle...')}
+                    </select>
                 </div>`;
         }
 
@@ -1599,7 +1985,18 @@
 
         function assignFieldToSlot(slot, colName) {
             const w = getSelectedWidget();
-            if (!w || !colName) return;
+            if (!w) return;
+
+            if (slot === 'dimension' || slot === 'secondaryDimension') {
+                w[slot] = colName || '';
+                delete widgetDrillState[w.id];
+                renderDesignerCanvas();
+                renderDataBindingPanel();
+                renderFieldList();
+                return;
+            }
+
+            if (!colName) return;
 
             if (slot === 'value') {
                 const metrics = getWidgetMetrics(w);
@@ -1615,29 +2012,62 @@
                 if (w.type === 'kpi' && (!w.title || w.title.startsWith('Yeni '))) {
                     w.title = `${colName} Toplamı`;
                 }
-            } else if (slot === 'dimension') {
-                w.dimension = colName;
-            } else if (slot === 'secondaryDimension') {
-                w.secondaryDimension = colName;
             } else if (slot === 'drill') {
-                if (!Array.isArray(w.drillHierarchy)) {
-                    w.drillHierarchy = w.dimension ? [w.dimension] : [];
-                }
+                w.drillHierarchy = getWidgetHierarchy(w);
                 if (!w.drillHierarchy.includes(colName)) {
                     w.drillHierarchy.push(colName);
                 }
                 w.dimension = w.drillHierarchy[0] || colName;
-                if (w.drillHierarchy.length > 1) {
-                    w.secondaryDimension = w.drillHierarchy[1];
-                    if (!w.multiDimMode) w.multiDimMode = 'combined';
+                w.secondaryDimension = w.drillHierarchy[1] || '';
+                if (w.drillHierarchy.length > 1 && !w.multiDimMode) {
+                    w.multiDimMode = 'combined';
                 }
             } else if (slot === 'tableCols') {
-                if (!Array.isArray(w.columns) || w.columns.length === 0) {
+                if (!Array.isArray(w.columns)) {
                     w.columns = [];
                 }
                 if (!w.columns.includes(colName)) {
                     w.columns.push(colName);
                 }
+            }
+
+            delete widgetDrillState[w.id];
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+            renderFieldList();
+        }
+
+        function clearSingleDimSlot(propName) {
+            const w = getSelectedWidget();
+            if (!w) return;
+            w[propName] = '';
+            delete widgetDrillState[w.id];
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+            renderFieldList();
+        }
+
+        function unassignFieldFromSelectedWidget(colName) {
+            const w = getSelectedWidget();
+            if (!w || !colName) return;
+
+            if (w.type === 'table') {
+                if (!Array.isArray(w.columns)) w.columns = liveColumns.map(c => c.name);
+                w.columns = w.columns.filter(c => c !== colName);
+            } else if (w.type === 'kpi' || w.type === 'gauge') {
+                w.valueMetrics = getWidgetMetrics(w).filter(m => m.field !== colName);
+                syncPrimaryMetricProps(w);
+            } else if (w.type === 'pivot') {
+                if (w.dimension === colName) w.dimension = '';
+                if (w.secondaryDimension === colName) w.secondaryDimension = '';
+                w.valueMetrics = getWidgetMetrics(w).filter(m => m.field !== colName);
+                syncPrimaryMetricProps(w);
+            } else {
+                w.valueMetrics = getWidgetMetrics(w).filter(m => m.field !== colName);
+                syncPrimaryMetricProps(w);
+                w.drillHierarchy = getWidgetHierarchy(w).filter(c => c !== colName);
+                w.dimension = w.drillHierarchy[0] || '';
+                w.secondaryDimension = w.drillHierarchy[1] || '';
             }
 
             delete widgetDrillState[w.id];
@@ -1687,9 +2117,7 @@
         function updateDrillField(idx, newCol) {
             const w = getSelectedWidget();
             if (!w || !newCol) return;
-            if (!Array.isArray(w.drillHierarchy) || w.drillHierarchy.length === 0) {
-                w.drillHierarchy = w.dimension ? [w.dimension] : [];
-            }
+            w.drillHierarchy = getWidgetHierarchy(w);
             if (idx >= 0 && idx < w.drillHierarchy.length) {
                 w.drillHierarchy[idx] = newCol;
             }
@@ -1784,7 +2212,8 @@
 
         function moveDrillItem(idx, dir) {
             const w = getSelectedWidget();
-            if (!w || !Array.isArray(w.drillHierarchy)) return;
+            if (!w) return;
+            w.drillHierarchy = getWidgetHierarchy(w);
             const target = idx + dir;
             if (target < 0 || target >= w.drillHierarchy.length) return;
             const tmp = w.drillHierarchy[idx];
@@ -1799,7 +2228,8 @@
 
         function removeDrillItem(idx) {
             const w = getSelectedWidget();
-            if (!w || !Array.isArray(w.drillHierarchy)) return;
+            if (!w) return;
+            w.drillHierarchy = getWidgetHierarchy(w);
             w.drillHierarchy.splice(idx, 1);
             w.dimension = w.drillHierarchy[0] || '';
             w.secondaryDimension = w.drillHierarchy[1] || '';
@@ -1809,10 +2239,22 @@
             renderFieldList();
         }
 
+        function clearDrillItems() {
+            const w = getSelectedWidget();
+            if (!w) return;
+            w.drillHierarchy = [];
+            w.dimension = '';
+            w.secondaryDimension = '';
+            delete widgetDrillState[w.id];
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+            renderFieldList();
+        }
+
         function moveTableCol(idx, dir) {
             const w = getSelectedWidget();
             if (!w) return;
-            if (!Array.isArray(w.columns) || w.columns.length === 0) w.columns = liveColumns.map(c => c.name);
+            if (!Array.isArray(w.columns)) w.columns = liveColumns.map(c => c.name);
             const target = idx + dir;
             if (target < 0 || target >= w.columns.length) return;
             const tmp = w.columns[idx];
@@ -1825,7 +2267,7 @@
         function removeTableCol(idx) {
             const w = getSelectedWidget();
             if (!w) return;
-            if (!Array.isArray(w.columns) || w.columns.length === 0) w.columns = liveColumns.map(c => c.name);
+            if (!Array.isArray(w.columns)) w.columns = liveColumns.map(c => c.name);
             w.columns.splice(idx, 1);
             renderDesignerCanvas();
             renderDataBindingPanel();
@@ -1922,9 +2364,11 @@
 
                 const drillState = widgetDrillState[w.id];
                 const hasDrillBack = drillState && drillState.level > 0;
+                const isTableType = w.type === 'table' || w.type === 'pivot';
+                const titleJustify = (!isTableType && w.align === 'center') ? 'center' : ((!isTableType && w.align === 'right') ? 'flex-end' : 'flex-start');
 
                 header.innerHTML = `
-                    <div class="widget-title">
+                    <div class="widget-title" style="flex:1;justify-content:${titleJustify};">
                         <span class="drag-grip" title="Basılı tutarak istediğiniz boşluğa (sola, sağa, alta) sürükleyin">⠿</span>
                         <span class="w-title-text">${escapeHtml(w.title || 'Bileşen')}</span>
                     </div>
@@ -2155,6 +2599,12 @@
             const primaryMetric = metrics[0] || { field: w.valueField || '', agg: w.agg || 'sum' };
 
             if (w.type === 'kpi') {
+                if (metrics.length === 0 || !primaryMetric.field) {
+                    container.innerHTML = '<div class="dz-empty" style="padding:18px;">KPI değerini göstermek için sol panelden <strong>Değer / Ölçüm</strong> kolonu seçin.</div>';
+                    return;
+                }
+                const effAlign = getColumnAlign(primaryMetric.field, w.align || 'left');
+                const flexAlign = effAlign === 'center' ? 'center' : (effAlign === 'right' ? 'flex-end' : 'flex-start');
                 if (metrics.length <= 1) {
                     const aggType = (primaryMetric.agg || 'sum').toLowerCase();
                     const aggLabel = aggType === 'count' ? 'KAYIT SAYISI' : (aggType === 'avg' ? 'ORTALAMA' : (aggType === 'max' ? 'MAKSİMUM' : (aggType === 'min' ? 'MİNİMUM' : 'GENEL TOPLAM')));
@@ -2162,27 +2612,28 @@
                     const effectiveSub = w.subtitle !== undefined ? w.subtitle : autoSub;
                     const val = computeAggregate(rows, primaryMetric.field, aggType);
                     container.innerHTML = `
-                        <div class="kpi-box">
+                        <div class="kpi-box" style="align-items:${flexAlign};text-align:${effAlign};width:100%;">
                             <div class="kpi-meta" title="Değiştirmek için tıklayın"
                                  style="cursor:text;display:${effectiveSub && effectiveSub.trim() !== '' ? 'block' : 'none'};"
                                  onclick="promptKpiSubtitle(event, '${w.id}')">${escapeHtml(effectiveSub)}</div>
-                            <div class="kpi-val">${formatNumber(val)}</div>
+                            <div class="kpi-val">${escapeHtml(formatValueByColumn(val, primaryMetric.field, 'number'))}</div>
                         </div>`;
                 } else {
                     const customSub = w.subtitle !== undefined && w.subtitle.trim() !== '' ? w.subtitle : '';
                     let itemsHtml = '';
                     metrics.forEach(m => {
+                        const mAlign = getColumnAlign(m.field, w.align || 'left');
                         const aggType = (m.agg || 'sum').toLowerCase();
                         const aggShort = aggType === 'count' ? 'ADET' : (aggType === 'avg' ? 'ORT.' : (aggType === 'max' ? 'MAKS' : (aggType === 'min' ? 'MİN' : 'TOPLAM')));
                         const v = computeAggregate(rows, m.field, aggType);
                         itemsHtml += `
-                            <div style="flex:1;min-width:110px;padding:4px 8px;border-left:2px solid rgba(56,189,248,0.45);">
+                            <div style="flex:1;min-width:110px;padding:4px 8px;border-left:2px solid rgba(56,189,248,0.45);text-align:${mAlign};">
                                 <div class="kpi-meta" style="margin-bottom:1px;font-size:0.66rem;">${escapeHtml(m.field)} (${aggShort})</div>
-                                <div class="kpi-val" style="font-size:clamp(1.1rem, 1.45vw, 1.5rem);">${formatNumber(v)}</div>
+                                <div class="kpi-val" style="font-size:clamp(1.1rem, 1.45vw, 1.5rem);">${escapeHtml(formatValueByColumn(v, m.field, 'number'))}</div>
                             </div>`;
                     });
                     container.innerHTML = `
-                        <div class="kpi-box" style="justify-content:center;gap:6px;width:100%;">
+                        <div class="kpi-box" style="justify-content:center;align-items:${flexAlign};text-align:${effAlign};gap:6px;width:100%;">
                             ${customSub ? `<div class="kpi-meta" style="cursor:text;" onclick="promptKpiSubtitle(event, '${w.id}')">${escapeHtml(customSub)}</div>` : ''}
                             <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;width:100%;">${itemsHtml}</div>
                         </div>`;
@@ -2212,10 +2663,20 @@
 
         function renderChartWidget(w, baseRows, container) {
             const metrics = getWidgetMetrics(w);
-            const primaryMetric = metrics[0] || { field: w.valueField || '', agg: w.agg || 'sum' };
-            const hierarchy = (Array.isArray(w.drillHierarchy) && w.drillHierarchy.length > 0)
-                ? w.drillHierarchy
-                : (w.dimension ? [w.dimension] : []);
+            const primaryMetric = metrics[0] || { field: '', agg: w.agg || 'sum' };
+            const hierarchy = getWidgetHierarchy(w);
+
+            if (w.type === 'gauge') {
+                if (metrics.length === 0 || !primaryMetric.field) {
+                    container.innerHTML = '<div class="dz-empty" style="padding:24px;">İbre göstergesi için sol panelden <strong>Değer / Ölçüm</strong> kolonu seçin.</div>';
+                    return;
+                }
+            } else {
+                if (metrics.length === 0 || !primaryMetric.field || hierarchy.length === 0) {
+                    container.innerHTML = '<div class="dz-empty" style="padding:24px;">Grafik oluşturmak için sol panelden <strong>Değer / Ölçüm</strong> ve <strong>Boyut & Kırılım</strong> kolonu seçin.</div>';
+                    return;
+                }
+            }
 
             const mode = w.multiDimMode || 'combined';
             let workingRows = baseRows;
@@ -2245,14 +2706,14 @@
                 const val = Math.round(computeAggregate(workingRows, primaryMetric.field, primaryMetric.agg) * 100) / 100;
                 chart.setOption({
                     backgroundColor: 'transparent',
-                    tooltip: { formatter: '{a} <br/>{b}: {c}' },
+                    tooltip: { formatter: p => `${escapeHtml(p.seriesName)}<br/>${escapeHtml(p.name)}: <strong>${escapeHtml(formatValueByColumn(p.value, primaryMetric.field, 'number'))}</strong>` },
                     series: [{
                         name: w.title || primaryMetric.field,
                         type: 'gauge',
                         max: val > 0 ? Math.ceil(val * 1.25) : 100,
                         progress: { show: true, width: 12 },
                         axisLine: { lineStyle: { width: 12 } },
-                        detail: { valueAnimation: true, formatter: v => formatNumber(v), color: '#38bdf8', fontSize: 16 },
+                        detail: { valueAnimation: true, formatter: v => formatValueByColumn(v, primaryMetric.field, 'number'), color: '#38bdf8', fontSize: 16 },
                         data: [{ value: val, name: primaryMetric.field || 'Değer' }]
                     }]
                 });
@@ -2262,15 +2723,15 @@
             if (w.type === 'heatmap') {
                 const dimX = hierarchy[0] || w.dimension || '';
                 const dimY = hierarchy[1] || w.secondaryDimension || dimX;
-                const xKeys = [...new Set(workingRows.map(r => String(getRowValue(r, dimX) ?? 'Belirsiz')))].slice(0, 20);
-                const yKeys = [...new Set(workingRows.map(r => String(getRowValue(r, dimY) ?? 'Belirsiz')))].slice(0, 15);
+                const xKeys = [...new Set(workingRows.map(r => formatDimensionValue(getRowValue(r, dimX), dimX)))].slice(0, 20);
+                const yKeys = [...new Set(workingRows.map(r => formatDimensionValue(getRowValue(r, dimY), dimY)))].slice(0, 15);
                 const heatData = [];
                 let maxVal = 0;
                 xKeys.forEach((xk, xi) => {
                     yKeys.forEach((yk, yi) => {
                         const matched = workingRows.filter(r =>
-                            String(getRowValue(r, dimX) ?? 'Belirsiz') === xk &&
-                            String(getRowValue(r, dimY) ?? 'Belirsiz') === yk);
+                            formatDimensionValue(getRowValue(r, dimX), dimX) === xk &&
+                            formatDimensionValue(getRowValue(r, dimY), dimY) === yk);
                         const v = Math.round(computeAggregate(matched, primaryMetric.field, primaryMetric.agg) * 100) / 100;
                         if (v > maxVal) maxVal = v;
                         heatData.push([xi, yi, v]);
@@ -2278,12 +2739,12 @@
                 });
                 chart.setOption({
                     backgroundColor: 'transparent',
-                    tooltip: { position: 'top' },
+                    tooltip: { position: 'top', formatter: p => `${escapeHtml(xKeys[p.value[0]] || '')} / ${escapeHtml(yKeys[p.value[1]] || '')}: <strong>${escapeHtml(formatValueByColumn(p.value[2], primaryMetric.field, 'number'))}</strong>` },
                     grid: { left: 12, right: 20, top: 20, bottom: 28, containLabel: true },
                     xAxis: { type: 'category', data: xKeys, splitArea: { show: true } },
                     yAxis: { type: 'category', data: yKeys, splitArea: { show: true } },
                     visualMap: { min: 0, max: maxVal || 100, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, itemWidth: 10, itemHeight: 60 },
-                    series: [{ type: 'heatmap', data: heatData, label: { show: xKeys.length <= 10 } }]
+                    series: [{ type: 'heatmap', data: heatData, label: { show: xKeys.length <= 10, formatter: p => formatValueByColumn(p.value[2], primaryMetric.field, 'number') } }]
                 });
                 return;
             }
@@ -2293,7 +2754,7 @@
                 const grouped = groupAndAggregateComposite(workingRows, dimKeyCols, primaryMetric.field, primaryMetric.agg, w.topN || 25);
                 chart.setOption({
                     backgroundColor: 'transparent',
-                    tooltip: { formatter: info => `${escapeHtml(info.name)}: <strong>${formatNumber(info.value)}</strong>` },
+                    tooltip: { formatter: info => `${escapeHtml(info.name)}: <strong>${escapeHtml(formatValueByColumn(info.value, primaryMetric.field, 'number'))}</strong>` },
                     series: [{
                         type: 'treemap',
                         roam: false,
@@ -2314,8 +2775,8 @@
                 chart.setOption({
                     backgroundColor: 'transparent',
                     color: palette,
-                    tooltip: { trigger: 'item', confine: true, formatter: p => `${escapeHtml(p.name)}: <strong>${formatNumber(p.value)}</strong> (%${p.percent})` },
-                    legend: { type: 'scroll', bottom: 0, textStyle: { color: legendTextColor, fontSize: 11 } },
+                    tooltip: { trigger: 'item', confine: true, formatter: p => `${escapeHtml(p.name)}: <strong>${escapeHtml(formatValueByColumn(p.value, primaryMetric.field, 'number'))}</strong> (%${p.percent})` },
+                    legend: { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 11 } },
                     series: [{
                         type: 'pie',
                         radius: w.type === 'donut' ? ['38%', '68%'] : '65%',
@@ -2331,9 +2792,9 @@
             if (mode === 'series' && hierarchy.length >= 2) {
                 const xDim = hierarchy[0];
                 const seriesDim = hierarchy[1];
-                const xKeys = [...new Set(workingRows.map(r => String(getRowValue(r, xDim) ?? 'Belirsiz')))];
+                const xKeys = [...new Set(workingRows.map(r => formatDimensionValue(getRowValue(r, xDim), xDim)))];
                 xKeys.sort((a, b) => a.localeCompare(b, 'tr-TR', { numeric: true }));
-                const seriesKeys = [...new Set(workingRows.map(r => String(getRowValue(r, seriesDim) ?? 'Belirsiz')))].slice(0, 12);
+                const seriesKeys = [...new Set(workingRows.map(r => formatDimensionValue(getRowValue(r, seriesDim), seriesDim)))].slice(0, 12);
                 seriesKeys.sort((a, b) => a.localeCompare(b, 'tr-TR', { numeric: true }));
 
                 const isLine = w.type === 'line' || w.type === 'area';
@@ -2343,8 +2804,8 @@
                 const seriesList = seriesKeys.map(sk => {
                     const dataArr = xKeys.map(xk => {
                         const matched = workingRows.filter(r =>
-                            String(getRowValue(r, xDim) ?? 'Belirsiz') === xk &&
-                            String(getRowValue(r, seriesDim) ?? 'Belirsiz') === sk);
+                            formatDimensionValue(getRowValue(r, xDim), xDim) === xk &&
+                            formatDimensionValue(getRowValue(r, seriesDim), seriesDim) === sk);
                         return Math.round(computeAggregate(matched, primaryMetric.field, primaryMetric.agg) * 100) / 100;
                     });
                     return {
@@ -2364,15 +2825,27 @@
                 };
                 const valAxis = {
                     type: 'value',
-                    axisLabel: { color: axisTextColor },
+                    axisLabel: { color: axisTextColor, formatter: v => formatValueByColumn(v, primaryMetric.field, 'number') },
                     splitLine: { lineStyle: { color: splitLineColor } }
                 };
 
                 chart.setOption({
                     backgroundColor: 'transparent',
                     color: palette,
-                    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, confine: true },
-                    legend: { type: 'scroll', top: 0, textStyle: { color: legendTextColor, fontSize: 11 } },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: { type: 'shadow' },
+                        confine: true,
+                        formatter: params => {
+                            if (!Array.isArray(params) || params.length === 0) return '';
+                            let res = `<strong>${escapeHtml(params[0].axisValueLabel || params[0].name || '')}</strong>`;
+                            params.forEach(p => {
+                                res += `<br/>${p.marker || ''} ${escapeHtml(p.seriesName)}: <strong>${escapeHtml(formatValueByColumn(p.value, primaryMetric.field, 'number'))}</strong>`;
+                            });
+                            return res;
+                        }
+                    },
+                    legend: { type: 'scroll', top: 0, left: w.align || 'auto', textStyle: { color: legendTextColor, fontSize: 11 } },
                     toolbox: {
                         show: true, right: 8, top: 0,
                         iconStyle: { borderColor: axisTextColor },
@@ -2433,15 +2906,28 @@
             };
             const valAxis = {
                 type: 'value',
-                axisLabel: { color: axisTextColor },
+                axisLabel: { color: axisTextColor, formatter: v => formatValueByColumn(v, effectiveMetrics[0].field, 'number') },
                 splitLine: { lineStyle: { color: splitLineColor } }
             };
 
             chart.setOption({
                 backgroundColor: 'transparent',
                 color: palette,
-                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, confine: true },
-                legend: effectiveMetrics.length > 1 ? { type: 'scroll', top: 0, textStyle: { color: legendTextColor, fontSize: 11 } } : undefined,
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    confine: true,
+                    formatter: params => {
+                        if (!Array.isArray(params) || params.length === 0) return '';
+                        let res = `<strong>${escapeHtml(params[0].axisValueLabel || params[0].name || '')}</strong>`;
+                        params.forEach((p, idx) => {
+                            const mCol = effectiveMetrics[idx]?.field || effectiveMetrics[0].field;
+                            res += `<br/>${p.marker || ''} ${escapeHtml(p.seriesName)}: <strong>${escapeHtml(formatValueByColumn(p.value, mCol, 'number'))}</strong>`;
+                        });
+                        return res;
+                    }
+                },
+                legend: effectiveMetrics.length > 1 ? { type: 'scroll', top: 0, left: w.align || 'auto', textStyle: { color: legendTextColor, fontSize: 11 } } : undefined,
                 toolbox: {
                     show: true, right: 8, top: 0,
                     iconStyle: { borderColor: axisTextColor },
@@ -2492,12 +2978,12 @@
 
         function renderDataTable(w, rows, container) {
             const widgetKey = w.id || 'preview_table';
-            const cols = (Array.isArray(w.columns) && w.columns.length > 0)
+            const cols = Array.isArray(w.columns)
                 ? w.columns
                 : liveColumns.map(c => c.name);
 
             if (cols.length === 0) {
-                container.innerHTML = '<div class="dz-empty" style="padding:24px;">Tabloya kolon eklemek için sol listeden kolon sürükleyin veya + butonuna tıklayın.</div>';
+                container.innerHTML = '<div class="dz-empty" style="padding:24px;">Tablo sütunları temizlendi. Sütun eklemek için <strong>3. Kolonlar</strong> listesinden sürükleyin, <strong>+</strong> butonuna tıklayın veya sol paneldeki açılır listeden seçin.</div>';
                 return;
             }
 
@@ -2523,16 +3009,20 @@
 
             displayRows.forEach(r => {
                 html += '<tr>';
-                cols.forEach(c => { html += `<td>${formatCell(getRowValue(r, c))}</td>`; });
+                cols.forEach(c => {
+                    const cAlign = getColumnAlign(c, w.align || 'left');
+                    html += `<td style="text-align:${cAlign};">${formatCell(getRowValue(r, c), c)}</td>`;
+                });
                 html += '</tr>';
             });
             html += '</tbody><tfoot><tr>';
             cols.forEach((c, idx) => {
                 const colMeta = liveColumns.find(x => x.name.toLowerCase() === c.toLowerCase());
-                if (colMeta && colMeta.dataType === 'number' && !c.toLowerCase().endsWith('_id')) {
-                    html += `<td>${formatNumber(computeAggregate(rows, c, 'sum'))}</td>`;
+                const cAlign = getColumnAlign(c, w.align || 'left');
+                if (colMeta && colMeta.dataType === 'number' && !c.toLowerCase().endsWith('_id') && !/y[ıi]l|ay\b/i.test(c)) {
+                    html += `<td style="text-align:${cAlign};">${escapeHtml(formatValueByColumn(computeAggregate(rows, c, 'sum'), c, 'number'))}</td>`;
                 } else {
-                    html += `<td>${idx === 0 ? 'Toplam (' + rows.length + ')' : ''}</td>`;
+                    html += `<td style="text-align:${cAlign};">${idx === 0 ? 'Toplam (' + rows.length + ')' : ''}</td>`;
                 }
             });
             html += '</tr></tfoot></table>';
@@ -2553,29 +3043,38 @@
         }
 
         function renderPivotTable(w, rows, container) {
-            const rowDim = w.dimension || (liveColumns[0]?.name ?? '');
-            const colDim = w.secondaryDimension || (liveColumns[1]?.name ?? '');
-            const valField = w.valueField || (liveColumns.find(c => c.dataType === 'number')?.name ?? '');
+            const metrics = getWidgetMetrics(w);
+            const rowDim = w.dimension || '';
+            const colDim = w.secondaryDimension || '';
+            const valField = metrics[0]?.field || '';
 
-            const rowKeys = [...new Set(rows.map(r => String(getRowValue(r, rowDim) ?? 'Belirsiz')))].slice(0, 40);
-            const colKeys = [...new Set(rows.map(r => String(getRowValue(r, colDim) ?? 'Belirsiz')))].slice(0, 12);
+            if (!rowDim || !colDim || !valField) {
+                container.innerHTML = '<div class="dz-empty" style="padding:24px;">Pivot tablo oluşturmak için sol panelden <strong>Satır Boyutu</strong>, <strong>Sütun Boyutu</strong> ve <strong>Değer / Ölçüm</strong> kolonu seçin.</div>';
+                return;
+            }
+
+            const rowAlign = getColumnAlign(rowDim, w.align || 'left');
+            const valAlign = getColumnAlign(valField, w.align || 'right');
+
+            const rowKeys = [...new Set(rows.map(r => formatDimensionValue(getRowValue(r, rowDim), rowDim)))].slice(0, 40);
+            const colKeys = [...new Set(rows.map(r => formatDimensionValue(getRowValue(r, colDim), colDim)))].slice(0, 12);
 
             let html = `<table class="bi-table"><thead><tr><th>${escapeHtml(rowDim)} \\ ${escapeHtml(colDim)}</th>`;
             colKeys.forEach(ck => { html += `<th>${escapeHtml(ck)}</th>`; });
-            html += '<th>Toplam</th></tr></thead><tbody>';
+            html += `<th>Toplam</th></tr></thead><tbody>`;
 
             rowKeys.forEach(rk => {
                 let rowSum = 0;
-                html += `<tr><td><strong>${escapeHtml(rk)}</strong></td>`;
+                html += `<tr><td style="text-align:${rowAlign};"><strong>${escapeHtml(rk)}</strong></td>`;
                 colKeys.forEach(ck => {
                     const matching = rows.filter(r =>
-                        String(getRowValue(r, rowDim) ?? 'Belirsiz') === rk &&
-                        String(getRowValue(r, colDim) ?? 'Belirsiz') === ck);
+                        formatDimensionValue(getRowValue(r, rowDim), rowDim) === rk &&
+                        formatDimensionValue(getRowValue(r, colDim), colDim) === ck);
                     const v = computeAggregate(matching, valField, w.agg || 'sum');
                     rowSum += v;
-                    html += `<td>${formatNumber(v)}</td>`;
+                    html += `<td style="text-align:${valAlign};">${escapeHtml(formatValueByColumn(v, valField, 'number'))}</td>`;
                 });
-                html += `<td><strong>${formatNumber(rowSum)}</strong></td></tr>`;
+                html += `<td style="text-align:${valAlign};"><strong>${escapeHtml(formatValueByColumn(rowSum, valField, 'number'))}</strong></td></tr>`;
             });
             html += '</tbody></table>';
             container.innerHTML = html;
@@ -2763,18 +3262,30 @@
             return sum;
         }
 
+        function formatDimensionValue(val, colName) {
+            if (val === null || val === undefined || val === '') return 'Belirsiz';
+            const meta = getColumnMeta(colName);
+            const fmt = getColumnFormat(colName);
+            const dType = meta ? meta.dataType : '';
+            if (dType === 'date' || (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}(?:[T\s]|$)/.test(val))) {
+                return formatDateByMask(val, fmt);
+            }
+            if (dType === 'number' || typeof val === 'number') {
+                if (!fmt && /ay\b/i.test(String(colName || '')) && !isNaN(Number(val))) {
+                    return String(val).padStart(2, '0');
+                }
+                return formatNumberByMask(val, fmt);
+            }
+            return String(val);
+        }
+
         function groupAndAggregateComposite(rows, dimFields, valField, agg, topN) {
             const cols = Array.isArray(dimFields) && dimFields.length > 0 ? dimFields : [dimFields || ''];
             const map = new Map();
             const a = (agg || 'sum').toLowerCase();
 
             rows.forEach(r => {
-                const parts = cols.map(c => {
-                    const v = getRowValue(r, c);
-                    if (v === null || v === undefined || v === '') return 'Belirsiz';
-                    if (/ay\b/i.test(c) && !isNaN(Number(v))) return String(v).padStart(2, '0');
-                    return String(v);
-                });
+                const parts = cols.map(c => formatDimensionValue(getRowValue(r, c), c));
                 const key = parts.join(' / ');
                 const num = parseFloat(getRowValue(r, valField));
                 const val = isNaN(num) ? 0 : num;
@@ -2807,18 +3318,285 @@
             return topN ? arr.slice(0, topN) : arr;
         }
 
-        function formatNumber(val) {
-            return Number(val || 0).toLocaleString('tr-TR', { maximumFractionDigits: 2 });
+        // SAYI VE TARİH FORMATLAMA MOTORU
+        function formatNumberByMask(val, fmt) {
+            if (val === null || val === undefined || val === '') return '';
+            const num = Number(val);
+            if (isNaN(num)) return String(val);
+
+            const mask = String(fmt || '').trim();
+            // Varsayılan: Tüm sayısal alanlar formatsız (binlik ayraçsız ham sayı, örn: 2026) yazılır
+            if (!mask || mask === 'raw') {
+                const clean = Math.round(num * 10000) / 10000;
+                return String(clean);
+            }
+
+            const m = mask.match(/^([^0#.,]*)([0#.,]+)([^0#.,]*)$/);
+            if (!m) {
+                return String(Math.round(num * 10000) / 10000);
+            }
+
+            const prefix = m[1] || '';
+            const core = m[2] || '0';
+            const suffix = m[3] || '';
+
+            let intPart = core;
+            let decPart = '';
+            const lastDot = core.lastIndexOf('.');
+            const lastComma = core.lastIndexOf(',');
+            const lastSep = Math.max(lastDot, lastComma);
+
+            if (lastSep >= 0) {
+                const afterSep = core.substring(lastSep + 1);
+                const beforeSep = core.substring(0, lastSep);
+                // Eğer tek ayraç varsa ve virgülden/noktadan sonrası "#00" veya "##0" gibi 3 haneli binlik grup ise ondalık değildir
+                const isThousandsOnly = (lastDot < 0 || lastComma < 0) && afterSep.length === 3 && afterSep.includes('#');
+                if (!isThousandsOnly) {
+                    intPart = beforeSep;
+                    decPart = afterSep;
+                }
+            }
+
+            const useGrouping = intPart.includes(',') || intPart.includes('.');
+            const minFrac = (decPart.match(/0/g) || []).length;
+            const maxFrac = decPart.length;
+
+            const formatted = num.toLocaleString('tr-TR', {
+                useGrouping: useGrouping,
+                minimumFractionDigits: minFrac,
+                maximumFractionDigits: maxFrac
+            });
+            return `${prefix}${formatted}${suffix}`;
         }
 
-        function formatCell(val) {
-            if (val === null || val === undefined) return '';
-            if (typeof val === 'number') return formatNumber(val);
-            const str = String(val);
-            if (/^\d{4}-\d{2}-\d{2}T/.test(str)) {
-                return str.substring(0, 10).split('-').reverse().join('.');
+        function formatDateByMask(val, fmt) {
+            if (val === null || val === undefined || val === '') return '';
+            const str = String(val).trim();
+            const mask = String(fmt || '').trim() || 'dd.MM.yyyy';
+
+            let yyyy = '', MM = '', dd = '', HH = '00', min = '00', ss = '00';
+            const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2})(?::(\d{2}))?)?/);
+            if (isoMatch) {
+                yyyy = isoMatch[1];
+                MM = isoMatch[2];
+                dd = isoMatch[3];
+                HH = isoMatch[4] || '00';
+                min = isoMatch[5] || '00';
+                ss = isoMatch[6] || '00';
+            } else {
+                const d = new Date(str);
+                if (isNaN(d.getTime())) return str;
+                yyyy = String(d.getFullYear());
+                MM = String(d.getMonth() + 1).padStart(2, '0');
+                dd = String(d.getDate()).padStart(2, '0');
+                HH = String(d.getHours()).padStart(2, '0');
+                min = String(d.getMinutes()).padStart(2, '0');
+                ss = String(d.getSeconds()).padStart(2, '0');
             }
-            return escapeHtml(str);
+
+            const yy = yyyy.slice(-2);
+            const hasHour = /H|h/.test(mask);
+
+            return mask.replace(/yyyy|YYYY|yy|YY|MM|mm|dd|DD|HH|hh|ss|SS/g, token => {
+                switch (token) {
+                    case 'yyyy':
+                    case 'YYYY': return yyyy;
+                    case 'yy':
+                    case 'YY': return yy;
+                    case 'MM': return MM;
+                    case 'mm': return hasHour ? min : MM;
+                    case 'dd':
+                    case 'DD': return dd;
+                    case 'HH':
+                    case 'hh': return HH;
+                    case 'ss':
+                    case 'SS': return ss;
+                    default: return token;
+                }
+            });
+        }
+
+        function formatValueByColumn(val, colName, forceType = '') {
+            if (val === null || val === undefined || val === '') return '';
+            const meta = getColumnMeta(colName);
+            const dType = forceType || (meta ? meta.dataType : '');
+            const fmt = getColumnFormat(colName);
+
+            if (dType === 'date' || (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}(?:[T\s]|$)/.test(val))) {
+                return formatDateByMask(val, fmt);
+            }
+            if (dType === 'number' || typeof val === 'number') {
+                return formatNumberByMask(val, fmt);
+            }
+            return String(val);
+        }
+
+        function formatNumber(val, colName = '') {
+            return formatNumberByMask(val, colName ? getColumnFormat(colName) : '');
+        }
+
+        function formatCell(val, colName = '') {
+            if (val === null || val === undefined) return '';
+            const meta = getColumnMeta(colName);
+            const dType = meta ? meta.dataType : '';
+            const fmt = getColumnFormat(colName);
+
+            if (dType === 'date' || (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}(?:[T\s]|$)/.test(String(val)))) {
+                return escapeHtml(formatDateByMask(val, fmt));
+            }
+            if (dType === 'number' || typeof val === 'number') {
+                return escapeHtml(formatNumberByMask(val, fmt));
+            }
+            return escapeHtml(String(val));
+        }
+
+        // KOLON FORMATLAMA MODAL PENCERESİ YÖNETİMİ
+        const NUMBER_FORMAT_PRESETS = [
+            { value: '', label: 'Formatsız / Ham Sayı (Varsayılan — Örn: 2026)' },
+            { value: '#,##0', label: 'Binlik Ayraçlı Tam Sayı (#,##0 — Örn: 40.903)' },
+            { value: '#,##0.0', label: 'Binlik + 1 Ondalık (#,##0.0 — Örn: 40.903,5)' },
+            { value: '#,##0.00', label: 'Binlik + 2 Ondalık (#,##0.00 — Örn: 40.903,25)' },
+            { value: '#,##0.##', label: 'Binlik + Esnek Ondalık (#,##0.## — Örn: 40.903,25)' },
+            { value: '0.00', label: 'Binliksiz 2 Ondalık (0.00 — Örn: 2026,00)' },
+            { value: '₺#,##0.00', label: 'Para Birimi TL (₺#,##0.00)' },
+            { value: '$#,##0.00', label: 'Para Birimi USD ($#,##0.00)' },
+            { value: '€#,##0.00', label: 'Para Birimi EUR (€#,##0.00)' },
+            { value: '%0.0', label: 'Yüzde Oran (%0.0)' }
+        ];
+
+        const DATE_FORMAT_PRESETS = [
+            { value: '', label: 'Varsayılan Tarih (dd.MM.yyyy — Örn: 06.11.2026)' },
+            { value: 'dd.MM.yy', label: 'Kısa Yıl Noktalı (dd.MM.yy — Örn: 06.11.26)' },
+            { value: 'dd/MM/yyyy', label: 'Eğik Çizgili (dd/MM/yyyy — Örn: 06/11/2026)' },
+            { value: 'dd/MM/yy', label: 'Kısa Eğik Çizgili (dd/MM/yy — Örn: 06/11/26)' },
+            { value: 'yyyy-MM-dd', label: 'ISO Standart (yyyy-MM-dd — Örn: 2026-11-06)' },
+            { value: 'MM.yyyy', label: 'Ay ve Yıl (MM.yyyy — Örn: 11.2026)' },
+            { value: 'yyyy-MM', label: 'Yıl ve Ay (yyyy-MM — Örn: 2026-11)' },
+            { value: 'dd.MM.yyyy HH:mm', label: 'Tarih ve Saat (dd.MM.yyyy HH:mm)' }
+        ];
+
+        let activeFormatModalAlign = '';
+
+        function renderModalAlignButtons() {
+            const box = document.getElementById('fmtModalAlignGroup');
+            if (!box) return;
+            box.innerHTML = `
+                <div class="align-btn-group">
+                    <button type="button" class="align-btn ${activeFormatModalAlign === 'left' ? 'active' : ''}" title="Sola Yasla" onclick="setModalAlign('left')">${ALIGN_ICONS.left}</button>
+                    <button type="button" class="align-btn ${activeFormatModalAlign === 'center' ? 'active' : ''}" title="Ortala" onclick="setModalAlign('center')">${ALIGN_ICONS.center}</button>
+                    <button type="button" class="align-btn ${activeFormatModalAlign === 'right' ? 'active' : ''}" title="Sağa Yasla" onclick="setModalAlign('right')">${ALIGN_ICONS.right}</button>
+                </div>`;
+        }
+
+        function setModalAlign(val) {
+            activeFormatModalAlign = (activeFormatModalAlign === val) ? '' : val;
+            renderModalAlignButtons();
+        }
+
+        function openColumnFormatModal(colName, forceType = '') {
+            const meta = getColumnMeta(colName);
+            const dType = forceType || (meta ? meta.dataType : 'number');
+            activeFormatModalCol = colName;
+            activeFormatModalType = dType;
+            activeFormatModalAlign = getColumnAlign(colName, '');
+
+            document.getElementById('fmtModalColName').textContent = colName;
+            const badge = document.getElementById('fmtModalColBadge');
+            badge.className = 'f-type-badge ' + (dType === 'date' ? 'ft-date' : (dType === 'number' ? 'ft-number' : 'ft-string'));
+            badge.textContent = dType === 'date' ? '📅 TARİH' : (dType === 'number' ? '# SAYI' : 'METİN');
+
+            renderModalAlignButtons();
+
+            const currentFmt = getColumnFormat(colName);
+            const presets = dType === 'date' ? DATE_FORMAT_PRESETS : NUMBER_FORMAT_PRESETS;
+            const sel = document.getElementById('fmtModalPresetSelect');
+            sel.innerHTML = presets.map(p => `<option value="${escapeHtml(p.value)}">${escapeHtml(p.label)}</option>`).join('') +
+                `<option value="__custom__">✍️ Özel Format Maskesi Yaz...</option>`;
+
+            const hasPreset = presets.some(p => p.value === currentFmt);
+            sel.value = hasPreset ? currentFmt : '__custom__';
+
+            const inp = document.getElementById('fmtModalCustomInput');
+            inp.value = currentFmt;
+            inp.placeholder = dType === 'date' ? 'Örn: dd.MM.yy veya yyyy-MM-dd' : 'Örn: #,##0 veya #,##0.00 (Boş = Formatsız)';
+
+            document.getElementById('fmtModalHint').innerHTML = dType === 'date'
+                ? 'Kullanılabilir kodlar: <code>dd</code> (Gün), <code>MM</code> (Ay), <code>yy</code> (2 Hane Yıl), <code>yyyy</code> (4 Hane Yıl), <code>HH:mm</code> (Saat:Dk). Boş bırakılırsa <strong>dd.MM.yyyy</strong> uygulanır.'
+                : 'Boş bırakılırsa sayı <strong>formatsız (2026)</strong> yazılır. Binlik ayraç için <code>#,##0</code>, kuruş/ondalık için <code>#,##0.00</code> veya <code>0.00</code> yazabilirsiniz.';
+
+            updateFormatModalPreview();
+            document.getElementById('colFormatModal').style.display = 'flex';
+        }
+
+        function onFormatPresetSelected(val) {
+            const inp = document.getElementById('fmtModalCustomInput');
+            if (val !== '__custom__') {
+                inp.value = val;
+            } else {
+                inp.focus();
+            }
+            updateFormatModalPreview();
+        }
+
+        function getSampleValueForColumn(colName, dType) {
+            for (const r of liveRows) {
+                const v = getRowValue(r, colName);
+                if (v !== null && v !== undefined && v !== '') return v;
+            }
+            return dType === 'date' ? '2026-11-06T14:30:00' : 2026;
+        }
+
+        function updateFormatModalPreview() {
+            const fmt = document.getElementById('fmtModalCustomInput').value.trim();
+            const sample = getSampleValueForColumn(activeFormatModalCol, activeFormatModalType);
+            const formatted = activeFormatModalType === 'date'
+                ? formatDateByMask(sample, fmt)
+                : (activeFormatModalType === 'number' ? formatNumberByMask(sample, fmt) : String(sample));
+            document.getElementById('fmtModalPreviewVal').textContent = `${sample}  ➔  ${formatted}`;
+        }
+
+        function applyColumnFormatModal() {
+            if (!activeFormatModalCol) return;
+            const fmt = document.getElementById('fmtModalCustomInput').value.trim();
+            if (activeFormatModalType === 'number' || activeFormatModalType === 'date') {
+                setColumnFormat(activeFormatModalCol, fmt);
+            }
+            if (!designerLayout.columnAlignments || typeof designerLayout.columnAlignments !== 'object') {
+                designerLayout.columnAlignments = {};
+            }
+            const existingKey = Object.keys(designerLayout.columnAlignments).find(k => k.toLowerCase() === String(activeFormatModalCol).toLowerCase());
+            if (existingKey && existingKey !== activeFormatModalCol) delete designerLayout.columnAlignments[existingKey];
+            if (!activeFormatModalAlign) {
+                delete designerLayout.columnAlignments[activeFormatModalCol];
+            } else {
+                designerLayout.columnAlignments[activeFormatModalCol] = activeFormatModalAlign;
+            }
+
+            closeColumnFormatModal();
+            renderFieldList();
+            renderDataBindingPanel();
+            renderDesignerCanvas();
+            showToast(`"${activeFormatModalCol}" format ve hizalama ayarları güncellendi.`);
+        }
+
+        function resetColumnFormatModal() {
+            if (!activeFormatModalCol) return;
+            setColumnFormat(activeFormatModalCol, '');
+            if (designerLayout.columnAlignments) {
+                const existingKey = Object.keys(designerLayout.columnAlignments).find(k => k.toLowerCase() === String(activeFormatModalCol).toLowerCase());
+                if (existingKey) delete designerLayout.columnAlignments[existingKey];
+                delete designerLayout.columnAlignments[activeFormatModalCol];
+            }
+            closeColumnFormatModal();
+            renderFieldList();
+            renderDataBindingPanel();
+            renderDesignerCanvas();
+            showToast(`"${activeFormatModalCol}" varsayılan format ve hizalamaya sıfırlandı.`);
+        }
+
+        function closeColumnFormatModal() {
+            document.getElementById('colFormatModal').style.display = 'none';
+            activeFormatModalCol = null;
         }
 
         function escapeHtml(str) {

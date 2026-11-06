@@ -65,4 +65,17 @@
   2. Veri kaynağı kolonları ve veri yuvası seçim kutuları Türkçe (`tr-TR`) alfabetik (`A → Z`) sıralı hale getirildi.
   3. Tuval ızgarası (`designer.html` ve `app.html`) 2 boyutlu yoğun mikro-grid (`grid-auto-rows: 6px; grid-auto-flow: row dense;` ve `grid-row: span ...`) yapısına geçirildi; kısa KPI kartlarının altında kalan boşluklara diğer bileşenlerin otomatik veya sürükle-bırak ile yerleşmesi sağlandı.
 
+---
+
+### [x] Adım 10: Sayısal/Tarih Formatlama Motoru, Excel Tarzı Hizalama İkonları, 2B Serbest Sürükleme ve Yuva Temizleme Senkronizasyonu (2026-11-06)
+- **Sayısal ve Tarih Alanı Formatlama (`columnFormats`):**
+  - Sayısal (`number`) kolonlar varsayılan olarak **formatsız/ham** (`2026`, `10021`) gösterilir; istenilen kolonlara `#,##0`, `#,##0.00`, `0.00`, `₺#,##0.00`, `%0.0` vb. özel format maskeleri hem satır içi `Biçim:` kutusundan hem de `#colFormatModal` penceresinden tanımlanabilir.
+  - Tarih (`date`) kolonları varsayılan `dd.MM.yyyy` formatında gösterilir; istenirse `dd.MM.yy`, `yyyy-MM-dd`, `MM.yyyy`, `dd.MM.yyyy HH:mm` gibi özel maskeler verilebilir.
+- **Excel Tarzı Hizalama İkonları (`columnAlignments` & `w.align`):**
+  - Hem bileşen bazında hem de kolon bazında (`Değer / Ölçüm`, `Boyut & Kırılım`, `Tablo Sütunları`, `3. Kolonlar A-Z`) Excel tarzı **Sola Yasla / Ortala / Sağa Yasla** SVG ikon butonları eklendi.
+  - Tablolarda hizalama yalnızca veri hücrelerine (`<tbody> <td>`) ve alt toplamlara (`<tfoot> <td>`) uygulanır; tablo başlıkları (`<thead> <th>`) sabit kalır.
+- **Tüm Bileşenlerde Yuva Temizleme ve Kolon Listesi (`✓`) Senkronizasyonu:**
+  - Tablo, Grafik, KPI, İbre ve Pivot nesnelerinde `Temizle` ve `✕` butonları ile kolonlar sıfırlandığında otomatik kolon ataması engellendi ve `3. Kolonlar (A-Z)` listesindeki `✓` işaretlerinin anında güncellenmesi sağlandı.
+
+
 
