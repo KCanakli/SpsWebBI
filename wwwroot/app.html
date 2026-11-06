@@ -714,8 +714,13 @@
                 const card = document.createElement('div');
                 card.className = 'widget-card';
                 const { colSpan12, gridSpan120, hUnits, rowSpan } = calcAppWidgetGridMetrics(w);
-                card.style.gridColumn = `span ${gridSpan120}`;
-                card.style.gridRow = `span ${rowSpan}`;
+                if (typeof w.col === 'number' && typeof w.row === 'number') {
+                    card.style.gridColumn = `${w.col + 1} / span ${gridSpan120}`;
+                    card.style.gridRow = `${w.row + 1} / span ${rowSpan}`;
+                } else {
+                    card.style.gridColumn = `span ${gridSpan120}`;
+                    card.style.gridRow = `span ${rowSpan}`;
+                }
 
                 const header = document.createElement('div');
                 header.className = 'widget-header';

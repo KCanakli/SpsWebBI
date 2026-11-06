@@ -142,15 +142,53 @@
         }
         .rail-icon { font-size: 1rem; line-height: 1; }
 
-        /* YAN YANA TAM BOY BAĞIMSIZ DİKEY PANELLER (2. ve 3. BÖLÜM) */
+        /* YAN YANA TAM BOY BAĞIMSIZ DİKEY PANELLER (2. ve 3. BÖLÜM - AÇILIR/KAPANIR DOCK STRIP) */
         .studio-column {
             display: flex; flex-direction: column; height: 100%; min-height: 0;
             background: var(--panel); border-right: 1px solid var(--border); user-select: none;
-            transition: width 0.15s ease, min-width 0.15s ease;
+            transition: width 0.18s ease, min-width 0.18s ease;
         }
         .studio-column.col-binding { width: 290px; min-width: 290px; }
         .studio-column.col-fields { width: 255px; min-width: 255px; }
-        .studio-column.collapsed { width: 0 !important; min-width: 0 !important; overflow: hidden; border-right: none; }
+        .studio-column.collapsed {
+            width: 30px !important; min-width: 30px !important; overflow: hidden;
+            background: #080d19; border-right: 1px solid var(--border-bright); cursor: pointer;
+        }
+        .studio-column.collapsed:hover {
+            background: rgba(14, 165, 233, 0.12); border-right-color: #38bdf8;
+        }
+        .studio-column.collapsed .col-header,
+        .studio-column.collapsed .col-scroll-body,
+        .studio-column.collapsed .field-search-box,
+        .studio-column.collapsed .col-footer {
+            display: none !important;
+        }
+        .col-collapsed-strip {
+            display: none; flex-direction: column; align-items: center; justify-content: flex-start;
+            padding: 10px 0; gap: 14px; height: 100%; width: 100%;
+        }
+        .studio-column.collapsed .col-collapsed-strip {
+            display: flex;
+        }
+        .strip-expand-icon {
+            width: 22px; height: 22px; border-radius: 5px;
+            background: rgba(14, 165, 233, 0.2); border: 1px solid #0ea5e9; color: #38bdf8;
+            display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem;
+        }
+        .strip-vertical-title {
+            writing-mode: vertical-rl; transform: rotate(180deg);
+            font-size: 0.71rem; font-weight: 800; color: #93c5fd; letter-spacing: 0.8px;
+            text-transform: uppercase; white-space: nowrap;
+        }
+        .col-collapse-btn {
+            padding: 2px 7px; border-radius: 5px; border: 1px solid rgba(56, 189, 248, 0.35);
+            background: rgba(14, 165, 233, 0.12); color: #7dd3fc; cursor: pointer;
+            font-size: 0.68rem; font-weight: 700; display: inline-flex; align-items: center; gap: 3px;
+            white-space: nowrap; transition: all 0.14s;
+        }
+        .col-collapse-btn:hover {
+            background: var(--primary); color: #fff; border-color: var(--primary);
+        }
 
         .col-header {
             height: 36px; min-height: 36px; padding: 0 10px;
@@ -298,6 +336,25 @@
             outline: 2px dashed #38bdf8; outline-offset: -4px; border-radius: 12px;
             background: rgba(14, 165, 233, 0.03);
         }
+        .grid-drop-preview {
+            border: 2px dashed #38bdf8;
+            background: rgba(14, 165, 233, 0.14);
+            border-radius: 10px;
+            pointer-events: none;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #7dd3fc;
+            font-size: 0.78rem;
+            font-weight: 700;
+            box-shadow: inset 0 0 18px rgba(56, 189, 248, 0.2);
+        }
+        .widget-card.dragging-card {
+            opacity: 0.55;
+            border-color: #38bdf8;
+            z-index: 30;
+        }
 
         /* Tuval Üzerindeki Widget Kartları */
         .widget-card {
@@ -421,7 +478,10 @@
         body.light-theme .col-header,
         body.light-theme .col-footer,
         body.light-theme .canvas-toolbar,
-        body.light-theme .studio-statusbar { background: #ffffff; color: #0f172a; }
+        body.light-theme .studio-statusbar,
+        body.light-theme .studio-column.collapsed { background: #ffffff; color: #0f172a; }
+        body.light-theme .strip-vertical-title { color: #0284c7; }
+        body.light-theme .col-collapse-btn { background: #e0f2fe; color: #0284c7; border-color: #7dd3fc; }
         body.light-theme .mode-tabs { background: #f1f5f9; }
         body.light-theme .btn { background: #ffffff; color: #0f172a; border-color: #cbd5e1; }
         body.light-theme .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
@@ -534,13 +594,17 @@
             <!-- SEÇENEK A (1. ve 2. Resim): EN SOLDA DİKEY İKON ŞERİDİ -->
             <aside class="left-rail-palette" id="leftRailPalette"></aside>
 
-            <!-- SÜTUN 1: 2. SEÇİLİ BİLEŞEN & VERİ YUVALARI (TAM BOY BAĞIMSIZ PANEL) -->
+            <!-- SÜTUN 1: 2. SEÇİLİ BİLEŞEN & VERİ YUVALARI (AÇILIR/KAPANIR TAM BOY BAĞIMSIZ PANEL) -->
             <section class="studio-column col-binding" id="colBindingPanel">
+                <div class="col-collapsed-strip" onclick="toggleColumnCollapse('colBindingPanel')" title="2. Seçili Bileşen & Veri Yuvaları Panelini Açmak İçin Tıklayın">
+                    <span class="strip-expand-icon">»</span>
+                    <span class="strip-vertical-title">2. Seçili Bileşen & Veri Yuvaları</span>
+                </div>
                 <div class="col-header">
-                    <span class="col-header-title">⇄ 2. Seçili Bileşen & Veri Yuvaları</span>
-                    <div style="display:flex;align-items:center;gap:4px;">
+                    <span class="col-header-title">⇄ 2. Seçili Bileşen & Yuvalar</span>
+                    <div style="display:flex;align-items:center;gap:5px;">
                         <span class="col-badge" id="selectedWidgetBadge">Seçili Yok</span>
-                        <button type="button" class="pill-btn" onclick="toggleColumnCollapse('colBindingPanel')" title="Paneli Daralt">«</button>
+                        <button type="button" class="col-collapse-btn" onclick="toggleColumnCollapse('colBindingPanel')" title="Paneli Daralt">«</button>
                     </div>
                 </div>
                 <div class="col-scroll-body" id="dataBindingContent">
@@ -548,13 +612,17 @@
                 </div>
             </section>
 
-            <!-- SÜTUN 2: 3. VERİ KAYNAĞI KOLONLARI (TAM BOY BAĞIMSIZ PANEL - ALFABETİK) -->
+            <!-- SÜTUN 2: 3. VERİ KAYNAĞI KOLONLARI (AÇILIR/KAPANIR TAM BOY BAĞIMSIZ PANEL - ALFABETİK) -->
             <section class="studio-column col-fields" id="colFieldsPanel">
+                <div class="col-collapsed-strip" onclick="toggleColumnCollapse('colFieldsPanel')" title="3. Veri Kaynağı Kolonları Panelini Açmak İçin Tıklayın">
+                    <span class="strip-expand-icon">»</span>
+                    <span class="strip-vertical-title">3. Veri Kaynağı Kolonları (A-Z)</span>
+                </div>
                 <div class="col-header">
-                    <span class="col-header-title">3. Veri Kaynağı Kolonları (A-Z)</span>
-                    <div style="display:flex;align-items:center;gap:4px;">
+                    <span class="col-header-title">3. Kolonlar (A-Z)</span>
+                    <div style="display:flex;align-items:center;gap:5px;">
                         <span class="col-badge" id="fieldCountBadge">0 KOLON</span>
-                        <button type="button" class="pill-btn" onclick="toggleColumnCollapse('colFieldsPanel')" title="Paneli Daralt">«</button>
+                        <button type="button" class="col-collapse-btn" onclick="toggleColumnCollapse('colFieldsPanel')" title="Paneli Daralt">«</button>
                     </div>
                 </div>
                 <div class="field-search-box">
@@ -571,13 +639,16 @@
             <main class="canvas-wrapper">
                 <div class="canvas-toolbar">
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <button type="button" class="btn" id="btnRestoreBinding" style="display:none;padding:2px 7px;font-size:0.7rem;" onclick="toggleColumnCollapse('colBindingPanel')">
-                            » 2. Veri Yuvalarını Aç
+                        <button type="button" class="btn" id="btnToggleBothPanels" style="padding:3px 8px;font-size:0.78rem;border-color:#0ea5e9;color:#38bdf8;" onclick="toggleBothSidePanels()" title="Sol Panelleri Daralt / Genişlet">
+                            ◧
                         </button>
-                        <button type="button" class="btn" id="btnRestoreFields" style="display:none;padding:2px 7px;font-size:0.7rem;" onclick="toggleColumnCollapse('colFieldsPanel')">
-                            » 3. Kolon Listesini Aç
+                        <button type="button" class="btn" id="btnRestoreBinding" style="display:none;padding:2px 7px;font-size:0.7rem;" onclick="toggleColumnCollapse('colBindingPanel')" title="2. Veri Yuvalarını Aç">
+                            » 2. Yuvalar
                         </button>
-                        <span>📐 <strong>Tuval Çalışma Alanı</strong> &nbsp;|&nbsp; 2D Yoğun Grid (Boş Alanlara Sürükle-Bırak Aktif)</span>
+                        <button type="button" class="btn" id="btnRestoreFields" style="display:none;padding:2px 7px;font-size:0.7rem;" onclick="toggleColumnCollapse('colFieldsPanel')" title="3. Kolon Listesini Aç">
+                            » 3. Kolonlar
+                        </button>
+                        <span>📐 <strong>Tuval Çalışma Alanı</strong> &nbsp;|&nbsp; 2D Serbest Sürükle-Bırak Izgarası</span>
                     </div>
                     <div style="display:flex;align-items:center;gap:10px;">
                         <span id="liveRowCountInfo" style="color:#34d399;font-weight:700;"></span>
@@ -729,6 +800,97 @@
             return { colSpan12, gridSpan120, hUnits, rowHeight, rowSpan };
         }
 
+        function boxesOverlap(a, b) {
+            return a.col < b.col + b.wSpan &&
+                   a.col + a.wSpan > b.col &&
+                   a.row < b.row + b.hSpan &&
+                   a.row + a.hSpan > b.row;
+        }
+
+        function findFirstFreeSlot(placedList, wSpan, hSpan) {
+            for (let r = 0; r < 500; r++) {
+                for (let c = 0; c <= 120 - wSpan; c++) {
+                    const candidate = { col: c, row: r, wSpan, hSpan };
+                    if (!placedList.some(p => boxesOverlap(candidate, p))) {
+                        return { col: c, row: r };
+                    }
+                }
+            }
+            return { col: 0, row: 0 };
+        }
+
+        // 2 BOYUTLU (X, Y) KOORDİNAT VE ÇAKIŞMA ÇÖZÜM MOTORU
+        function ensureAndCompactLayout(widgets, pinnedWidgetId = null) {
+            if (!Array.isArray(widgets) || widgets.length === 0) return;
+
+            const placed = [];
+            const unplaced = [];
+
+            // 1. Önce kullanıcının yeni taşıdığı/boyutlandırdığı (pinned) bileşeni sabitle
+            if (pinnedWidgetId) {
+                const pw = widgets.find(x => x.id === pinnedWidgetId);
+                if (pw && typeof pw.col === 'number' && typeof pw.row === 'number') {
+                    const { gridSpan120, rowSpan } = calcWidgetGridMetrics(pw);
+                    pw.col = Math.max(0, Math.min(120 - gridSpan120, Math.round(pw.col)));
+                    pw.row = Math.max(0, Math.round(pw.row));
+                    placed.push({ id: pw.id, ref: pw, col: pw.col, row: pw.row, wSpan: gridSpan120, hSpan: rowSpan });
+                }
+            }
+
+            // 2. Koordinatı olan diğer bileşenleri yukarıdan aşağıya sırala
+            const withCoords = widgets
+                .filter(w => w.id !== pinnedWidgetId && typeof w.col === 'number' && typeof w.row === 'number')
+                .sort((a, b) => (a.row - b.row) || (a.col - b.col));
+
+            withCoords.forEach(w => {
+                const { gridSpan120, rowSpan } = calcWidgetGridMetrics(w);
+                const c = Math.max(0, Math.min(120 - gridSpan120, Math.round(w.col)));
+                let r = Math.max(0, Math.round(w.row));
+                const box = { id: w.id, ref: w, col: c, row: r, wSpan: gridSpan120, hSpan: rowSpan };
+                while (placed.some(p => boxesOverlap(box, p))) {
+                    box.row++;
+                }
+                w.col = box.col;
+                w.row = box.row;
+                placed.push(box);
+            });
+
+            // 3. Henüz koordinatı olmayan (yeni eklenen veya eski şablondan gelen) bileşenleri boşluklara yerleştir
+            widgets.forEach(w => {
+                if (!placed.some(p => p.id === w.id)) {
+                    unplaced.push(w);
+                }
+            });
+
+            unplaced.forEach(w => {
+                const { gridSpan120, rowSpan } = calcWidgetGridMetrics(w);
+                const slot = findFirstFreeSlot(placed, gridSpan120, rowSpan);
+                w.col = slot.col;
+                w.row = slot.row;
+                placed.push({ id: w.id, ref: w, col: w.col, row: w.row, wSpan: gridSpan120, hSpan: rowSpan });
+            });
+
+            // 4. Dikey Yerçekimi (Her bileşeni kendi X sütun şeridinde üstteki bileşenin altına yasla)
+            placed.sort((a, b) => (a.row - b.row) || (a.col - b.col));
+            placed.forEach(box => {
+                let targetRow = 0;
+                for (const other of placed) {
+                    if (other.id === box.id) continue;
+                    const horizOverlap = box.col < other.col + other.wSpan && box.col + box.wSpan > other.col;
+                    if (horizOverlap && other.row + other.hSpan <= box.row) {
+                        if (other.row + other.hSpan > targetRow) {
+                            targetRow = other.row + other.hSpan;
+                        }
+                    }
+                }
+                const testBox = { ...box, row: targetRow };
+                if (!placed.some(p => p.id !== box.id && boxesOverlap(testBox, p))) {
+                    box.row = targetRow;
+                    box.ref.row = targetRow;
+                }
+            });
+        }
+
         function isLightTheme() {
             return document.body.classList.contains('light-theme');
         }
@@ -768,16 +930,33 @@
             setTimeout(() => chartInstances.forEach(c => { try { c.resize(); } catch (_) {} }), 80);
         }
 
+        function updatePanelRestoreButtons() {
+            const bCol = document.getElementById('colBindingPanel')?.classList.contains('collapsed');
+            const fCol = document.getElementById('colFieldsPanel')?.classList.contains('collapsed');
+            document.getElementById('btnRestoreBinding').style.display = bCol ? 'inline-flex' : 'none';
+            document.getElementById('btnRestoreFields').style.display = fCol ? 'inline-flex' : 'none';
+            const bothBtn = document.getElementById('btnToggleBothPanels');
+            if (bothBtn) {
+                bothBtn.innerHTML = (bCol && fCol) ? '◨' : '◧';
+            }
+        }
+
         function toggleColumnCollapse(panelId) {
             const el = document.getElementById(panelId);
             if (!el) return;
-            const collapsed = el.classList.toggle('collapsed');
-            if (panelId === 'colBindingPanel') {
-                document.getElementById('btnRestoreBinding').style.display = collapsed ? 'inline-flex' : 'none';
-            } else if (panelId === 'colFieldsPanel') {
-                document.getElementById('btnRestoreFields').style.display = collapsed ? 'inline-flex' : 'none';
-            }
-            setTimeout(() => chartInstances.forEach(c => { try { c.resize(); } catch (_) {} }), 160);
+            el.classList.toggle('collapsed');
+            updatePanelRestoreButtons();
+            setTimeout(() => chartInstances.forEach(c => { try { c.resize(); } catch (_) {} }), 200);
+        }
+
+        function toggleBothSidePanels() {
+            const bEl = document.getElementById('colBindingPanel');
+            const fEl = document.getElementById('colFieldsPanel');
+            const bothCollapsed = bEl.classList.contains('collapsed') && fEl.classList.contains('collapsed');
+            bEl.classList.toggle('collapsed', !bothCollapsed);
+            fEl.classList.toggle('collapsed', !bothCollapsed);
+            updatePanelRestoreButtons();
+            setTimeout(() => chartInstances.forEach(c => { try { c.resize(); } catch (_) {} }), 200);
         }
 
         function renderPalettes() {
@@ -1041,7 +1220,7 @@
         }
 
         function onCanvasDragOver(e) {
-            if (dragPayload && (dragPayload.kind === 'toolbox' || dragPayload.kind === 'widget')) {
+            if (dragPayload && dragPayload.kind === 'toolbox') {
                 e.preventDefault();
                 document.getElementById('designerCanvas').classList.add('canvas-drag-over');
             }
@@ -1051,42 +1230,17 @@
             document.getElementById('designerCanvas').classList.remove('canvas-drag-over');
         }
 
-        function findInsertionIndexByPoint(dropX, dropY, draggedIdx) {
-            const cards = Array.from(document.querySelectorAll('#designerCanvas .widget-card'));
-            let insertAfterIdx = -1;
-            for (const cardEl of cards) {
-                const idx = parseInt(cardEl.dataset.widgetIndex || '-1', 10);
-                if (idx < 0 || idx === draggedIdx) continue;
-                const r = cardEl.getBoundingClientRect();
-                // Kart bırakılan noktanın tamamen üstündeyse VEYA aynı yatay hizada olup solundaysa
-                const isAbove = r.bottom <= dropY + 14;
-                const isSameBandLeft = r.top <= dropY + 14 && r.left < dropX;
-                if (isAbove || isSameBandLeft) {
-                    insertAfterIdx = idx;
-                }
-            }
-            return insertAfterIdx + 1;
-        }
-
         function onCanvasDrop(e) {
             document.getElementById('designerCanvas').classList.remove('canvas-drag-over');
             if (!dragPayload) return;
 
             if (dragPayload.kind === 'toolbox') {
                 e.preventDefault();
-                addWidgetFromToolbox(dragPayload.widgetType);
-                dragPayload = null;
-            } else if (dragPayload.kind === 'widget') {
-                e.preventDefault();
-                const fromIdx = dragPayload.fromIndex;
-                if (fromIdx >= 0 && fromIdx < designerLayout.widgets.length) {
-                    let targetIdx = findInsertionIndexByPoint(e.clientX, e.clientY, fromIdx);
-                    const moved = designerLayout.widgets.splice(fromIdx, 1)[0];
-                    if (targetIdx > fromIdx) targetIdx--;
-                    targetIdx = Math.max(0, Math.min(designerLayout.widgets.length, targetIdx));
-                    designerLayout.widgets.splice(targetIdx, 0, moved);
-                    renderDesignerCanvas();
-                }
+                const canvasEl = document.getElementById('designerCanvas');
+                const rect = canvasEl.getBoundingClientRect();
+                const dropCol = Math.max(0, Math.min(110, Math.round(((e.clientX - rect.left) / (rect.width || 1200)) * 120 / 5) * 5));
+                const dropRow = Math.max(0, Math.round((e.clientY - rect.top) / 14));
+                addWidgetFromToolbox(dragPayload.widgetType, dropCol, dropRow);
                 dragPayload = null;
             }
         }
@@ -1114,7 +1268,7 @@
             w.agg = metrics[0]?.agg || 'sum';
         }
 
-        function addWidgetFromToolbox(type) {
+        function addWidgetFromToolbox(type, dropCol = null, dropRow = null) {
             const firstStrCol = liveColumns.find(c => isLikelyDimensionColumn(c.name, c.dataType))?.name || liveColumns[0]?.name || '';
             const secondStrCol = liveColumns.filter(c => isLikelyDimensionColumn(c.name, c.dataType))[1]?.name || firstStrCol;
             const firstNumCol = liveColumns.find(c => c.dataType === 'number' && !isLikelyDimensionColumn(c.name, c.dataType))?.name
@@ -1156,7 +1310,13 @@
                 h: type === 'kpi' ? 2 : 5
             };
 
+            if (typeof dropCol === 'number' && typeof dropRow === 'number') {
+                newWidget.col = dropCol;
+                newWidget.row = dropRow;
+            }
+
             designerLayout.widgets.push(newWidget);
+            ensureAndCompactLayout(designerLayout.widgets, dropCol !== null ? newWidget.id : null);
             selectedWidgetId = newWidget.id;
             renderDesignerCanvas();
             renderDataBindingPanel();
@@ -1690,7 +1850,7 @@
             renderFieldList();
         }
 
-        // SAĞ CANLI TUVAL ÇİZİMİ (2 BOYUTLU YOĞUN MİKRO-GRİD)
+        // SAĞ CANLI TUVAL ÇİZİMİ (2 BOYUTLU SERBEST X,Y MİKRO-GRİD)
         function renderDesignerCanvas() {
             chartInstances.forEach(c => { try { c.dispose(); } catch (_) {} });
             chartInstances = [];
@@ -1717,6 +1877,8 @@
                 return;
             }
 
+            ensureAndCompactLayout(widgets);
+
             widgets.forEach((w, idx) => {
                 const card = document.createElement('div');
                 card.className = 'widget-card' + (w.id === selectedWidgetId ? ' selected' : '');
@@ -1724,8 +1886,10 @@
                 card.dataset.widgetIndex = idx;
 
                 const { colSpan12, gridSpan120, hUnits, rowSpan } = calcWidgetGridMetrics(w);
-                card.style.gridColumn = `span ${gridSpan120}`;
-                card.style.gridRow = `span ${rowSpan}`;
+                const cStart = (typeof w.col === 'number' ? w.col : 0) + 1;
+                const rStart = (typeof w.row === 'number' ? w.row : 0) + 1;
+                card.style.gridColumn = `${cStart} / span ${gridSpan120}`;
+                card.style.gridRow = `${rStart} / span ${rowSpan}`;
 
                 card.addEventListener('mousedown', () => {
                     if (w.id !== selectedWidgetId) {
@@ -1735,20 +1899,10 @@
 
                 const header = document.createElement('div');
                 header.className = 'widget-header';
-                header.draggable = true;
 
-                header.addEventListener('dragstart', e => {
-                    dragPayload = { kind: 'widget', fromIndex: idx, widgetId: w.id };
-                    e.dataTransfer.setData('text/plain', String(idx));
-                });
-
+                // Kart üzerine kolon sürüklendiğinde (3. Kolonlar listesinden)
                 card.addEventListener('dragover', e => {
-                    if (!dragPayload) return;
-                    if (dragPayload.kind === 'widget' && dragPayload.fromIndex !== idx) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        card.classList.add('card-drop-target');
-                    } else if (dragPayload.kind === 'field') {
+                    if (dragPayload && dragPayload.kind === 'field') {
                         e.preventDefault();
                         e.stopPropagation();
                         card.classList.add('card-drop-target');
@@ -1757,15 +1911,7 @@
                 card.addEventListener('dragleave', () => card.classList.remove('card-drop-target'));
                 card.addEventListener('drop', e => {
                     card.classList.remove('card-drop-target');
-                    if (!dragPayload) return;
-                    if (dragPayload.kind === 'widget' && dragPayload.fromIndex !== idx) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const moved = designerLayout.widgets.splice(dragPayload.fromIndex, 1)[0];
-                        designerLayout.widgets.splice(idx, 0, moved);
-                        dragPayload = null;
-                        renderDesignerCanvas();
-                    } else if (dragPayload.kind === 'field') {
+                    if (dragPayload && dragPayload.kind === 'field') {
                         e.preventDefault();
                         e.stopPropagation();
                         selectedWidgetId = w.id;
@@ -1779,7 +1925,7 @@
 
                 header.innerHTML = `
                     <div class="widget-title">
-                        <span class="drag-grip" title="Sürükleyerek boş alanlara veya başka kartın yerine taşıyın">⠿</span>
+                        <span class="drag-grip" title="Basılı tutarak istediğiniz boşluğa (sola, sağa, alta) sürükleyin">⠿</span>
                         <span class="w-title-text">${escapeHtml(w.title || 'Bileşen')}</span>
                     </div>
                     <div style="display:flex;align-items:center;gap:6px;">
@@ -1787,6 +1933,8 @@
                         <span class="size-badge" id="sizeBadge_${w.id}">${colSpan12}/12 × ${hUnits}</span>
                         <button type="button" class="pill-btn del" title="Bileşeni Sil" onclick="deleteWidgetByIndex(event, ${idx})">🗑️</button>
                     </div>`;
+
+                attachMoveBehavior(card, w, header);
 
                 const body = document.createElement('div');
                 body.className = (w.type === 'table' || w.type === 'pivot')
@@ -1818,6 +1966,108 @@
                 canvas.appendChild(card);
 
                 renderWidgetContent(w, body);
+            });
+        }
+
+        // FAREYLE 2 BOYUTLU SERBEST TAŞIMA VE CANLI MAVİ HEDEF ÖNİZLEME (DROP PREVIEW)
+        function attachMoveBehavior(cardEl, widgetObj, headerEl) {
+            headerEl.addEventListener('mousedown', e => {
+                if (e.button !== 0 || e.target.closest('button')) return;
+                e.preventDefault();
+                selectWidget(widgetObj.id);
+
+                const canvasEl = document.getElementById('designerCanvas');
+                const cardRect = cardEl.getBoundingClientRect();
+                const grabOffsetX = e.clientX - cardRect.left;
+                const grabOffsetY = e.clientY - cardRect.top;
+                const startX = e.clientX;
+                const startY = e.clientY;
+
+                const { gridSpan120, rowSpan, colSpan12, hUnits } = calcWidgetGridMetrics(widgetObj);
+                let isDragging = false;
+                let previewEl = null;
+                let targetCol = widgetObj.col || 0;
+                let targetRow = widgetObj.row || 0;
+
+                function computeSnapCol(rawCol) {
+                    const snapPoints = [0, 30, 40, 60, 80, 90, 120 - gridSpan120];
+                    (designerLayout.widgets || []).forEach(other => {
+                        if (other.id === widgetObj.id) return;
+                        const m = calcWidgetGridMetrics(other);
+                        const oc = other.col || 0;
+                        snapPoints.push(oc, oc + m.gridSpan120, oc - gridSpan120);
+                    });
+                    for (const sp of snapPoints) {
+                        if (sp >= 0 && sp <= 120 - gridSpan120 && Math.abs(rawCol - sp) <= 3) {
+                            return sp;
+                        }
+                    }
+                    const rounded = Math.round(rawCol / 2) * 2;
+                    return Math.max(0, Math.min(120 - gridSpan120, rounded));
+                }
+
+                function computeTargetRow(col, rawRow) {
+                    const others = (designerLayout.widgets || []).filter(x => x.id !== widgetObj.id);
+                    let maxBottomAbove = 0;
+                    for (const other of others) {
+                        const m = calcWidgetGridMetrics(other);
+                        const oc = other.col || 0;
+                        const or = other.row || 0;
+                        const horizOverlap = col < oc + m.gridSpan120 && col + gridSpan120 > oc;
+                        if (!horizOverlap) continue;
+                        // Eğer doğrudan bu kartın üst yarısına sürükleniyorsa onun satırını hedef al
+                        if (rawRow >= or && rawRow < or + Math.ceil(m.rowSpan / 2)) {
+                            return or;
+                        }
+                        if (or < rawRow && or + m.rowSpan > maxBottomAbove) {
+                            maxBottomAbove = or + m.rowSpan;
+                        }
+                    }
+                    return maxBottomAbove;
+                }
+
+                function onMouseMove(ev) {
+                    const dist = Math.hypot(ev.clientX - startX, ev.clientY - startY);
+                    if (!isDragging && dist > 4) {
+                        isDragging = true;
+                        cardEl.classList.add('dragging-card');
+                        previewEl = document.createElement('div');
+                        previewEl.className = 'grid-drop-preview';
+                        canvasEl.appendChild(previewEl);
+                    }
+                    if (!isDragging) return;
+
+                    const cRect = canvasEl.getBoundingClientRect();
+                    const relX = ev.clientX - cRect.left - grabOffsetX;
+                    const relY = ev.clientY - cRect.top - grabOffsetY;
+
+                    const rawCol = Math.round((relX / (cRect.width || 1200)) * 120);
+                    const rawRow = Math.max(0, Math.round(relY / 14));
+
+                    targetCol = computeSnapCol(rawCol);
+                    targetRow = computeTargetRow(targetCol, rawRow);
+
+                    previewEl.style.gridColumn = `${targetCol + 1} / span ${gridSpan120}`;
+                    previewEl.style.gridRow = `${targetRow + 1} / span ${rowSpan}`;
+                    previewEl.textContent = `📍 Konum: ${(targetCol / 10).toFixed(1)}/12 (${colSpan12}×${hUnits})`;
+                }
+
+                function onMouseUp() {
+                    window.removeEventListener('mousemove', onMouseMove);
+                    window.removeEventListener('mouseup', onMouseUp);
+                    if (isDragging) {
+                        cardEl.classList.remove('dragging-card');
+                        if (previewEl) previewEl.remove();
+                        widgetObj.col = targetCol;
+                        widgetObj.row = targetRow;
+                        ensureAndCompactLayout(designerLayout.widgets, widgetObj.id);
+                        renderDesignerCanvas();
+                        updateStatusBar();
+                    }
+                }
+
+                window.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('mouseup', onMouseUp);
             });
         }
 
@@ -1863,11 +2113,12 @@
                 function onMouseMove(ev) {
                     if (allowW) {
                         const deltaMicroCols = Math.round((ev.clientX - startX) / microColPx);
-                        const newW = Math.min(12, Math.max(1.0, Math.round((startW + deltaMicroCols * 0.1) * 10) / 10));
+                        const maxCols12 = (120 - (widgetObj.col || 0)) / 10;
+                        const newW = Math.min(maxCols12, Math.max(1.0, Math.round((startW + deltaMicroCols * 0.1) * 10) / 10));
                         if (newW !== widgetObj.w) {
                             widgetObj.w = newW;
                             const { gridSpan120 } = calcWidgetGridMetrics(widgetObj);
-                            cardEl.style.gridColumn = `span ${gridSpan120}`;
+                            cardEl.style.gridColumn = `${(widgetObj.col || 0) + 1} / span ${gridSpan120}`;
                         }
                     }
                     if (allowH) {
@@ -1876,7 +2127,7 @@
                         if (newH !== widgetObj.h) {
                             widgetObj.h = newH;
                             const { rowSpan } = calcWidgetGridMetrics(widgetObj);
-                            cardEl.style.gridRow = `span ${rowSpan}`;
+                            cardEl.style.gridRow = `${(widgetObj.row || 0) + 1} / span ${rowSpan}`;
                         }
                     }
                     const badge = document.getElementById(`sizeBadge_${widgetObj.id}`);
@@ -1888,8 +2139,9 @@
                 function onMouseUp() {
                     window.removeEventListener('mousemove', onMouseMove);
                     window.removeEventListener('mouseup', onMouseUp);
+                    ensureAndCompactLayout(designerLayout.widgets, widgetObj.id);
+                    renderDesignerCanvas();
                     renderDataBindingPanel();
-                    chartInstances.forEach(c => { try { c.resize(); } catch (_) {} });
                 }
 
                 window.addEventListener('mousemove', onMouseMove);
