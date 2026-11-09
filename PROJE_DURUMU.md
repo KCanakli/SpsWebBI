@@ -1,6 +1,6 @@
 # SpsWebBI - Geliştirme Durumu ve Mimari Hafıza
 
-**Son Güncelleme:** 2026-11-08
+**Son Güncelleme:** 2026-11-09
 **Proje Yolu:** `c:\Projeler\SpsWebBI`
 
 ---
@@ -135,4 +135,39 @@
   - Açık temadaki okunmayan koyu zeminli alanlar düzeltildi ve NBG Bilişim SpsTeks masaüstü ERP renk paletine uygun 3. tema (`body.spsteks-theme`) oluşturuldu.
 - **Çoklu Veritabanı Bağlantı Profili Ekranı (`wwwroot/db-settings.html`, `Services/DbConnectionManager.cs`, `Controllers/DbSettingsController.cs`):**
   - `/db-settings` ekranı sol tarafta kayıtlı bağlantıların listelendiği (`+ Yeni Bağlantı`), sağ tarafta ise bağlantı detaylarının (**Ortam İsmi**, **Açıklama**, **Sunucu**, **Port**, **Veritabanı**, **Kullanıcı**, **Şifre** ve **Bağlantı Aktif** onay kutusu) düzenlendiği iki sütunlu yapıya kavuşturuldu.
+
+---
+
+### [x] Adım 14: Veri Kaynakları Grid & Modal Mimarisi, Güvenlik Sıkılaştırma ve Oturum Çıkışları (2026-11-09)
+- **Veri Kaynakları Grid ve Modal Düzenleme (`wwwroot/designer.html`):**
+  - `#sqlEditorView` ekranında sol/sağ bölünmüş eski form yerine tam boy, kolon başlıklarına tıklanarak sıralanabilen ve arama kutusuyla filtrelenebilen veri kaynakları tablosu (`#dsMasterGridTable`) oluşturuldu.
+  - Bir satır seçilip `✏️ Güncelle` tıklandığında veya satıra çift tıklandığında ekranın ortasında modal iletişim kutusu (`#dsFormSection`) açılır.
+  - Veri kaynağına `is_active` alanı bağlandı; pasif yapılan kaynaklar gridde `🔴 Pasif` rozetiyle gösterilir ve tasarım/izleme modunda çalıştırılmaz.
+  - `📋 Kopyasını Oluştur` butonu ile canlı veri kaynağının test kopyası tek tıkla üretilir.
+- **Oturum Çıkışı (`Çıkış`) ve Tüm Ekranlarda 3'lü Tema:**
+  - `wwwroot/designer.html`, `wwwroot/admin.html` ve `wwwroot/db-settings.html` ekranlarına `Çıkış` butonları eklendi; tıklandığında oturum kapatılarak şifre ekranına yönlendirilir.
+  - `wwwroot/login.html` ekranına 3'lü tema seçicisi (`🌙 Koyu Tema`, `☀️ Açık Tema`, `💎 SpsTeks Mavi`) eklendi ve seçim `localStorage` ile tüm ekranlar arasında kalıcı kılındı.
+- **Veri Kaynağı Ayarları Siber Güvenlik İzolasyonu (`Controllers/DbSettingsController.cs`, `wwwroot/login.html`, `wwwroot/designer.html`):**
+  - Login ekranından şifresiz `/db-settings` bağlantısı tamamen kaldırıldı.
+  - `/api/db-settings` uçları yalnızca oturum açmış `admin` rolündeki kullanıcılara sınırlandırıldı; yetkisiz çağrılarda `403 Forbidden` döndürülür.
+  - `designer.html` ve `admin.html` arayüzlerinde admin olmayan kullanıcılara veri kaynağı ayarları menüsü gizlendi.
+
+---
+
+### [x] Adım 15: Viewer (İzleme) Ekranı Dikey Parametre Paneli ve Alt Durum Çubuğu (Status Bar) Mimarisi (2026-11-09)
+- **Kompakt Üst Çubuk (36px) ve Hamburger Menü (`wwwroot/app.html`):**
+  - Viewer üst başlığı daraltıldı (`36px`), sol tarafa `☰` hamburger menüsü yerleştirildi.
+  - Hamburger menüye oturum açan kullanıcının yetkisine göre Tasarım Stüdyosu (`/designer`) ve Yetki Yönetimi (`/admin`) kısayolları eklendi.
+- **Sol Dikey, Gizlenebilir ve Mouse ile Boyutlandırılabilir Parametre Paneli (`#controlBarSection`):**
+  - Parametre alanı üst şeritten sol dikey panele taşındı, parametreler alt alta hizalandı.
+  - Slayt Modu, Otomatik Yenileme ve Göster butonları SVG ikon butonlarına dönüştürüldü; üzerine gelindiğinde açıklaması gösterilir.
+  - Panel `«` butonu veya dikey şeridi ile tamamen gizlenip açılabilir.
+  - `#sidebarResizer` ayırıcı çizgisi ile kullanıcı paneli mouse ile 180px–520px arasında istediği genişliğe çekebilir; genişlik `localStorage` içinde saklanır.
+- **Alt Durum Çubuğu (Status Bar) ile Cross-Filter ve Kayıt Takibi (`#viewerStatusBar`):**
+  - Üst tarafta bulunan ve grafikleri aşağı iten eski rozet şeridi kaldırıldı.
+  - Ekranın en altına sabit, her temada net okunan 26px yüksekliğinde durum çubuğu eklendi:
+    - 🔎 **Filtre:** Grafiğe tıklandığında oluşan filtreler kolon formatı ve değeriyle rozet olarak listelenir (örn: `Cari Adı = ABC ✕`), tek tıkla kaldırılabilir.
+    - **Kayıt Sayacı:** Filtrelenen ve toplam satır sayısını dinamik gösterir (örn: `124 / 3.560`).
+    - **Tümünü Temizle:** Yalnızca aktif filtre varken görünen tek tık temizleme butonu.
+
 
