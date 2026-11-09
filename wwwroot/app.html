@@ -24,63 +24,280 @@
             margin: 0; background: var(--bg); color: var(--text); min-height: 100vh;
             display: flex; flex-direction: column; overflow-x: hidden;
         }
-        /* Üst Navigasyon ve Kontrol Çubuğu */
+        /* Üst Navigasyon Çubuğu (İnce / Dar Tasarım + Hamburger Menü) */
         .top-header {
-            background: var(--panel); border-bottom: 1px solid var(--border);
-            padding: 10px 18px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+            height: 36px;
+            min-height: 36px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            padding: 0 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            z-index: 200;
         }
-        .brand-area { display: flex; align-items: center; gap: 12px; }
+        .brand-area { display: flex; align-items: center; gap: 8px; min-width: 0; }
         .brand-badge {
             background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: #fff;
-            font-weight: 800; padding: 6px 10px; border-radius: 8px; font-size: 0.95rem;
+            font-weight: 800; padding: 3px 8px; border-radius: 6px; font-size: 0.78rem; letter-spacing: 0.2px;
         }
-        .dash-title { font-size: 1.1rem; font-weight: 700; margin: 0; }
-        .user-nav { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 0.85rem; }
+        .dash-title { font-size: 0.9rem; font-weight: 700; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-nav { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; }
         .btn {
-            padding: 7px 13px; border-radius: 7px; border: 1px solid var(--border);
+            padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border);
             background: #0f172a; color: var(--text); cursor: pointer; font-weight: 600;
-            font-size: 0.84rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.76rem; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
         }
         .btn:hover { border-color: var(--primary); }
         .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
         .btn-primary:hover { background: var(--primary-hover); }
         .btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
         .btn-warning { background: rgba(245,158,11,0.18); border-color: var(--warning); color: #fcd34d; }
+        .btn-danger { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.45); color: #fca5a5; }
+        .btn-danger:hover { background: var(--danger); border-color: var(--danger); color: #fff; }
 
-        /* Madde 8.2 / 8.3 / 8.4 / 8.5: Datasource, Filtreler ve Slayt/Otomatik Yenileme Kontrol Paneli */
-        .control-bar {
-            background: rgba(30, 41, 59, 0.75); border-bottom: 1px solid var(--border);
-            padding: 12px 18px; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px;
+        select option {
+            background-color: #0f172a;
+            color: #f8fafc;
         }
-        .ctrl-group { display: flex; flex-direction: column; gap: 5px; min-width: 170px; }
-        .ctrl-group label { font-size: 0.78rem; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+
+        /* Hamburger Menü */
+        .hamburger-wrap { position: relative; display: inline-flex; align-items: center; }
+        .hamburger-btn {
+            width: 28px; height: 26px; border-radius: 6px; border: 1px solid var(--border);
+            background: #0f172a; color: #38bdf8; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s;
+        }
+        .hamburger-btn:hover, .hamburger-btn.open {
+            background: rgba(14, 165, 233, 0.18); border-color: #38bdf8; color: #fff;
+        }
+        .hamburger-dropdown {
+            position: absolute; top: calc(100% + 6px); left: 0; width: 265px;
+            background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.65); padding: 8px; display: none;
+            flex-direction: column; gap: 5px; z-index: 3000;
+        }
+        .hamburger-dropdown.open { display: flex; }
+        .hamburger-sec-title {
+            font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px;
+            color: var(--muted); padding: 2px 6px;
+        }
+        .hamburger-item {
+            width: 100%; padding: 7px 10px; border-radius: 7px; border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(15, 23, 42, 0.65); color: var(--text); font-size: 0.78rem; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; gap: 9px; text-align: left; text-decoration: none;
+            transition: all 0.14s;
+        }
+        .hamburger-item:hover {
+            border-color: #38bdf8; background: rgba(14, 165, 233, 0.14); color: #7dd3fc;
+        }
+        .hamburger-item-sub {
+            font-size: 0.65rem; font-weight: 400; color: var(--muted); display: block; margin-top: 1px;
+        }
+
+        /* Ana Çalışma Alanı: Sol Parametre Paneli + Sağ Grafik Tuvali */
+        .viewer-workspace {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Sol Dikey Gizlenebilir Parametre ve Kontrol Paneli */
+        .control-sidebar {
+            width: 245px;
+            min-width: 245px;
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.18s ease, min-width 0.18s ease;
+            overflow: hidden;
+            z-index: 25;
+            position: relative;
+        }
+        .control-sidebar.resizing {
+            transition: none !important;
+            user-select: none;
+        }
+        .control-sidebar.collapsed {
+            width: 28px !important;
+            min-width: 28px !important;
+        }
+        .sidebar-resizer {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 6px;
+            cursor: col-resize;
+            z-index: 35;
+            transition: background 0.15s;
+        }
+        .sidebar-resizer:hover,
+        .control-sidebar.resizing .sidebar-resizer {
+            background: rgba(56, 189, 248, 0.65);
+        }
+        .control-sidebar.collapsed .sidebar-resizer {
+            display: none;
+        }
+        .sidebar-collapsed-strip {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 10px;
+            height: 100%;
+            cursor: pointer;
+            user-select: none;
+            gap: 10px;
+        }
+        .control-sidebar.collapsed .sidebar-collapsed-strip {
+            display: flex;
+        }
+        .control-sidebar.collapsed .sidebar-inner {
+            display: none;
+        }
+        .strip-vertical-title {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: var(--muted);
+            text-transform: uppercase;
+        }
+        .sidebar-inner {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            min-height: 0;
+        }
+        .sidebar-header {
+            height: 32px;
+            min-height: 32px;
+            padding: 0 10px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: #38bdf8;
+            text-transform: uppercase;
+        }
+        .sidebar-collapse-btn {
+            width: 22px; height: 22px; border-radius: 5px; border: 1px solid var(--border);
+            background: transparent; color: var(--muted); cursor: pointer; font-weight: 800;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .sidebar-collapse-btn:hover { color: #38bdf8; border-color: #38bdf8; }
+
+        /* İkon Aksiyon Çubuğu (Slayt, Otomatik Yenileme, Göster) */
+        .sidebar-icon-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(15, 23, 42, 0.35);
+        }
+        .icon-action-btn {
+            flex: 1;
+            height: 32px;
+            border-radius: 7px;
+            border: 1px solid var(--border);
+            background: #0f172a;
+            color: var(--muted);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            font-size: 0.74rem;
+            font-weight: 700;
+            transition: all 0.15s;
+        }
+        .icon-action-btn:hover {
+            border-color: #38bdf8;
+            color: var(--text);
+        }
+        .icon-action-btn.active {
+            background: rgba(14, 165, 233, 0.2);
+            border-color: #38bdf8;
+            color: #38bdf8;
+            box-shadow: inset 0 0 8px rgba(56, 189, 248, 0.25);
+        }
+        .icon-action-btn.run-btn {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+        .icon-action-btn.run-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .sidebar-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .ctrl-group { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+        .ctrl-group label { font-size: 0.72rem; color: var(--muted); font-weight: 700; text-transform: uppercase; }
         .ctrl-group select, .ctrl-group input {
-            padding: 8px 11px; border-radius: 7px; border: 1px solid var(--border);
-            background: #0f172a; color: var(--text); font-size: 0.9rem; outline: none;
+            width: 100%; padding: 7px 9px; border-radius: 6px; border: 1px solid var(--border);
+            background: #0f172a; color: var(--text); font-size: 0.82rem; outline: none;
         }
-        .checkbox-group {
-            display: flex; align-items: center; gap: 16px; background: #0f172a;
-            border: 1px solid var(--border); padding: 8px 14px; border-radius: 8px; height: 37px;
+        .ctrl-group select:focus, .ctrl-group input:focus { border-color: #38bdf8; }
+
+        .viewer-main-col {
+            flex: 1;
+            min-width: 0;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
         }
-        .checkbox-group label {
-            display: flex; align-items: center; gap: 7px; font-size: 0.88rem; cursor: pointer;
-            color: var(--text); font-weight: 600; margin: 0; text-transform: none;
-        }
-        .checkbox-group input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
 
         /* Slayt ve Otomatik Yenileme İlerleme Çubuğu */
         .timer-progress-wrap { height: 4px; width: 100%; background: rgba(255,255,255,0.05); position: relative; }
         .timer-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #3b82f6, #10b981); transition: width 0.25s linear; }
 
-        /* Aktif Cross-Filter (Tek Tık) Rozet Çubuğu */
-        .filter-badges-bar {
-            display: none; padding: 8px 18px; background: rgba(59, 130, 246, 0.1);
-            border-bottom: 1px solid rgba(59, 130, 246, 0.3); align-items: center; gap: 10px; flex-wrap: wrap;
+        /* Alt Durum Çubuğu (Status Bar) — Aktif Cross-Filter (Tek Tık) Bilgileri */
+        body { padding-bottom: 26px; }
+        .viewer-status-bar {
+            position: fixed; left: 0; right: 0; bottom: 0; height: 26px; z-index: 900;
+            display: flex; align-items: center; gap: 12px; padding: 0 12px;
+            background: var(--panel); border-top: 1px solid var(--border);
+            font-size: 0.74rem; color: var(--muted); white-space: nowrap;
         }
+        .status-sec { display: flex; align-items: center; gap: 6px; min-width: 0; }
+        .status-filters { flex: 1; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; }
+        .status-label { font-weight: 700; color: #93c5fd; flex-shrink: 0; }
+        .status-sep { width: 1px; height: 14px; background: var(--border); flex-shrink: 0; }
         .badge-chip {
-            background: var(--primary); color: #fff; padding: 4px 10px; border-radius: 999px;
-            font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+            background: var(--primary); color: #fff; padding: 1px 8px; border-radius: 999px;
+            font-size: 0.72rem; font-weight: 500; display: inline-flex; align-items: center; gap: 5px;
+            cursor: pointer; flex-shrink: 0; line-height: 18px;
         }
+        .badge-chip:hover { filter: brightness(1.15); }
+        .badge-chip .chip-x { opacity: 0.8; font-weight: 700; }
+        .status-clear-btn {
+            padding: 1px 9px; font-size: 0.72rem; border-radius: 5px; cursor: pointer; flex-shrink: 0;
+            border: 1px solid rgba(239,68,68,0.5); background: rgba(239,68,68,0.12); color: #fca5a5;
+        }
+        .status-clear-btn:hover { background: rgba(239,68,68,0.25); }
+        body.light-theme .viewer-status-bar { background: #f8fafc; border-top-color: #cbd5e1; color: #475569; }
+        body.light-theme .status-label { color: #0369a1; }
+        body.light-theme .status-clear-btn { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+        body.spsteks-theme .viewer-status-bar { background: #102a4c; border-top-color: #1e4a7f; color: #dbeafe; }
+        body.spsteks-theme .status-label { color: #7dd3fc; }
 
         /* 120 Mikro-Sütunlu ve 2 Boyutlu Yoğun (Dense) Responsive Dashboard Grid */
         .dashboard-canvas {
@@ -205,10 +422,17 @@
         body.light-theme .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
         body.light-theme .btn-accent { background: var(--accent); color: #fff; border-color: var(--accent); }
         body.light-theme .btn-warning { background: #fef3c7; color: #b45309; border-color: #f59e0b; }
-        body.light-theme .control-bar { background: #f8fafc; border-bottom: 1px solid #cbd5e1; }
+        body.light-theme .btn-danger { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+        body.light-theme select option { background-color: #ffffff; color: #0f172a; }
+        body.light-theme .hamburger-btn { background: #ffffff; color: #0284c7; border-color: #cbd5e1; }
+        body.light-theme .hamburger-dropdown { background: #ffffff; border-color: #cbd5e1; box-shadow: 0 12px 28px rgba(15,23,42,0.15); }
+        body.light-theme .hamburger-item { background: #f8fafc; color: #0f172a; border-color: #e2e8f0; }
+        body.light-theme .hamburger-item:hover { background: #e0f2fe; color: #0284c7; border-color: #38bdf8; }
+        body.light-theme .control-sidebar { background: #f8fafc; border-right: 1px solid #cbd5e1; }
+        body.light-theme .sidebar-icon-actions { background: #f1f5f9; }
+        body.light-theme .icon-action-btn:not(.run-btn):not(.active) { background: #ffffff; color: #334155; border-color: #cbd5e1; }
         body.light-theme .ctrl-group select,
-        body.light-theme .ctrl-group input,
-        body.light-theme .checkbox-group { background: #ffffff; color: #0f172a; border-color: #cbd5e1; }
+        body.light-theme .ctrl-group input { background: #ffffff; color: #0f172a; border-color: #cbd5e1; }
         body.light-theme .widget-card { box-shadow: 0 4px 14px rgba(15,23,42,0.08); }
         body.light-theme .widget-header { background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
         body.light-theme .widget-title { color: #0f172a; }
@@ -233,9 +457,17 @@
             background: linear-gradient(180deg, #dce9f9 0%, #bdd4f1 100%);
             border-bottom: 1px solid #7da2ce;
         }
-        body.spsteks-theme .control-bar {
+        body.spsteks-theme .control-sidebar {
             background: linear-gradient(180deg, #eef5fc 0%, #e1edf9 100%);
-            border-bottom: 1px solid #8db2e3;
+            border-right: 1px solid #8db2e3;
+        }
+        body.spsteks-theme .sidebar-icon-actions {
+            background: rgba(191, 214, 242, 0.45);
+        }
+        body.spsteks-theme .icon-action-btn:not(.run-btn):not(.active) {
+            background: #f8fbff;
+            color: #123560;
+            border-color: #7da2ce;
         }
         body.spsteks-theme .btn {
             background: linear-gradient(180deg, #f5f9ff 0%, #d4e5f9 55%, #c1d8f4 100%);
@@ -246,6 +478,39 @@
             background: linear-gradient(180deg, #3b6ea5 0%, #285284 100%);
             color: #ffffff;
             border-color: #1e3f66;
+        }
+        body.spsteks-theme select.btn,
+        body.spsteks-theme select.btn:hover,
+        body.spsteks-theme select,
+        body.spsteks-theme select option {
+            background: #f8fbff !important;
+            background-color: #f8fbff !important;
+            color: #102a4c !important;
+            border-color: #7da2ce !important;
+        }
+        body.spsteks-theme .btn-danger {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #f87171;
+        }
+        body.spsteks-theme .hamburger-btn {
+            background: #f5f9ff;
+            color: #123560;
+            border-color: #7da2ce;
+        }
+        body.spsteks-theme .hamburger-dropdown {
+            background: #eef5fc;
+            border-color: #7da2ce;
+        }
+        body.spsteks-theme .hamburger-item {
+            background: #f8fbff;
+            color: #102a4c;
+            border-color: #bdd4f1;
+        }
+        body.spsteks-theme .hamburger-item:hover {
+            background: #dceaf9;
+            color: #0d3b66;
+            border-color: #2b62a8;
         }
         body.spsteks-theme .widget-card {
             background: #f8fbff;
@@ -268,27 +533,68 @@
     </style>
 </head>
 <body>
-    <!-- Üst Başlık -->
+    <!-- İnce Üst Başlık + Hamburger Menü -->
     <header class="top-header">
         <div class="brand-area">
+            <div class="hamburger-wrap" id="viewerHamburgerWrap">
+                <button type="button" class="hamburger-btn" id="btnViewerHamburger" onclick="toggleViewerHamburgerMenu(event)" title="Menü ve İşlemler">
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <line x1="2.5" y1="4" x2="13.5" y2="4"/>
+                        <line x1="2.5" y1="8" x2="13.5" y2="8"/>
+                        <line x1="2.5" y1="12" x2="13.5" y2="12"/>
+                    </svg>
+                </button>
+                <div class="hamburger-dropdown" id="viewerHamburgerMenu" onclick="event.stopPropagation()">
+                    <div class="hamburger-sec-title">⚙️ Görünüm & Kişiselleştirme</div>
+                    <button type="button" class="hamburger-item" id="btnCustomizeLayout" onclick="toggleUserEditMode(); closeViewerHamburgerMenu();">
+                        <span>🎨</span>
+                        <span>
+                            Tasarımımı Özelleştir
+                            <span class="hamburger-item-sub">Kartların yerini ve boyutunu kendine göre ayarla</span>
+                        </span>
+                    </button>
+                    <button type="button" class="hamburger-item" id="btnSaveUserLayout" style="display:none;" onclick="saveUserCustomLayout(); closeViewerHamburgerMenu();">
+                        <span>💾</span>
+                        <span>
+                            Tasarımımı Kaydet
+                            <span class="hamburger-item-sub">Kişisel yerleşimini kaydet</span>
+                        </span>
+                    </button>
+                    <button type="button" class="hamburger-item" id="btnResetUserLayout" style="display:none;" onclick="resetUserCustomLayout(); closeViewerHamburgerMenu();">
+                        <span>↺</span>
+                        <span>
+                            Varsayılana Sıfırla
+                            <span class="hamburger-item-sub">Ana şablon tasarımına geri dön</span>
+                        </span>
+                    </button>
+                    <a href="/designer" class="hamburger-item" id="navDesignerLink" style="display:none;">
+                        <span>📐</span>
+                        <span>
+                            Tasarım Stüdyosu
+                            <span class="hamburger-item-sub">SQL sorgu ve dashboard tasarım ekranı</span>
+                        </span>
+                    </a>
+                    <a href="/admin" class="hamburger-item" id="navAdminLink" style="display:none;">
+                        <span>🛡️</span>
+                        <span>
+                            Yetki & Süre Yönetimi
+                            <span class="hamburger-item-sub">Kullanıcı yetkileri ve slayt süreleri</span>
+                        </span>
+                    </a>
+                </div>
+            </div>
             <span class="brand-badge">SpsWebBI</span>
             <h1 class="dash-title" id="activeDashboardTitle">Yükleniyor...</h1>
-            <span id="timerStatusBadge" style="font-size:0.8rem;color:#6ee7b7;background:rgba(16,185,129,0.12);padding:4px 10px;border-radius:999px;display:none;"></span>
+            <span id="timerStatusBadge" style="font-size:0.72rem;color:#6ee7b7;background:rgba(16,185,129,0.12);padding:2px 8px;border-radius:999px;display:none;white-space:nowrap;"></span>
         </div>
         <div class="user-nav">
-            <select id="selThemeMode" class="btn" onchange="onThemeSelectChange(this.value)" title="Görünüm Teması Seçin" style="padding:5px 10px;cursor:pointer;">
+            <select id="selThemeMode" class="btn" onchange="onThemeSelectChange(this.value)" title="Görünüm Teması Seçin" style="padding:3px 8px;cursor:pointer;">
                 <option value="dark">🌙 Koyu Tema</option>
                 <option value="light">☀️ Açık Tema</option>
                 <option value="spsteks">💎 SpsTeks Mavi</option>
             </select>
-            <button type="button" class="btn" id="btnToggleFilterBar" onclick="toggleControlBar()">Kontrol Panelini Gizle/Göster</button>
-            <button type="button" class="btn btn-warning" id="btnCustomizeLayout" onclick="toggleUserEditMode()">Tasarımımı Özelleştir</button>
-            <button type="button" class="btn btn-accent" id="btnSaveUserLayout" style="display:none;" onclick="saveUserCustomLayout()">Tasarımımı Kaydet</button>
-            <button type="button" class="btn" id="btnResetUserLayout" style="display:none;" onclick="resetUserCustomLayout()">Varsayılana Sıfırla</button>
-            <a href="/designer" class="btn" id="navDesignerLink" style="display:none;">Tasarım Stüdyosu (Admin)</a>
-            <a href="/admin" class="btn" id="navAdminLink" style="display:none;">Yetki & Süre Yönetimi</a>
-            <span id="userInfoText" style="color:var(--muted);"></span>
-            <button type="button" class="btn" onclick="logout()">Çıkış</button>
+            <span id="userInfoText" style="color:var(--muted);font-weight:600;"></span>
+            <button type="button" class="btn btn-danger" onclick="logout()" title="Oturumu kapat ve şifre ekranına dön">Çıkış</button>
         </div>
     </header>
 
@@ -296,50 +602,95 @@
         <div class="timer-progress-bar" id="timerProgressBar"></div>
     </div>
 
-    <!-- Madde 8.2, 8.3, 8.4, 8.5: Datasource Seçimi, Dinamik Filtreler, Slayt ve Otomatik Yenileme -->
-    <section class="control-bar" id="controlBarSection">
-        <div class="ctrl-group" style="min-width:260px;">
-            <label for="selectDashboard">Veri Kaynağı / Dashboard Seçimi</label>
-            <select id="selectDashboard" onchange="onDashboardSelectionChanged()"></select>
-        </div>
-
-        <!-- Seçilen Datasource'un Dinamik Filtreleri Buraya Otomatik Gelir -->
-        <div id="dynamicFiltersContainer" style="display:flex;flex-wrap:wrap;gap:12px;"></div>
-
-        <!-- Madde 8.2.5: Slayt Görünümü ve Otomatik Yenileme için birbirini dışlayan iki checkbox -->
-        <div class="checkbox-group">
-            <label title="Yetkili tüm dashboard'ları sırasına ve ekranda kalma süresine göre döngüsel gösterir">
-                <input type="checkbox" id="chkSlideMode" onchange="onModeCheckboxChanged('slide')">
-                Slayt Görünümü
-            </label>
-            <label title="Seçili dashboard'u tanımlı yenileme süresinde otomatik yeniler">
-                <input type="checkbox" id="chkAutoRefresh" onchange="onModeCheckboxChanged('refresh')">
-                Otomatik Yenileme
-            </label>
-        </div>
-
-        <button type="button" class="btn btn-primary" style="height:37px;padding:0 22px;font-size:0.92rem;" onclick="onShowButtonClicked()">
-            Göster
-        </button>
-    </section>
-
-    <!-- Aktif Cross-Filter (Tek Tık) Gösterge Çubuğu -->
-    <div class="filter-badges-bar" id="crossFilterBar">
-        <span style="font-size:0.82rem;color:#93c5fd;font-weight:600;">Aktif Grafik Filtresi (Cross-Filter):</span>
-        <div id="crossFilterBadges" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
-        <button type="button" class="btn" style="padding:3px 9px;font-size:0.78rem;" onclick="clearAllCrossFilters()">Tümünü Temizle</button>
-    </div>
-
     <!-- Kullanıcı Kişisel Düzenleme Araç Çubuğu (Madde 10) -->
-    <div id="userEditBanner" style="display:none;padding:10px 18px;background:rgba(245,158,11,0.12);border-bottom:1px solid rgba(245,158,11,0.35);align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-        <span style="font-size:0.88rem;color:#fcd34d;">
-            <strong>Kişisel Tasarım Modu (Madde 10):</strong> Her kartın sağ üstündeki <em>"Düzenle"</em> veya <em>"Yeni Bileşen Ekle"</em> ile görünümü değiştirip <strong>"Tasarımımı Kaydet"</strong> diyebilirsiniz.
+    <div id="userEditBanner" style="display:none;padding:8px 16px;background:rgba(245,158,11,0.12);border-bottom:1px solid rgba(245,158,11,0.35);align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <span style="font-size:0.82rem;color:#fcd34d;">
+            <strong>Kişisel Tasarım Modu:</strong> Kartların sağ üstündeki <em>"Düzenle"</em> veya <em>"+ Yeni Bileşen Ekle"</em> ile görünümü değiştirip kaydedebilirsiniz.
         </span>
-        <button type="button" class="btn btn-primary" onclick="openAddWidgetModal()">+ Yeni Grafik / Tablo / Pivot / KPI Ekle</button>
+        <div style="display:flex;gap:8px;">
+            <button type="button" class="btn btn-primary" onclick="openAddWidgetModal()">+ Yeni Bileşen Ekle</button>
+            <button type="button" class="btn btn-accent" onclick="saveUserCustomLayout()">💾 Tasarımımı Kaydet</button>
+            <button type="button" class="btn" onclick="toggleUserEditMode()">Kapat</button>
+        </div>
     </div>
 
-    <!-- Dashboard Tuvali (Grid) -->
-    <main class="dashboard-canvas" id="dashboardCanvas"></main>
+    <!-- Ana Çalışma Alanı: Sol Dikey Parametre Paneli + Sağ Grafik Tuvali -->
+    <div class="viewer-workspace">
+        <aside class="control-sidebar" id="controlBarSection">
+            <div class="sidebar-collapsed-strip" onclick="toggleControlBar()" title="Parametre ve Kontrol Panelini Açmak İçin Tıklayın">
+                <span style="color:#38bdf8;font-weight:800;">»</span>
+                <span class="strip-vertical-title">PARAMETRELER & KONTROL</span>
+            </div>
+            <div class="sidebar-inner">
+                <div class="sidebar-header">
+                    <span>🎛️ Parametreler</span>
+                    <button type="button" class="sidebar-collapse-btn" onclick="toggleControlBar()" title="Parametre Panelini Gizle">«</button>
+                </div>
+
+                <!-- Slayt Görünümü, Otomatik Yenileme ve Göster İçin İkon Butonları -->
+                <div class="sidebar-icon-actions">
+                    <input type="checkbox" id="chkSlideMode" onchange="onModeCheckboxChanged('slide')" style="display:none;">
+                    <input type="checkbox" id="chkAutoRefresh" onchange="onModeCheckboxChanged('refresh')" style="display:none;">
+
+                    <button type="button" class="icon-action-btn" id="btnIconSlideMode" onclick="toggleViewerIconMode('slide')"
+                            title="Slayt Görünümü: Yetkili tüm dashboard'ları sırasına ve ekranda kalma süresine göre döngüsel gösterir">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                            <polygon points="10 7 15 10 10 13 10 7"></polygon>
+                        </svg>
+                    </button>
+
+                    <button type="button" class="icon-action-btn" id="btnIconAutoRefresh" onclick="toggleViewerIconMode('refresh')"
+                            title="Otomatik Yenileme: Seçili dashboard'u tanımlı yenileme süresinde otomatik yeniler">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <polyline points="1 20 1 14 7 14"></polyline>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                    </button>
+
+                    <button type="button" class="icon-action-btn run-btn" id="btnIconShow" onclick="onShowButtonClicked()"
+                            title="Göster: Seçili filtre parametreleriyle verileri sorgula ve grafikleri yenile">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                            <polygon points="6 4 20 12 6 20 6 4"></polygon>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Alt Alta Dizili Dashboard Seçimi ve Dinamik Filtre Parametreleri -->
+                <div class="sidebar-body">
+                    <div class="ctrl-group">
+                        <label for="selectDashboard">Dashboard Seçimi</label>
+                        <select id="selectDashboard" onchange="onDashboardSelectionChanged()"></select>
+                    </div>
+
+                    <div id="dynamicFiltersContainer" style="display:flex;flex-direction:column;gap:10px;"></div>
+                </div>
+            </div>
+            <div class="sidebar-resizer" id="sidebarResizer" title="Fareyle sağa/sola çekerek filtre panelini genişletebilirsiniz"></div>
+        </aside>
+
+        <div class="viewer-main-col">
+            <!-- Dashboard Tuvali (Grid) -->
+            <main class="dashboard-canvas" id="dashboardCanvas"></main>
+        </div>
+    </div>
+
+    <!-- Alt Durum Çubuğu: Grafik tıklamasıyla oluşan Cross-Filter bilgileri -->
+    <footer class="viewer-status-bar" id="viewerStatusBar">
+        <div class="status-sec status-filters">
+            <span class="status-label">🔎 Filtre:</span>
+            <div id="crossFilterBadges" style="display:flex;gap:6px;align-items:center;"></div>
+        </div>
+        <span class="status-sep"></span>
+        <div class="status-sec" title="Grafik filtresinden sonra kalan kayıt / toplam kayıt (ana veri kaynağı)">
+            <span class="status-label">Kayıt:</span>
+            <span id="statusRowCount">-</span>
+        </div>
+        <button type="button" class="status-clear-btn" id="btnStatusClearFilters" style="display:none;" onclick="clearAllCrossFilters()" title="Tüm grafik filtrelerini kaldır">Tümünü Temizle</button>
+    </footer>
 
     <!-- Drill-Through (Çift Tık Detay) ve Widget Düzenleme Modalı -->
     <div class="modal-backdrop" id="detailModal">
@@ -359,6 +710,7 @@
         let currentLayout = { widgets: [] };
         let currentColumns = [];
         let rawRows = [];
+        let appDataSourceCache = {}; // { [dsId]: { columns, rows, isPassive, message } }
         let activeCrossFilters = {}; // { KolonAdi: Deger }
         let widgetDrillState = {};   // { widgetId: { levelIndex: 0, path: [{dim, val}] } }
         let widgetSortState = {};    // { widgetId: { column: 'Siparis_ID', dir: 'asc' | 'desc' } }
@@ -436,10 +788,12 @@
             if (autoStartSlide) {
                 document.getElementById('chkSlideMode').checked = true;
                 document.getElementById('chkAutoRefresh').checked = false;
-                document.getElementById('controlBarSection').style.display = 'none';
+                syncViewerIconButtons();
+                document.getElementById('controlBarSection').classList.add('collapsed');
                 await startDisplayEngine();
             } else {
                 // Varsayılan olarak ilk dashboard'un filtrelerini yükle ve göster
+                syncViewerIconButtons();
                 await onDashboardSelectionChanged();
                 await startDisplayEngine();
             }
@@ -460,6 +814,51 @@
             });
         }
 
+        function toggleViewerHamburgerMenu(e) {
+            if (e) e.stopPropagation();
+            const menu = document.getElementById('viewerHamburgerMenu');
+            const btn = document.getElementById('btnViewerHamburger');
+            if (!menu) return;
+            const isOpen = menu.classList.toggle('open');
+            if (btn) btn.classList.toggle('open', isOpen);
+        }
+
+        function closeViewerHamburgerMenu() {
+            const menu = document.getElementById('viewerHamburgerMenu');
+            const btn = document.getElementById('btnViewerHamburger');
+            if (menu) menu.classList.remove('open');
+            if (btn) btn.classList.remove('open');
+        }
+
+        document.addEventListener('click', e => {
+            const wrap = document.getElementById('viewerHamburgerWrap');
+            if (wrap && !wrap.contains(e.target)) {
+                closeViewerHamburgerMenu();
+            }
+        });
+
+        function syncViewerIconButtons() {
+            const chkSlide = document.getElementById('chkSlideMode');
+            const chkRefresh = document.getElementById('chkAutoRefresh');
+            const btnSlide = document.getElementById('btnIconSlideMode');
+            const btnRefresh = document.getElementById('btnIconAutoRefresh');
+            if (btnSlide && chkSlide) btnSlide.classList.toggle('active', !!chkSlide.checked);
+            if (btnRefresh && chkRefresh) btnRefresh.classList.toggle('active', !!chkRefresh.checked);
+        }
+
+        function toggleViewerIconMode(which) {
+            const chkSlide = document.getElementById('chkSlideMode');
+            const chkRefresh = document.getElementById('chkAutoRefresh');
+            if (which === 'slide' && chkSlide) {
+                chkSlide.checked = !chkSlide.checked;
+                onModeCheckboxChanged('slide');
+            } else if (which === 'refresh' && chkRefresh) {
+                chkRefresh.checked = !chkRefresh.checked;
+                onModeCheckboxChanged('refresh');
+            }
+            syncViewerIconButtons();
+        }
+
         // Madde 8.2.5 / 8.3.5: Slayt Görünümü ve Otomatik Yenileme birbirini dışlar
         function onModeCheckboxChanged(which) {
             const chkSlide = document.getElementById('chkSlideMode');
@@ -469,6 +868,7 @@
             } else if (which === 'refresh' && chkRefresh.checked) {
                 chkSlide.checked = false;
             }
+            syncViewerIconButtons();
         }
 
         async function onDashboardSelectionChanged() {
@@ -635,38 +1035,103 @@
             await refreshActiveDashboardData();
         }
 
+        function getEffectiveAppWidgetDataSourceId(w) {
+            const dash = authorizedDashboards[activeDashboardIndex];
+            const primaryDsId = dash ? Number(dash.primary_datasource_id || 0) : 0;
+            if (w && w.dataSourceId && Number(w.dataSourceId) > 0) {
+                return Number(w.dataSourceId);
+            }
+            return primaryDsId;
+        }
+
+        async function fetchAndCacheAppDataSource(dsId, filters) {
+            if (!dsId || dsId <= 0) return { columns: [], rows: [], isPassive: true, message: 'Veri kaynağı seçilmedi.' };
+            try {
+                const res = await fetch(`/api/datasources/${dsId}/execute`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filters })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    const entry = {
+                        columns: [],
+                        rows: [],
+                        isPassive: true,
+                        message: data.message || 'Veri kaynağı pasif veya veri çekilemedi.'
+                    };
+                    appDataSourceCache[dsId] = entry;
+                    return entry;
+                }
+                const entry = {
+                    columns: data.columns || [],
+                    rows: data.rows || [],
+                    isPassive: false,
+                    message: ''
+                };
+                appDataSourceCache[dsId] = entry;
+                return entry;
+            } catch (_) {
+                const entry = {
+                    columns: [],
+                    rows: [],
+                    isPassive: true,
+                    message: 'Veri kaynağı çalıştırılırken hata oluştu.'
+                };
+                appDataSourceCache[dsId] = entry;
+                return entry;
+            }
+        }
+
         async function refreshActiveDashboardData() {
             const dash = authorizedDashboards[activeDashboardIndex];
             if (!dash) return;
 
             const filters = collectFilterValues();
-            const res = await fetch(`/api/datasources/${dash.primary_datasource_id}/execute`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ filters })
+            appDataSourceCache = {};
+
+            const neededDsIds = new Set();
+            if (dash.primary_datasource_id) neededDsIds.add(Number(dash.primary_datasource_id));
+            (currentLayout.widgets || []).forEach(w => {
+                if (w && w.dataSourceId && Number(w.dataSourceId) > 0) {
+                    neededDsIds.add(Number(w.dataSourceId));
+                }
             });
 
-            const data = await res.json();
-            if (!res.ok || !data.success) {
-                currentColumns = [];
-                rawRows = [];
+            await Promise.all(Array.from(neededDsIds).map(id => fetchAndCacheAppDataSource(id, filters)));
+
+            const primaryEntry = appDataSourceCache[Number(dash.primary_datasource_id)] || { columns: [], rows: [], isPassive: true, message: 'Veri kaynağı pasif veya veri çekilemedi.' };
+            currentColumns = primaryEntry.columns || [];
+            rawRows = primaryEntry.rows || [];
+
+            const allWidgetsUsePrimary = (currentLayout.widgets || []).every(w => !w.dataSourceId || Number(w.dataSourceId) === Number(dash.primary_datasource_id));
+            if (primaryEntry.isPassive && allWidgetsUsePrimary) {
                 chartInstances.forEach(c => { try { c.dispose(); } catch (_) {} });
                 chartInstances = [];
                 document.getElementById('dashboardCanvas').innerHTML =
-                    `<div style="grid-column:span 120;grid-row:span 10;padding:28px;border:1px dashed rgba(239,68,68,0.45);border-radius:12px;color:#fca5a5;text-align:center;">${escapeHtml(data.message || 'Veri kaynağı pasif veya veri çekilemedi.')}</div>`;
+                    `<div style="grid-column:span 120;grid-row:span 10;padding:28px;border:1px dashed rgba(239,68,68,0.45);border-radius:12px;color:#fca5a5;text-align:center;">${escapeHtml(primaryEntry.message || 'Veri kaynağı pasif veya veri çekilemedi.')}</div>`;
+                renderCrossFilterBadges();
                 return;
             }
 
-            currentColumns = data.columns || [];
-            rawRows = data.rows || [];
             renderAllWidgets();
+            renderCrossFilterBadges();
         }
 
-        // Cross-Filter (Tek Tık) Uygulaması (Madde 2.2)
-        function getFilteredRows(excludeWidgetDimension = null) {
-            return rawRows.filter(row => {
+        // Cross-Filter (Tek Tık) Uygulaması (Madde 2.2) — Akıllı Çoklu Veri Kaynağı Desteğiyle
+        function getFilteredRows(excludeWidgetDimension = null, widgetObj = null) {
+            const effDsId = getEffectiveAppWidgetDataSourceId(widgetObj);
+            const dsEntry = appDataSourceCache[effDsId] || { columns: currentColumns, rows: rawRows, isPassive: false };
+            const sourceRows = dsEntry.rows || [];
+            const sourceCols = dsEntry.columns || [];
+
+            return sourceRows.filter(row => {
                 for (const [col, val] of Object.entries(activeCrossFilters)) {
                     if (excludeWidgetDimension && col.toLowerCase() === excludeWidgetDimension.toLowerCase()) continue;
+                    // Akıllı Cross-Filter: Tıklanan boyut kolonu bu widget'ın veri kaynağında yoksa bu widget'ı sıfırlama, filtreyi atla
+                    const hasColInSchema = sourceCols.some(c => (c.name || '').toLowerCase() === col.toLowerCase())
+                        || Object.keys(row || {}).some(k => k.toLowerCase() === col.toLowerCase());
+                    if (!hasColInSchema) continue;
                     const cellVal = String(getRowValue(row, col) ?? '');
                     if (cellVal !== String(val)) return false;
                 }
@@ -698,23 +1163,44 @@
             renderAllWidgets();
         }
 
+        // Alt durum çubuğundaki aktif filtre rozetlerini ve kayıt sayacını günceller
         function renderCrossFilterBadges() {
-            const bar = document.getElementById('crossFilterBar');
             const container = document.getElementById('crossFilterBadges');
+            const clearBtn = document.getElementById('btnStatusClearFilters');
+            if (!container) return;
             const entries = Object.entries(activeCrossFilters);
-            if (entries.length === 0) {
-                bar.style.display = 'none';
-                return;
-            }
-            bar.style.display = 'flex';
             container.innerHTML = '';
-            entries.forEach(([col, val]) => {
-                const chip = document.createElement('span');
-                chip.className = 'badge-chip';
-                chip.innerHTML = `${escapeHtml(col)}: <strong>${escapeHtml(String(val))}</strong> ✕`;
-                chip.onclick = () => toggleCrossFilter(col, val);
-                container.appendChild(chip);
-            });
+            if (entries.length === 0) {
+                const none = document.createElement('span');
+                none.textContent = 'Filtre yok';
+                none.style.opacity = '0.75';
+                container.appendChild(none);
+            } else {
+                entries.forEach(([col, val]) => {
+                    let shown;
+                    try { shown = formatDimensionValue(val, col); } catch (_) { shown = String(val); }
+                    const chip = document.createElement('span');
+                    chip.className = 'badge-chip';
+                    chip.title = 'Bu filtreyi kaldırmak için tıklayın';
+                    chip.innerHTML = `${escapeHtml(col)} = <strong>${escapeHtml(String(shown))}</strong> <span class="chip-x">✕</span>`;
+                    chip.onclick = () => toggleCrossFilter(col, val);
+                    container.appendChild(chip);
+                });
+            }
+            if (clearBtn) clearBtn.style.display = entries.length > 0 ? 'inline-block' : 'none';
+            updateStatusRowCount();
+        }
+
+        function updateStatusRowCount() {
+            const el = document.getElementById('statusRowCount');
+            if (!el) return;
+            const total = (rawRows || []).length;
+            let filtered = total;
+            try { filtered = getFilteredRows(null, null).length; } catch (_) { }
+            const fmt = n => Number(n).toLocaleString('tr-TR');
+            el.textContent = Object.keys(activeCrossFilters).length > 0
+                ? `${fmt(filtered)} / ${fmt(total)}`
+                : fmt(total);
         }
 
         function calcAppWidgetGridMetrics(w) {
@@ -954,7 +1440,13 @@
         }
 
         function renderSingleWidget(w, container) {
-            let rows = getFilteredRows(w.dimension);
+            const effDsId = getEffectiveAppWidgetDataSourceId(w);
+            const dsEntry = appDataSourceCache[effDsId];
+            if (dsEntry && dsEntry.isPassive) {
+                container.innerHTML = `<div style="padding:18px;color:#fca5a5;text-align:center;font-size:0.82rem;">${escapeHtml(dsEntry.message || 'Pasif veri kaynağı seçili — veriler görüntülenemiyor.')}</div>`;
+                return;
+            }
+            let rows = getFilteredRows(w.dimension, w);
             const metrics = getWidgetMetrics(w);
             const primaryMetric = metrics[0] || { field: w.valueField || '', agg: w.agg || 'sum' };
 
@@ -1965,17 +2457,33 @@
             return sA.localeCompare(sB, 'tr-TR', { numeric: true, sensitivity: 'base' });
         }
 
+        function getWidgetColumnsMeta(w, rows) {
+            const effDsId = getEffectiveAppWidgetDataSourceId(w);
+            const dsEntry = appDataSourceCache[effDsId];
+            if (dsEntry && Array.isArray(dsEntry.columns) && dsEntry.columns.length > 0) {
+                return dsEntry.columns;
+            }
+            if (Array.isArray(currentColumns) && currentColumns.length > 0) {
+                return currentColumns;
+            }
+            if (Array.isArray(rows) && rows.length > 0 && rows[0]) {
+                return Object.keys(rows[0]).map(k => ({ name: k, dataType: typeof rows[0][k] === 'number' ? 'number' : 'string' }));
+            }
+            return [];
+        }
+
         function renderDataTable(w, rows, container) {
             const widgetKey = w.id || 'modal_table';
+            const widgetColsMeta = getWidgetColumnsMeta(w, rows);
             const cols = (Array.isArray(w.columns) && w.columns.length > 0)
                 ? w.columns
-                : currentColumns.map(c => c.name);
+                : widgetColsMeta.map(c => c.name);
 
             const sortInfo = widgetSortState[widgetKey] || null;
             let workingRows = rows.slice();
 
             if (sortInfo && sortInfo.column) {
-                const colMeta = currentColumns.find(x => x.name.toLowerCase() === sortInfo.column.toLowerCase());
+                const colMeta = getColumnMeta(sortInfo.column) || widgetColsMeta.find(x => x.name.toLowerCase() === sortInfo.column.toLowerCase());
                 const dType = colMeta ? colMeta.dataType : 'string';
                 const factor = sortInfo.dir === 'desc' ? -1 : 1;
                 workingRows.sort((rA, rB) => {
@@ -2007,7 +2515,7 @@
             });
             html += '</tbody><tfoot><tr>';
             cols.forEach((c, idx) => {
-                const colMeta = currentColumns.find(x => x.name.toLowerCase() === c.toLowerCase());
+                const colMeta = getColumnMeta(c) || widgetColsMeta.find(x => x.name.toLowerCase() === c.toLowerCase());
                 const cAlign = getColumnAlign(c, w.align || 'left');
                 if (colMeta && colMeta.dataType === 'number' && !c.toLowerCase().endsWith('_id') && !/y[ıi]l|ay\b/i.test(c)) {
                     const sum = computeAggregate(rows, c, 'sum');
@@ -2074,7 +2582,10 @@
             document.getElementById('modalTitle').textContent = title;
             const body = document.getElementById('modalBody');
             body.style.padding = '0';
-            renderDataTable({ id: 'drill_modal_tbl', columns: currentColumns.map(c => c.name) }, rows, body);
+            const modalCols = (Array.isArray(rows) && rows.length > 0 && rows[0])
+                ? Object.keys(rows[0])
+                : currentColumns.map(c => c.name);
+            renderDataTable({ id: 'drill_modal_tbl', columns: modalCols }, rows, body);
             document.getElementById('detailModal').style.display = 'flex';
         }
 
@@ -2251,8 +2762,52 @@
 
         function toggleControlBar() {
             const el = document.getElementById('controlBarSection');
-            el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+            if (!el) return;
+            el.classList.toggle('collapsed');
+            setTimeout(() => {
+                chartInstances.forEach(c => { try { c.resize(); } catch (_) {} });
+            }, 200);
         }
+
+        function initSidebarResizer() {
+            const sidebar = document.getElementById('controlBarSection');
+            const resizer = document.getElementById('sidebarResizer');
+            if (!sidebar || !resizer) return;
+
+            const savedWidth = parseInt(localStorage.getItem('sps_viewer_sidebar_w') || '0', 10);
+            if (savedWidth >= 180 && savedWidth <= 520) {
+                sidebar.style.width = `${savedWidth}px`;
+                sidebar.style.minWidth = `${savedWidth}px`;
+            }
+
+            resizer.addEventListener('mousedown', e => {
+                if (sidebar.classList.contains('collapsed')) return;
+                e.preventDefault();
+                sidebar.classList.add('resizing');
+                const startX = e.clientX;
+                const startW = sidebar.getBoundingClientRect().width;
+
+                function onMouseMove(ev) {
+                    const nextW = Math.min(520, Math.max(180, Math.round(startW + (ev.clientX - startX))));
+                    sidebar.style.width = `${nextW}px`;
+                    sidebar.style.minWidth = `${nextW}px`;
+                    chartInstances.forEach(c => { try { c.resize(); } catch (_) {} });
+                }
+
+                function onMouseUp() {
+                    sidebar.classList.remove('resizing');
+                    window.removeEventListener('mousemove', onMouseMove);
+                    window.removeEventListener('mouseup', onMouseUp);
+                    const finalW = Math.round(sidebar.getBoundingClientRect().width);
+                    localStorage.setItem('sps_viewer_sidebar_w', String(finalW));
+                    chartInstances.forEach(c => { try { c.resize(); } catch (_) {} });
+                }
+
+                window.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('mouseup', onMouseUp);
+            });
+        }
+        initSidebarResizer();
 
         async function logout() {
             await fetch('/api/auth/logout', { method: 'POST' });
@@ -2284,7 +2839,14 @@
 
         function getColumnMeta(colName) {
             if (!colName) return null;
-            return currentColumns.find(x => x.name.toLowerCase() === String(colName).toLowerCase()) || null;
+            const target = String(colName).toLowerCase();
+            const foundInPrimary = currentColumns.find(x => x.name.toLowerCase() === target);
+            if (foundInPrimary) return foundInPrimary;
+            for (const entry of Object.values(appDataSourceCache || {})) {
+                const found = (entry.columns || []).find(x => x.name.toLowerCase() === target);
+                if (found) return found;
+            }
+            return null;
         }
 
         function getColumnFormat(colName) {

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpsWebBI - MariaDB Bağlantı Ayarları</title>
+    <title>SpsWebBI - Veri Kaynağı Bağlantı Ayarları</title>
     <style>
         :root {
             --bg: #0f172a;
@@ -107,10 +107,34 @@
         .btn-save:hover { background: var(--primary-hover); }
         .footer-links {
             margin-top: 16px; display: flex; justify-content: space-between; align-items: center;
-            font-size: 0.85rem; padding-top: 12px; border-top: 1px solid var(--border);
+            font-size: 0.85rem; padding-top: 12px; border-top: 1px solid var(--border); gap: 10px; flex-wrap: wrap;
         }
         .footer-links a { color: #60a5fa; text-decoration: none; font-weight: 600; }
         .footer-links a:hover { text-decoration: underline; }
+        body.light-theme {
+            --bg: #f1f5f9; --card: #ffffff; --border: #cbd5e1; --text: #0f172a; --muted: #475569;
+            background: radial-gradient(circle at top right, #e2e8f0, #f1f5f9);
+        }
+        body.light-theme .card { box-shadow: 0 12px 30px rgba(15,23,42,0.12); }
+        body.light-theme .conn-item,
+        body.light-theme input[type="text"],
+        body.light-theme input[type="number"],
+        body.light-theme input[type="password"],
+        body.light-theme .checkbox-row { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
+        body.light-theme .conn-meta { color: #1d4ed8; }
+        body.light-theme .btn-test { background: #e2e8f0; color: #0f172a; }
+        body.spsteks-theme {
+            --bg: #d9e7f5; --card: #edf4fc; --border: #94b8db; --text: #0c2340; --muted: #2b4c73;
+            --primary: #0f5ea8; --primary-hover: #0a4882;
+            background: radial-gradient(circle at top right, #c3daf2, #d9e7f5);
+        }
+        body.spsteks-theme .conn-item,
+        body.spsteks-theme input[type="text"],
+        body.spsteks-theme input[type="number"],
+        body.spsteks-theme input[type="password"],
+        body.spsteks-theme .checkbox-row { background: #ffffff; color: #0c2340; border-color: #94b8db; }
+        body.spsteks-theme .conn-meta { color: #0f5ea8; }
+        body.spsteks-theme .btn-test { background: #d0e3f7; color: #0c2340; }
     </style>
 </head>
 <body>
@@ -126,8 +150,22 @@
 
         <!-- SAĞ PANEL: BAĞLANTI DETAYLARI GİRİŞ VE KAYIT EKRANI -->
         <div class="card">
-            <h1>MariaDB Bağlantı Ayarları</h1>
-            <p class="sub">Veritabanı bağlantı bilgileri Windows DPAPI ile şifrelenerek saklanır.</p>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
+                <h1 style="margin:0;">🔌 Veri Kaynağı Ayarları</h1>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <select id="selThemeMode" onchange="onThemeSelectChange(this.value)" title="Görünüm Teması Seçin"
+                            style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:7px;cursor:pointer;font-size:0.78rem;font-weight:700;outline:none;">
+                        <option value="dark">🌙 Koyu Tema</option>
+                        <option value="light">☀️ Açık Tema</option>
+                        <option value="spsteks">💎 SpsTeks Mavi</option>
+                    </select>
+                    <button type="button" onclick="logout()"
+                            style="padding:6px 12px;border-radius:7px;border:1px solid rgba(239,68,68,0.45);background:rgba(239,68,68,0.16);color:#fca5a5;font-weight:700;font-size:0.8rem;cursor:pointer;">
+                        Çıkış
+                    </button>
+                </div>
+            </div>
+            <p class="sub">Birden fazla aktif bağlantı tanımlayabilirsiniz; kullanılmayanları pasife alabilirsiniz. Şifreler DPAPI ile şifrelenir.</p>
 
             <div id="statusBox" class="status-banner">Bağlantı durumu kontrol ediliyor...</div>
 
@@ -171,7 +209,7 @@
 
             <label class="checkbox-row" for="isActive">
                 <input type="checkbox" id="isActive" checked>
-                <span>Bağlantı Aktif (Çalışma zamanında bu bağlantıyı kullan)</span>
+                <span>Bağlantı Aktif (SQL sorgularında bu bağlantı seçilebilir ve kullanılabilir)</span>
             </label>
 
             <div class="field" id="adminAuthField">
@@ -257,19 +295,42 @@
             document.getElementById('envName').focus();
         }
 
+        function applySavedTheme() {
+            const saved = localStorage.getItem('sps_bi_theme') || 'dark';
+            document.body.classList.toggle('light-theme', saved === 'light' || saved === 'spsteks');
+            document.body.classList.toggle('spsteks-theme', saved === 'spsteks');
+            const sel = document.getElementById('selThemeMode');
+            if (sel) sel.value = (saved === 'light' || saved === 'spsteks') ? saved : 'dark';
+        }
+
+        function onThemeSelectChange(mode) {
+            const next = (mode === 'light' || mode === 'spsteks') ? mode : 'dark';
+            localStorage.setItem('sps_bi_theme', next);
+            applySavedTheme();
+        }
+        applySavedTheme();
+
+        async function logout() {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login';
+        }
+
         async function loadSettings() {
             const box = document.getElementById('statusBox');
             try {
-                // Admin oturumu açıksa doğrulama şifresi alanını gizle
-                try {
-                    const meRes = await fetch('/api/auth/me');
-                    if (meRes.ok) {
-                        const me = await meRes.json();
-                        if (me && me.role === 'admin') {
-                            document.getElementById('adminAuthField').style.display = 'none';
-                        }
-                    }
-                } catch (_) { }
+                // Yalnızca şifreli giriş yapmış Admin erişebilir
+                const meRes = await fetch('/api/auth/me');
+                if (!meRes.ok) {
+                    window.location.href = '/login';
+                    return;
+                }
+                const me = await meRes.json();
+                if (!me || me.role !== 'admin' || me.authMethod === 'Passwordless') {
+                    alert('Veri kaynağı bağlantı ayarlarına yalnızca Sistem Yöneticisi (Admin) erişebilir.');
+                    window.location.href = '/login';
+                    return;
+                }
+                document.getElementById('adminAuthField').style.display = 'none';
 
                 const res = await fetch('/api/db-settings');
                 const data = await res.json();

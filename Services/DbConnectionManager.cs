@@ -178,6 +178,45 @@ namespace SpsWebBI.Services
             return ConnectionProtector.GetUsableConnectionString(raw);
         }
 
+        /// <summary>
+        /// Bir SQL sorgusunun (bi_datasources) bağlı olduğu connection_id'ye göre hedef veritabanı bağlantı dizesini döner.
+        /// İlgili bağlantı pasifse (IsActive == false) sorgunun çalıştırılmasını engeller.
+        /// </summary>
+        public (bool IsUsable, string ConnectionString, string ErrorMessage) ResolveConnectionForQuery(string? connectionId)
+        {
+            var entries = ReadConnectionsFromDisk();
+
+            if (!string.IsNullOrWhiteSpace(connectionId))
+            {
+                var matched = entries.FirstOrDefault(x =>
+                    string.Equals(x.Dto.Id, connectionId.Trim(), StringComparison.OrdinalIgnoreCase));
+
+                if (!string.IsNullOrWhiteSpace(matched.RawConnectionString))
+                {
+                    if (!matched.Dto.IsActive)
+                    {
+                        return (false, string.Empty, $"'{matched.Dto.EnvironmentName}' veri kaynağı bağlantısı pasif durumda.");
+                    }
+                    return (true, ConnectionProtector.GetUsableConnectionString(matched.RawConnectionString), string.Empty);
+                }
+            }
+
+            // connection_id belirtilmemişse (veya varsayılan ise) ilk aktif bağlantıyı kullan
+            var firstActive = entries.FirstOrDefault(x => x.Dto.IsActive);
+            if (!string.IsNullOrWhiteSpace(firstActive.RawConnectionString))
+            {
+                return (true, ConnectionProtector.GetUsableConnectionString(firstActive.RawConnectionString), string.Empty);
+            }
+
+            if (entries.Count > 0)
+            {
+                return (false, string.Empty, "Tüm veri kaynağı bağlantıları pasif durumda.");
+            }
+
+            string fallback = GetActiveConnectionString();
+            return (!string.IsNullOrWhiteSpace(fallback), fallback, "Veri kaynağı bağlantısı bulunamadı.");
+        }
+
         public DbConnectionInfoDto GetCurrentSettings()
         {
             var all = GetAllConnections();
@@ -307,18 +346,6 @@ namespace SpsWebBI.Services
                     ? "conn_" + Guid.NewGuid().ToString("N")[..8]
                     : dto.Id.Trim();
 
-                // Yeni/güncellenen kayıt Aktif ise diğer kayıtları Pasif yap
-                if (dto.IsActive)
-                {
-                    foreach (var item in connArray)
-                    {
-                        if (item is JsonObject existingObj)
-                        {
-                            existingObj["IsActive"] = false;
-                        }
-                    }
-                }
-
                 JsonObject? foundObj = null;
                 foreach (var item in connArray)
                 {
@@ -348,7 +375,8 @@ namespace SpsWebBI.Services
                     rootObj.Remove("DatabaseEnvironments");
                 }
 
-                if (setAsActiveMariaDb)
+                // Ana MariaDbConnection sistem bağlantısı boşsa veya ilk kayıt güncelleniyorsa senkronize tut
+                if (setAsActiveMariaDb && (string.IsNullOrWhiteSpace(connStringsObj["MariaDbConnection"]?.GetValue<string>()) || targetId == "conn_default"))
                 {
                     connStringsObj["MariaDbConnection"] = protectedConnectionString;
                     _configuration["ConnectionStrings:MariaDbConnection"] = protectedConnectionString;

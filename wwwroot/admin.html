@@ -50,6 +50,18 @@
         body.light-theme th { background: #e2e8f0; color: #1e3a8a; }
         body.light-theme .token-box { background: #f8fafc; color: #334155; }
         body.light-theme .token-box code { color: #047857; }
+        body.spsteks-theme {
+            --bg: #d9e7f5; --panel: #103766; --card: #edf4fc; --border: #94b8db;
+            --text: #0c2340; --muted: #2b4c73; --primary: #0f5ea8;
+        }
+        body.spsteks-theme .top-header { color: #ffffff; border-bottom-color: #0a2546; }
+        body.spsteks-theme .top-header .btn { background: rgba(255,255,255,0.14); color: #ffffff; border-color: rgba(255,255,255,0.28); }
+        body.spsteks-theme .box .btn:not(.btn-primary):not(.btn-accent) { background: #ffffff; color: #0c2340; border-color: #94b8db; }
+        body.spsteks-theme h2 { color: #0f5ea8; }
+        body.spsteks-theme input, body.spsteks-theme select { background: #ffffff; color: #0c2340; border-color: #94b8db; }
+        body.spsteks-theme th { background: #cfe2f6; color: #0c2340; }
+        body.spsteks-theme .token-box { background: #e1eefb; color: #0c2340; }
+        body.spsteks-theme .token-box code { color: #047857; }
     </style>
 </head>
 <body>
@@ -57,23 +69,34 @@
         <div>
             <strong>SpsWebBI — Kullanıcı, Dashboard Yetkisi, Gösterim Önceliği ve Süre Yönetimi (Madde 6, 7, 8)</strong>
         </div>
-        <div style="display:flex;gap:10px;">
-            <button type="button" class="btn" id="btnThemeToggle" onclick="toggleTheme()">☀️ Açık Tema</button>
+        <div style="display:flex;align-items:center;gap:10px;">
+            <select id="selThemeMode" onchange="onThemeSelectChange(this.value)" title="Görünüm Teması Seçin"
+                    style="padding:7px 11px;border-radius:7px;border:1px solid var(--border);font-weight:700;font-size:0.8rem;cursor:pointer;">
+                <option value="dark">🌙 Koyu Tema</option>
+                <option value="light">☀️ Açık Tema</option>
+                <option value="spsteks">💎 SpsTeks Mavi</option>
+            </select>
             <a href="/app" class="btn">← Gösterim Ekranı</a>
             <a href="/designer" class="btn">Tasarım Stüdyosu</a>
+            <button type="button" class="btn" onclick="logout()" style="border-color:rgba(239,68,68,0.5);background:rgba(239,68,68,0.18);color:#fca5a5;">Çıkış</button>
         </div>
     </header>
     <script>
         function applySavedTheme() {
             const saved = localStorage.getItem('sps_bi_theme') || 'dark';
-            document.body.classList.toggle('light-theme', saved === 'light');
-            const btn = document.getElementById('btnThemeToggle');
-            if (btn) btn.innerHTML = saved === 'light' ? '🌙 Koyu Tema' : '☀️ Açık Tema';
+            document.body.classList.toggle('light-theme', saved === 'light' || saved === 'spsteks');
+            document.body.classList.toggle('spsteks-theme', saved === 'spsteks');
+            const sel = document.getElementById('selThemeMode');
+            if (sel) sel.value = (saved === 'light' || saved === 'spsteks') ? saved : 'dark';
         }
-        function toggleTheme() {
-            const next = document.body.classList.contains('light-theme') ? 'dark' : 'light';
+        function onThemeSelectChange(mode) {
+            const next = (mode === 'light' || mode === 'spsteks') ? mode : 'dark';
             localStorage.setItem('sps_bi_theme', next);
             applySavedTheme();
+        }
+        async function logout() {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login';
         }
         applySavedTheme();
     </script>

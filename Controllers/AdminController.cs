@@ -83,6 +83,7 @@ namespace SpsWebBI.Controllers
 
             var sources = (await conn.QueryAsync<BiDataSource>("SELECT * FROM bi_datasources ORDER BY datasource_id ASC;")).ToList();
             var allParams = (await conn.QueryAsync<BiDataSourceParam>("SELECT * FROM bi_datasource_params ORDER BY display_order ASC;")).ToList();
+            var connections = _connManager.GetAllConnections();
 
             var result = sources.Select(ds => new
             {
@@ -90,13 +91,14 @@ namespace SpsWebBI.Controllers
                 ds.code,
                 ds.name,
                 ds.category,
+                ds.connection_id,
                 ds.sql_query,
                 ds.columns_schema_json,
                 ds.is_active,
                 parameters = allParams.Where(p => p.datasource_id == ds.datasource_id).ToList()
             });
 
-            return Ok(new { success = true, datasources = result });
+            return Ok(new { success = true, datasources = result, connections });
         }
 
         [HttpGet("dashboards")]

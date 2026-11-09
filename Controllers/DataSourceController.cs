@@ -20,6 +20,7 @@ namespace SpsWebBI.Controllers
 
     public class PreviewSqlRequest
     {
+        public string? ConnectionId { get; set; }
         public string SqlQuery { get; set; } = string.Empty;
         public Dictionary<string, string?>? SampleFilters { get; set; }
     }
@@ -27,10 +28,12 @@ namespace SpsWebBI.Controllers
     public class SaveDataSourceRequest
     {
         public int? DataSourceId { get; set; }
+        public string? ConnectionId { get; set; }
         public string Code { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string? Category { get; set; }
         public string SqlQuery { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = true;
         public List<BiDataSourceParam>? Parameters { get; set; }
     }
 
@@ -133,10 +136,16 @@ namespace SpsWebBI.Controllers
 
             var extractedParams = SqlSecurityValidator.ExtractParameters(request.SqlQuery);
 
-            await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
-            await conn.OpenAsync();
+            var targetConnInfo = _connManager.ResolveConnectionForQuery(request.ConnectionId);
+            if (!targetConnInfo.IsUsable)
+            {
+                return BadRequest(new { success = false, message = targetConnInfo.ErrorMessage, extractedParameters = extractedParams });
+            }
 
-            var result = await _queryService.ExecuteRawSelectQueryAsync(conn, request.SqlQuery, request.SampleFilters, maxRows: 100);
+            await using var targetConn = new MySqlConnection(targetConnInfo.ConnectionString);
+            await targetConn.OpenAsync();
+
+            var result = await _queryService.ExecuteRawSelectQueryAsync(targetConn, request.SqlQuery, request.SampleFilters, maxRows: 100);
             if (!result.Success)
             {
                 return BadRequest(new { success = false, message = result.Message, extractedParameters = extractedParams });
@@ -152,7 +161,7 @@ namespace SpsWebBI.Controllers
         }
 
         /// <summary>
-        /// Madde 2.4, 2.5, 4, 5, 9: Yeni bir Veri Kaynağını (SQL Sorgusu) ve filtre parametrelerini MariaDB'ye kaydeder.
+        /// Madde 2.4, 2.5, 4, 5, 9: Yeni bir Veri Kaynağını (SQL Sorgusu), seçili bağlantısını (connection_id) ve filtre parametrelerini MariaDB'ye kaydeder.
         /// </summary>
         [HttpPost("save")]
         public async Task<IActionResult> SaveDataSource([FromBody] SaveDataSourceRequest request)
@@ -164,7 +173,7 @@ namespace SpsWebBI.Controllers
 
             if (string.IsNullOrWhiteSpace(request.Code) || string.IsNullOrWhiteSpace(request.Name))
             {
-                return BadRequest(new { success = false, message = "Veri kaynağı kodu ve adı zorunludur." });
+                return BadRequest(new { success = false, message = "Sorgu kodu ve adı zorunludur." });
             }
 
             var validation = SqlSecurityValidator.ValidateSelectQuery(request.SqlQuery);
@@ -173,29 +182,55 @@ namespace SpsWebBI.Controllers
                 return BadRequest(new { success = false, message = validation.ErrorMessage });
             }
 
-            await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
-            await conn.OpenAsync();
+            var targetConnInfo = _connManager.ResolveConnectionForQuery(request.ConnectionId);
+            List<ColumnSchemaInfo> detectedCols = new();
 
-            // Şemayı otomatik çıkar
-            var testExec = await _queryService.ExecuteRawSelectQueryAsync(conn, request.SqlQuery, null, maxRows: 5);
-            if (!testExec.Success)
+            if (targetConnInfo.IsUsable)
             {
-                return BadRequest(new { success = false, message = $"SQL doğrulama hatası: {testExec.Message}" });
+                await using var targetConn = new MySqlConnection(targetConnInfo.ConnectionString);
+                await targetConn.OpenAsync();
+
+                // Şemayı seçili hedef veritabanı bağlantısı üzerinden otomatik çıkar
+                var testExec = await _queryService.ExecuteRawSelectQueryAsync(targetConn, request.SqlQuery, null, maxRows: 5);
+                if (!testExec.Success && request.IsActive)
+                {
+                    return BadRequest(new { success = false, message = $"SQL doğrulama hatası: {testExec.Message}" });
+                }
+                if (testExec.Success)
+                {
+                    detectedCols = testExec.Columns;
+                }
+            }
+            else if (request.IsActive)
+            {
+                return BadRequest(new { success = false, message = targetConnInfo.ErrorMessage });
             }
 
-            string schemaJson = JsonSerializer.Serialize(testExec.Columns);
+            await using var sysConn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await sysConn.OpenAsync();
+
             int dsId = request.DataSourceId ?? 0;
+            string schemaJson = JsonSerializer.Serialize(detectedCols);
+            if (detectedCols.Count == 0 && dsId > 0)
+            {
+                var existingSchema = await sysConn.ExecuteScalarAsync<string?>("SELECT columns_schema_json FROM bi_datasources WHERE datasource_id = @Id;", new { Id = dsId });
+                if (!string.IsNullOrWhiteSpace(existingSchema))
+                {
+                    schemaJson = existingSchema;
+                }
+            }
 
             if (dsId > 0)
             {
-                await conn.ExecuteAsync(@"
+                await sysConn.ExecuteAsync(@"
                     UPDATE bi_datasources
                        SET code = @Code,
                            name = @Name,
                            category = @Category,
+                           connection_id = @ConnectionId,
                            sql_query = @SqlQuery,
                            columns_schema_json = @SchemaJson,
-                           is_active = 1,
+                           is_active = @IsActive,
                            updated_at = NOW()
                      WHERE datasource_id = @Id;",
                     new
@@ -204,34 +239,38 @@ namespace SpsWebBI.Controllers
                         Code = request.Code.Trim(),
                         Name = request.Name.Trim(),
                         Category = request.Category?.Trim(),
+                        ConnectionId = string.IsNullOrWhiteSpace(request.ConnectionId) ? null : request.ConnectionId.Trim(),
                         SqlQuery = request.SqlQuery,
-                        SchemaJson = schemaJson
+                        SchemaJson = schemaJson,
+                        IsActive = request.IsActive
                     });
             }
             else
             {
-                dsId = await conn.ExecuteScalarAsync<int>(@"
-                    INSERT INTO bi_datasources (code, name, category, sql_query, columns_schema_json, is_active)
-                    VALUES (@Code, @Name, @Category, @SqlQuery, @SchemaJson, 1);
+                dsId = await sysConn.ExecuteScalarAsync<int>(@"
+                    INSERT INTO bi_datasources (code, name, category, connection_id, sql_query, columns_schema_json, is_active)
+                    VALUES (@Code, @Name, @Category, @ConnectionId, @SqlQuery, @SchemaJson, @IsActive);
                     SELECT LAST_INSERT_ID();",
                     new
                     {
                         Code = request.Code.Trim(),
                         Name = request.Name.Trim(),
                         Category = request.Category?.Trim(),
+                        ConnectionId = string.IsNullOrWhiteSpace(request.ConnectionId) ? null : request.ConnectionId.Trim(),
                         SqlQuery = request.SqlQuery,
-                        SchemaJson = schemaJson
+                        SchemaJson = schemaJson,
+                        IsActive = request.IsActive
                     });
             }
 
             if (request.Parameters != null)
             {
-                await conn.ExecuteAsync("DELETE FROM bi_datasource_params WHERE datasource_id = @DsId;", new { DsId = dsId });
+                await sysConn.ExecuteAsync("DELETE FROM bi_datasource_params WHERE datasource_id = @DsId;", new { DsId = dsId });
                 int order = 1;
                 foreach (var p in request.Parameters)
                 {
                     if (string.IsNullOrWhiteSpace(p.param_name)) continue;
-                    await conn.ExecuteAsync(@"
+                    await sysConn.ExecuteAsync(@"
                         INSERT INTO bi_datasource_params (datasource_id, param_name, label, param_type, default_value, lookup_sql, display_order)
                         VALUES (@DsId, @ParamName, @Label, @ParamType, @DefaultValue, @LookupSql, @DisplayOrder);",
                         new
@@ -251,7 +290,7 @@ namespace SpsWebBI.Controllers
             {
                 success = true,
                 datasourceId = dsId,
-                columns = testExec.Columns,
+                columns = detectedCols,
                 message = "Veri kaynağı ve parametreleri başarıyla kaydedildi."
             });
         }

@@ -94,6 +94,7 @@ namespace SpsWebBI.Services
 
         /// <summary>
         /// Kullanıcının ilgili datasource veya dashboard için görüntüleme yetkisi olup olmadığını kontrol eder (IDOR koruması).
+        /// Hem dashboard'un ana veri kaynağını hem de dashboard bileşenlerinde (widgets) kullanılan ikincil sorguları doğrular.
         /// </summary>
         public async Task<bool> IsUserAuthorizedForDataSourceAsync(int userId, string userRole, int datasourceId)
         {
@@ -112,9 +113,18 @@ namespace SpsWebBI.Services
                   INNER JOIN bi_dashboards d ON d.dashboard_id = ud.dashboard_id AND d.is_active = 1
                  WHERE ud.user_id = @UserId
                    AND ud.can_view = 1
-                   AND d.primary_datasource_id = @DataSourceId;";
+                   AND (
+                        d.primary_datasource_id = @DataSourceId
+                        OR d.layout_json LIKE @DsPattern
+                        OR ud.custom_layout_json LIKE @DsPattern
+                   );";
 
-            int count = await conn.ExecuteScalarAsync<int>(sql, new { UserId = userId, DataSourceId = datasourceId });
+            int count = await conn.ExecuteScalarAsync<int>(sql, new
+            {
+                UserId = userId,
+                DataSourceId = datasourceId,
+                DsPattern = $"%\"dataSourceId\":{datasourceId}%"
+            });
             return count > 0;
         }
 
@@ -123,29 +133,33 @@ namespace SpsWebBI.Services
         /// </summary>
         public async Task<List<ParameterWithOptionsDto>> GetDataSourceParametersAsync(int datasourceId)
         {
-            if (!_connManager.IsActiveConnectionEnabled())
-            {
-                return new List<ParameterWithOptionsDto>();
-            }
+            await using var sysConn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await sysConn.OpenAsync();
 
-            await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
-            await conn.OpenAsync();
-
-            int isActive = await conn.ExecuteScalarAsync<int>(
-                "SELECT COUNT(1) FROM bi_datasources WHERE datasource_id = @DataSourceId AND is_active = 1;",
+            var ds = await sysConn.QueryFirstOrDefaultAsync<BiDataSource>(
+                "SELECT * FROM bi_datasources WHERE datasource_id = @DataSourceId AND is_active = 1 LIMIT 1;",
                 new { DataSourceId = datasourceId });
-            if (isActive == 0)
+            if (ds == null)
             {
                 return new List<ParameterWithOptionsDto>();
             }
 
-            var parameters = (await conn.QueryAsync<BiDataSourceParam>(@"
+            var targetConnInfo = _connManager.ResolveConnectionForQuery(ds.connection_id);
+            if (!targetConnInfo.IsUsable)
+            {
+                return new List<ParameterWithOptionsDto>();
+            }
+
+            var parameters = (await sysConn.QueryAsync<BiDataSourceParam>(@"
                 SELECT * FROM bi_datasource_params 
                  WHERE datasource_id = @DataSourceId 
                  ORDER BY display_order ASC, param_id ASC;",
                 new { DataSourceId = datasourceId })).ToList();
 
             var result = new List<ParameterWithOptionsDto>();
+
+            await using var targetConn = new MySqlConnection(targetConnInfo.ConnectionString);
+            await targetConn.OpenAsync();
 
             foreach (var p in parameters)
             {
@@ -167,7 +181,7 @@ namespace SpsWebBI.Services
                     {
                         try
                         {
-                            var rows = await conn.QueryAsync(p.lookup_sql);
+                            var rows = await targetConn.QueryAsync(p.lookup_sql);
                             foreach (IDictionary<string, object> row in rows)
                             {
                                 var values = row.Values.ToList();
@@ -194,30 +208,34 @@ namespace SpsWebBI.Services
         }
 
         /// <summary>
-        /// Kayıtlı bir veri kaynağını (bi_datasources) filtre parametreleriyle güvenli biçimde çalıştırır.
+        /// Kayıtlı bir veri kaynağını (bi_datasources) kendi seçili veritabanı bağlantısı (connection_id) üzerinde çalıştırır.
         /// </summary>
         public async Task<DynamicQueryResult> ExecuteDataSourceAsync(
             int datasourceId,
             Dictionary<string, string?>? filterValues)
         {
-            if (!_connManager.IsActiveConnectionEnabled())
-            {
-                return new DynamicQueryResult { Success = false, Message = "Veritabanı bağlantısı pasif durumda." };
-            }
+            await using var sysConn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await sysConn.OpenAsync();
 
-            await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
-            await conn.OpenAsync();
-
-            var ds = await conn.QueryFirstOrDefaultAsync<BiDataSource>(
+            var ds = await sysConn.QueryFirstOrDefaultAsync<BiDataSource>(
                 "SELECT * FROM bi_datasources WHERE datasource_id = @Id AND is_active = 1 LIMIT 1;",
                 new { Id = datasourceId });
 
             if (ds == null)
             {
-                return new DynamicQueryResult { Success = false, Message = "Veri kaynağı bulunamadı veya pasif." };
+                return new DynamicQueryResult { Success = false, Message = "SQL sorgusu bulunamadı veya pasif." };
             }
 
-            return await ExecuteRawSelectQueryAsync(conn, ds.sql_query, filterValues);
+            var targetConnInfo = _connManager.ResolveConnectionForQuery(ds.connection_id);
+            if (!targetConnInfo.IsUsable)
+            {
+                return new DynamicQueryResult { Success = false, Message = targetConnInfo.ErrorMessage };
+            }
+
+            await using var targetConn = new MySqlConnection(targetConnInfo.ConnectionString);
+            await targetConn.OpenAsync();
+
+            return await ExecuteRawSelectQueryAsync(targetConn, ds.sql_query, filterValues);
         }
 
         /// <summary>

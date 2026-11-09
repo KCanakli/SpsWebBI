@@ -22,6 +22,7 @@ namespace SpsWebBI.Models
         public string code { get; set; } = string.Empty;
         public string name { get; set; } = string.Empty;
         public string? category { get; set; }
+        public string? connection_id { get; set; }
         public string sql_query { get; set; } = string.Empty;
         public string? columns_schema_json { get; set; }
         public bool is_active { get; set; } = true;

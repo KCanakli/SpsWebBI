@@ -54,12 +54,24 @@ namespace SpsWebBI.Data
                         code VARCHAR(50) NOT NULL UNIQUE,
                         name VARCHAR(120) NOT NULL,
                         category VARCHAR(50) NULL,
+                        connection_id VARCHAR(64) NULL,
                         sql_query LONGTEXT NOT NULL,
                         columns_schema_json LONGTEXT NULL,
                         is_active TINYINT(1) NOT NULL DEFAULT 1,
                         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         updated_at DATETIME NULL
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+                // Mevcut bi_datasources tablosunda connection_id kolonu yoksa ekle
+                int hasConnCol = await connection.ExecuteScalarAsync<int>(@"
+                    SELECT COUNT(*) FROM information_schema.COLUMNS
+                     WHERE TABLE_SCHEMA = DATABASE()
+                       AND TABLE_NAME = 'bi_datasources'
+                       AND COLUMN_NAME = 'connection_id';");
+                if (hasConnCol == 0)
+                {
+                    await connection.ExecuteAsync("ALTER TABLE bi_datasources ADD COLUMN connection_id VARCHAR(64) NULL AFTER category;");
+                }
 
                 // 3. Veri Kaynağı Filtre Parametreleri Tablosu (Madde 5)
                 await connection.ExecuteAsync(@"

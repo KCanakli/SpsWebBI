@@ -69,7 +69,14 @@
             background: radial-gradient(circle at top left, #e2e8f0, #f1f5f9);
         }
         body.light-theme .login-card { box-shadow: 0 12px 32px rgba(15,23,42,0.12); }
-        body.light-theme input { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
+        body.light-theme input, body.light-theme select { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
+        body.spsteks-theme {
+            --bg: #d9e7f5; --card: #edf4fc; --border: #94b8db; --text: #0c2340; --muted: #2b4c73;
+            --primary: #0f5ea8; --primary-hover: #0a4882;
+            background: radial-gradient(circle at top left, #c3daf2, #d9e7f5);
+        }
+        body.spsteks-theme .login-card { box-shadow: 0 14px 36px rgba(12,35,64,0.18); }
+        body.spsteks-theme input, body.spsteks-theme select { background: #ffffff; color: #0c2340; border-color: #94b8db; }
     </style>
 </head>
 <body>
@@ -81,20 +88,23 @@
                     <h1>SpsWebBI</h1>
                 </div>
             </div>
-            <button type="button" id="btnThemeToggle" onclick="toggleTheme()"
-                    style="background:transparent;border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:7px;cursor:pointer;font-size:0.78rem;font-weight:600;">
-                ☀️ Açık
-            </button>
+            <select id="selThemeMode" onchange="onThemeSelectChange(this.value)" title="Görünüm Teması Seçin"
+                    style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:7px;cursor:pointer;font-size:0.78rem;font-weight:700;outline:none;">
+                <option value="dark">🌙 Koyu Tema</option>
+                <option value="light">☀️ Açık Tema</option>
+                <option value="spsteks">💎 SpsTeks Mavi</option>
+            </select>
         </div>
         <script>
             function applySavedTheme() {
                 const saved = localStorage.getItem('sps_bi_theme') || 'dark';
-                document.body.classList.toggle('light-theme', saved === 'light');
-                const btn = document.getElementById('btnThemeToggle');
-                if (btn) btn.innerHTML = saved === 'light' ? '🌙 Koyu' : '☀️ Açık';
+                document.body.classList.toggle('light-theme', saved === 'light' || saved === 'spsteks');
+                document.body.classList.toggle('spsteks-theme', saved === 'spsteks');
+                const sel = document.getElementById('selThemeMode');
+                if (sel) sel.value = (saved === 'light' || saved === 'spsteks') ? saved : 'dark';
             }
-            function toggleTheme() {
-                const next = document.body.classList.contains('light-theme') ? 'dark' : 'light';
+            function onThemeSelectChange(mode) {
+                const next = (mode === 'light' || mode === 'spsteks') ? mode : 'dark';
                 localStorage.setItem('sps_bi_theme', next);
                 applySavedTheme();
             }
@@ -123,9 +133,8 @@
             <button type="submit" class="btn-submit" id="btnLogin">Giriş Yap</button>
         </form>
 
-        <div class="footer">
-            <span>Kapalı Devre Güvenli Oturum</span>
-            <a href="/db-settings">Veritabanı Ayarları</a>
+        <div class="footer" style="justify-content:center;">
+            <span>🔒 Kapalı Devre Güvenli Oturum</span>
         </div>
     </div>
 

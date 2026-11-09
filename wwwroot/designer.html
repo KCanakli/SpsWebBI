@@ -1265,10 +1265,16 @@
             overflow-y: auto;
             padding: 16px;
             display: none;
+            min-height: 0;
+        }
+
+        #sqlEditorView.sql-studio-container {
+            overflow: hidden;
+            flex-direction: column;
         }
 
         .sql-box {
-            max-width: 1100px;
+            max-width: 1180px;
             margin: 0 auto;
             background: var(--panel);
             border: 1px solid var(--border-bright);
@@ -1277,6 +1283,119 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+        }
+
+        #sqlEditorView > .sql-box {
+            max-width: 100%;
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .ds-grid-wrap {
+            flex: 1;
+            min-height: 0;
+            border: 1px solid var(--border-bright);
+            border-radius: 9px;
+            overflow: auto;
+            background: var(--panel-alt);
+        }
+
+        .ds-grid-filter-row th {
+            position: sticky !important;
+            top: 31px !important;
+            z-index: 4 !important;
+            background: var(--panel) !important;
+            padding: 4px 6px !important;
+            border-bottom: 1px solid var(--border-bright) !important;
+            cursor: default !important;
+        }
+
+        .ds-grid-filter-input {
+            width: 100%;
+            padding: 4px 7px;
+            border-radius: 5px;
+            border: 1px solid var(--border-bright);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.74rem;
+            outline: none;
+        }
+
+        .ds-grid-filter-input:focus {
+            border-color: #38bdf8;
+        }
+
+        table.bi-table tbody tr.ds-grid-row {
+            cursor: pointer;
+            transition: background 0.12s;
+        }
+
+        table.bi-table tbody tr.ds-grid-row.selected-ds-row td {
+            background: rgba(14, 165, 233, 0.22) !important;
+            border-bottom-color: rgba(56, 189, 248, 0.45);
+            font-weight: 600;
+        }
+
+        .ds-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 4500;
+            background: rgba(2, 6, 23, 0.72);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+        }
+
+        .ds-modal-overlay.open {
+            display: flex;
+        }
+
+        .ds-modal-card {
+            width: min(1140px, 96vw);
+            max-height: 92vh;
+            background: var(--panel);
+            border: 1px solid rgba(56, 189, 248, 0.55);
+            border-radius: 14px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .ds-modal-header {
+            padding: 12px 16px;
+            background: var(--panel-alt);
+            border-bottom: 1px solid var(--border-bright);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .ds-modal-body {
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ds-modal-body textarea {
+            width: 100%;
+            min-height: 140px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-bright);
+            background: var(--bg);
+            color: #38bdf8;
+            font-family: Consolas, monospace;
+            font-size: 0.86rem;
+            resize: vertical;
         }
 
         .sql-box textarea {
@@ -2008,11 +2127,20 @@
                         <div class="hamburger-sec-title">
                             <span>⚙️ Stüdyo Modülleri</span>
                         </div>
+                        <button type="button" class="hamburger-item" id="hmBtnDbSettings"
+                            onclick="window.location.href='/db-settings'">
+                            <span style="font-size:1.1rem;">🔌</span>
+                            <span>
+                                Veri Kaynağı Ayarları
+                                <span class="hamburger-item-sub">Canlı ve Test ortamı bağlantı ve DB ayarlarını
+                                    yönet</span>
+                            </span>
+                        </button>
                         <button type="button" class="hamburger-item" id="hmBtnSql" onclick="openNewDataSourceScreen()">
                             <span style="font-size:1.1rem;">🗄️</span>
                             <span>
-                                Veri Kaynağı (SQL Datasource)
-                                <span class="hamburger-item-sub">Yeni veri kaynağı oluştur veya mevcut SQL sorgularını
+                                Veri Kaynağı (SQL Sorgu Tanımlama)
+                                <span class="hamburger-item-sub">Yeni SQL sorgusu oluştur, bağlantı seç veya mevcutları
                                     düzenle</span>
                             </span>
                         </button>
@@ -2023,15 +2151,6 @@
                                 Dashboard Ekle / Tanımla
                                 <span class="hamburger-item-sub">Yeni dashboard oluştur veya mevcut dashboard
                                     bilgilerini düzenle</span>
-                            </span>
-                        </button>
-                        <button type="button" class="hamburger-item" id="hmBtnDbSettings"
-                            onclick="window.location.href='/db-settings'">
-                            <span style="font-size:1.1rem;">🔌</span>
-                            <span>
-                                Veritabanı Ayarları
-                                <span class="hamburger-item-sub">Canlı ve Test ortamı bağlantı ve DB ayarlarını
-                                    yönet</span>
                             </span>
                         </button>
                         <button type="button" class="hamburger-item" id="hmBtnAuth"
@@ -2078,6 +2197,7 @@
             </div>
             <button type="button" class="btn" onclick="saveMasterDashboard()">Kaydet</button>
             <a href="/app" class="btn">Kapat</a>
+            <button type="button" class="btn btn-danger" onclick="logoutStudio()" title="Oturumu kapat ve şifre ekranına dön">Çıkış</button>
         </div>
     </header>
 
@@ -2187,79 +2307,141 @@
         </footer>
     </div>
 
-    <!-- SEKME 2: VERİ KAYNAĞI VE SQL SORGU EDİTÖRÜ -->
+    <!-- SEKME 2: VERİ KAYNAĞI VE SQL SORGU EDİTÖRÜ (TAM EKRAN YÜKSEKLİĞİNDE LİSTE + MODAL DÜZENLEME) -->
     <div id="sqlEditorView" class="sql-studio-container">
         <div class="sql-box">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-                <h2 style="margin:0;font-size:1.05rem;color:#38bdf8;">🗄️ SQL Veri Kaynağı & Dinamik Filtre Parametresi
-                    Tanımlama (Madde 2.4 & 2.5)</h2>
-                <div style="display:flex;align-items:center;gap:8px;">
-                    <button type="button" id="btnDeleteDs" class="btn btn-danger" onclick="deactivateDataSource()"
-                        disabled title="Seçili veri kaynağını veritabanından silmeden pasif hale getir">Sil</button>
-                    <button type="button" class="btn btn-primary" onclick="switchStudioTab('visual')">Kapat</button>
+                <div>
+                    <h2 style="margin:0;font-size:1.05rem;color:#38bdf8;">🗄️ Veri Kaynağı (SQL Sorgu Tanımlama) & Bağlantı Seçimi</h2>
+                    <div style="font-size:0.74rem;color:var(--muted);margin-top:2px;">Listeden bir satır seçip <strong>"✏️ Güncelle"</strong> butonuna basabilir (veya satıra çift tıklayabilir), başlıklardan sıralama ve filtreleme yapabilirsiniz.</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <button type="button" class="btn btn-accent" onclick="startNewDataSourceForm()">+ Yeni Veri Kaynağı (Sorgu) Ekle</button>
+                    <button type="button" id="btnEditSelectedDs" class="btn btn-primary" onclick="openSelectedDataSourceModal()" disabled>✏️ Güncelle</button>
+                    <button type="button" id="btnCloneSelectedDs" class="btn" onclick="cloneSelectedDataSourceFromGrid()" disabled title="Seçili sorguyu farklı bir ortam/bağlantı için kopyala">📋 Kopyasını Oluştur</button>
+                    <button type="button" id="btnDeleteSelectedDs" class="btn btn-danger" onclick="deactivateDataSource()" disabled title="Seçili veri kaynağını veritabanından silmeden pasif hale getir">Sil</button>
+                    <button type="button" class="btn" onclick="switchStudioTab('visual')">Kapat</button>
                 </div>
             </div>
 
-            <div class="r-field">
-                <label>Mevcut Veri Kaynağını Seç (Düzenlemek İçin)</label>
-                <select id="selExistingDs" onchange="onSelectExistingDs()"></select>
-            </div>
+            <!-- Gizli select: geriye dönük senkronizasyon için korunur -->
+            <select id="selExistingDs" onchange="onSelectExistingDs()" style="display:none;"></select>
 
-            <div style="display:grid;grid-template-columns:1fr 2fr 1fr;gap:12px;">
-                <div class="r-field">
-                    <label>Veri Kaynağı Kodu</label>
-                    <input type="text" id="dsCode" placeholder="Örn: DS_SATINALMA">
-                </div>
-                <div class="r-field">
-                    <label>Veri Kaynağı Adı</label>
-                    <input type="text" id="dsName" placeholder="Örn: Satınalma Sipariş Analizi">
-                </div>
-                <div class="r-field">
-                    <label>Kategori</label>
-                    <input type="text" id="dsCat" placeholder="Satış / Stok / Sevkiyat">
-                </div>
-            </div>
-
-            <div class="r-field">
-                <label>SQL Sorgusu (Yalnızca SELECT/WITH; filtreler için @ParametreAdi kullanın)</label>
-                <textarea id="dsSql"
-                    placeholder="SELECT ... FROM tablo WHERE (@Bolge IS NULL OR Bolge = @Bolge)"></textarea>
-            </div>
-
-            <div style="display:flex;gap:10px;">
-                <button type="button" class="btn btn-primary" onclick="previewAndDetectSql()">🔍 SQL Doğrula & Kolonları
-                    / @Parametreleri Algıla</button>
-                <button type="button" class="btn btn-accent" onclick="saveDataSource()">Kaydet</button>
-            </div>
-
-            <div>
-                <label style="font-size:0.75rem;color:var(--muted);font-weight:700;display:block;margin-bottom:6px;">
-                    FİLTRE PARAMETRELERİ (@Parametreler ve Açılır Liste Lookup SQL)
-                </label>
-                <table class="bi-table"
-                    style="border:1px solid var(--border-bright);border-radius:8px;overflow:hidden;">
+            <!-- 1. KAYITLI VERİ KAYNAKLARI LİSTESİ (TAM EKRAN YÜKSEKLİĞİNDE SIRALANABİLİR & FİLTRELENEBİLİR GRİD) -->
+            <div class="ds-grid-wrap">
+                <table class="bi-table" id="dsMasterGridTable">
                     <thead>
                         <tr>
-                            <th>Parametre (@)</th>
-                            <th>Ekran Etiketi</th>
-                            <th>Tip</th>
-                            <th>Lookup SQL (Seçim Listesi İçin Opsiyonel SELECT val, txt)</th>
-                            <th></th>
+                            <th onclick="toggleDsGridSort('connection')" style="width:22%;">Bağlantı Kaynağı <span class="sort-ind" id="dsSortInd_connection">⇅</span></th>
+                            <th onclick="toggleDsGridSort('code')" style="width:20%;">Veri Kaynağı Kodu <span class="sort-ind" id="dsSortInd_code">⇅</span></th>
+                            <th onclick="toggleDsGridSort('name')" style="width:30%;">Veri Kaynağı Adı <span class="sort-ind" id="dsSortInd_name">⇅</span></th>
+                            <th onclick="toggleDsGridSort('category')" style="width:16%;">Kategori <span class="sort-ind" id="dsSortInd_category">⇅</span></th>
+                            <th onclick="toggleDsGridSort('status')" style="width:12%;">Durum <span class="sort-ind" id="dsSortInd_status">⇅</span></th>
+                        </tr>
+                        <tr class="ds-grid-filter-row">
+                            <th><input type="text" id="dsGridFilterConn" class="ds-grid-filter-input" placeholder="🔍 Bağlantı ara..." oninput="renderDataSourceGrid()"></th>
+                            <th><input type="text" id="dsGridFilterCode" class="ds-grid-filter-input" placeholder="🔍 Kod ara..." oninput="renderDataSourceGrid()"></th>
+                            <th><input type="text" id="dsGridFilterName" class="ds-grid-filter-input" placeholder="🔍 Ad ara..." oninput="renderDataSourceGrid()"></th>
+                            <th><input type="text" id="dsGridFilterCat" class="ds-grid-filter-input" placeholder="🔍 Kategori ara..." oninput="renderDataSourceGrid()"></th>
+                            <th>
+                                <select id="dsGridFilterStatus" class="ds-grid-filter-input" onchange="renderDataSourceGrid()">
+                                    <option value="">Tümü</option>
+                                    <option value="1">🟢 Aktif</option>
+                                    <option value="0">🔴 Pasif</option>
+                                </select>
+                            </th>
                         </tr>
                     </thead>
-                    <tbody id="paramsTableBody"></tbody>
+                    <tbody id="dsGridTableBody"></tbody>
                 </table>
-                <button type="button" class="btn" style="margin-top:8px;" onclick="addParamRow('', '', 'select', '')">+
-                    Parametre Satırı Ekle</button>
             </div>
+        </div>
 
-            <div>
-                <label style="font-size:0.75rem;color:var(--muted);font-weight:700;display:block;margin-bottom:6px;">
-                    ALGILANAN KOLONLAR VE ÖNİZLEME
-                </label>
-                <div id="detectedSchemaBox" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"></div>
-                <div id="sqlPreviewTableWrap"
-                    style="max-height:250px;overflow:auto;border:1px solid var(--border-bright);border-radius:8px;">
+        <!-- 2. VERİ GÜNCELLEME VE GİRİŞ MODAL EKRANI -->
+        <div id="dsFormSection" class="ds-modal-overlay" onclick="if(event.target===this) closeDataSourceFormPanel()">
+            <div class="ds-modal-card">
+                <div class="ds-modal-header">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span id="dsFormModeBadge" style="font-size:0.9rem;font-weight:800;color:#38bdf8;">✏️ Veri Kaynağı Düzenleme</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <button type="button" id="btnCloneDs" class="btn" onclick="cloneCurrentDataSource()"
+                            disabled title="Seçili sorguyu farklı bir ortam/bağlantı için kopyala">📋 Kopyasını Oluştur</button>
+                        <button type="button" id="btnDeleteDs" class="btn btn-danger" onclick="deactivateDataSource()"
+                            disabled title="Seçili veri kaynağını veritabanından silmeden pasif hale getir">Sil</button>
+                        <button type="button" class="btn" onclick="closeDataSourceFormPanel()">✕ Kapat</button>
+                    </div>
+                </div>
+
+                <div class="ds-modal-body">
+                    <div style="display:grid;grid-template-columns:1.3fr 1fr 1.5fr 1fr 0.85fr;gap:12px;">
+                        <div class="r-field">
+                            <label>Bağlantı (Veri Kaynağı Ayarı)</label>
+                            <select id="dsConnId"></select>
+                        </div>
+                        <div class="r-field">
+                            <label>Veri Kaynağı Kodu</label>
+                            <input type="text" id="dsCode" placeholder="Örn: DS_SIPARIS_TEST">
+                        </div>
+                        <div class="r-field">
+                            <label>Veri Kaynağı Adı</label>
+                            <input type="text" id="dsName" placeholder="Örn: Satınalma Sipariş Analizi">
+                        </div>
+                        <div class="r-field">
+                            <label>Kategori</label>
+                            <input type="text" id="dsCat" placeholder="Satış / Stok / Sevkiyat">
+                        </div>
+                        <div class="r-field">
+                            <label>Durum</label>
+                            <select id="dsIsActive">
+                                <option value="1">🟢 Aktif</option>
+                                <option value="0">🔴 Pasif</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="r-field">
+                        <label>SQL Sorgusu (Yalnızca SELECT/WITH; filtreler için @ParametreAdi kullanın)</label>
+                        <textarea id="dsSql"
+                            placeholder="SELECT ... FROM tablo WHERE (@Bolge IS NULL OR Bolge = @Bolge)"></textarea>
+                    </div>
+
+                    <div style="display:flex;gap:10px;">
+                        <button type="button" class="btn btn-primary" onclick="previewAndDetectSql()">🔍 SQL Doğrula & Kolonları
+                            / @Parametreleri Algıla</button>
+                        <button type="button" class="btn btn-accent" onclick="saveDataSource()">💾 Kaydet</button>
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.75rem;color:var(--muted);font-weight:700;display:block;margin-bottom:6px;">
+                            FİLTRE PARAMETRELERİ (@Parametreler ve Açılır Liste Lookup SQL)
+                        </label>
+                        <table class="bi-table"
+                            style="border:1px solid var(--border-bright);border-radius:8px;overflow:hidden;">
+                            <thead>
+                                <tr>
+                                    <th>Parametre (@)</th>
+                                    <th>Ekran Etiketi</th>
+                                    <th>Tip</th>
+                                    <th>Lookup SQL (Seçim Listesi İçin Opsiyonel SELECT val, txt)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="paramsTableBody"></tbody>
+                        </table>
+                        <button type="button" class="btn" style="margin-top:8px;" onclick="addParamRow('', '', 'select', '')">+
+                            Parametre Satırı Ekle</button>
+                    </div>
+
+                    <div>
+                        <label style="font-size:0.75rem;color:var(--muted);font-weight:700;display:block;margin-bottom:6px;">
+                            ALGILANAN KOLONLAR VE ÖNİZLEME
+                        </label>
+                        <div id="detectedSchemaBox" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"></div>
+                        <div id="sqlPreviewTableWrap"
+                            style="max-height:220px;overflow:auto;border:1px solid var(--border-bright);border-radius:8px;">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2271,6 +2453,8 @@
             <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
                 <h2 style="margin:0;font-size:1.05rem;color:#38bdf8;">📐 Dashboard Tanımlama & Veri Kaynağı Seçimi</h2>
                 <div style="display:flex;align-items:center;gap:8px;">
+                    <button type="button" id="btnCloneDash" class="btn" onclick="cloneCurrentDashboard()"
+                        disabled title="Seçili dashboard'u tüm grafik yerleşimiyle birlikte kopyala">📋 Kopyasını Oluştur</button>
                     <button type="button" id="btnDeleteDash" class="btn btn-danger" onclick="deactivateDashboard()"
                         disabled title="Seçili dashboard'u veritabanından silmeden pasif hale getir">Sil</button>
                     <button type="button" class="btn btn-primary" onclick="switchStudioTab('visual')">Kapat</button>
@@ -2699,7 +2883,7 @@
             if (hmDash) hmDash.classList.toggle('active-item', isDash);
             if (hmVis) hmVis.style.display = isVisual ? 'none' : 'flex';
             document.getElementById('visualDesignerView').style.display = isVisual ? 'flex' : 'none';
-            document.getElementById('sqlEditorView').style.display = isSql ? 'block' : 'none';
+            document.getElementById('sqlEditorView').style.display = isSql ? 'flex' : 'none';
             document.getElementById('dashboardEditorView').style.display = isDash ? 'block' : 'none';
             if (isVisual) {
                 setTimeout(() => chartInstances.forEach(c => { try { c.resize(); } catch (_) { } }), 60);
@@ -2709,13 +2893,19 @@
         function openNewDataSourceScreen() {
             closeStudioHamburgerMenu();
             switchStudioTab('sql');
-            clearDataSourceForm();
+            closeDataSourceFormPanel();
+            renderDataSourceGrid();
         }
 
         function openDashboardEditorScreen() {
             closeStudioHamburgerMenu();
             switchStudioTab('dashboard');
             clearDashboardEditorForm();
+        }
+
+        async function logoutStudio() {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login';
         }
 
         async function initDesigner() {
@@ -2728,7 +2918,58 @@
                 window.location.href = '/app';
                 return;
             }
+            if (user.role !== 'admin') {
+                const dbBtn = document.getElementById('hmBtnDbSettings');
+                const authBtn = document.getElementById('hmBtnAuth');
+                if (dbBtn) dbBtn.style.display = 'none';
+                if (authBtn) authBtn.style.display = 'none';
+            }
             await loadAllData();
+        }
+
+        let allConnections = [];
+        let designerDataSourceCache = {};
+
+        function getConnectionLabelById(connId) {
+            if (!connId) {
+                const firstAct = allConnections.find(c => c.isActive !== false && c.IsActive !== false) || allConnections[0];
+                return firstAct ? (firstAct.environmentName || firstAct.EnvironmentName || 'Varsayılan') : 'Varsayılan';
+            }
+            const found = allConnections.find(c => String(c.id || c.Id).toLowerCase() === String(connId).toLowerCase());
+            if (!found) return connId;
+            const name = found.environmentName || found.EnvironmentName || connId;
+            const isAct = found.isActive !== false && found.IsActive !== false;
+            return isAct ? name : `${name} (PASİF)`;
+        }
+
+        function populateConnectionSelect() {
+            const selConn = document.getElementById('dsConnId');
+            if (!selConn) return;
+            const prevVal = selConn.value;
+            selConn.innerHTML = '';
+
+            const activeConns = allConnections.filter(c => c.isActive !== false && c.IsActive !== false);
+            if (activeConns.length === 0 && allConnections.length === 0) {
+                selConn.innerHTML = '<option value="conn_default">Varsayılan Bağlantı</option>';
+                return;
+            }
+
+            allConnections.forEach(c => {
+                const cid = c.id || c.Id || '';
+                const name = c.environmentName || c.EnvironmentName || 'Bağlantı';
+                const srv = c.server || c.Server || '127.0.0.1';
+                const dbn = c.database || c.Database || '';
+                const isAct = c.isActive !== false && c.IsActive !== false;
+                if (!isAct && cid !== prevVal) return; // Yeni seçimde yalnızca aktif bağlantıları listele
+                const suffix = isAct ? '' : ' (PASİF BAĞLANTI)';
+                selConn.innerHTML += `<option value="${escapeHtml(cid)}">🔌 ${escapeHtml(name)} (${escapeHtml(srv)} / ${escapeHtml(dbn)})${suffix}</option>`;
+            });
+
+            if (prevVal && Array.from(selConn.options).some(o => o.value === prevVal)) {
+                selConn.value = prevVal;
+            } else if (selConn.options.length > 0) {
+                selConn.selectedIndex = 0;
+            }
         }
 
         async function loadAllData() {
@@ -2739,8 +2980,11 @@
             const dsData = await dsRes.json();
             const dashData = await dashRes.json();
             allDataSources = dsData.datasources || [];
+            allConnections = dsData.connections || [];
             allDashboards = dashData.dashboards || [];
+            designerDataSourceCache = {};
 
+            populateConnectionSelect();
             populateDataSourceSelects();
             populateDashboardSelect();
 
@@ -2767,17 +3011,19 @@
         function populateDataSourceSelects() {
             const selDs = document.getElementById('selExistingDs');
             const dashDs = document.getElementById('dashDsId');
-            selDs.innerHTML = '<option value="">-- Yeni Veri Kaynağı Oluştur --</option>';
+            selDs.innerHTML = '<option value="">-- Yeni Veri Kaynağı (SQL Sorgusu) Oluştur --</option>';
             dashDs.innerHTML = '<option value="">-- Veri Kaynağı Seçin --</option>';
 
             allDataSources.forEach(ds => {
                 const passiveSuffix = (ds.is_active === false || ds.is_active === 0) ? ' (PASİF)' : '';
-                selDs.innerHTML += `<option value="${ds.datasource_id}">${escapeHtml(ds.code)} - ${escapeHtml(ds.name)}${passiveSuffix}</option>`;
-                dashDs.innerHTML += `<option value="${ds.datasource_id}">${escapeHtml(ds.code)} - ${escapeHtml(ds.name)}${passiveSuffix}</option>`;
+                const connTag = ` [${getConnectionLabelById(ds.connection_id)}]`;
+                selDs.innerHTML += `<option value="${ds.datasource_id}">${escapeHtml(ds.code)} - ${escapeHtml(ds.name)}${escapeHtml(connTag)}${passiveSuffix}</option>`;
+                dashDs.innerHTML += `<option value="${ds.datasource_id}">${escapeHtml(ds.code)} - ${escapeHtml(ds.name)}${escapeHtml(connTag)}${passiveSuffix}</option>`;
             });
             if (currentDsId) {
                 selDs.value = currentDsId;
             }
+            renderDataSourceGrid();
         }
 
         function populateDashboardSelect() {
@@ -2803,6 +3049,18 @@
             });
             if (currentDashId) selDash.value = currentDashId;
             if (editorDashId && selEditor) selEditor.value = editorDashId;
+        }
+
+        function getDashboardPrimaryDsId() {
+            const d = allDashboards.find(x => x.dashboard_id === currentDashId);
+            return d ? d.primary_datasource_id : parseInt(document.getElementById('dashDsId').value || '0', 10);
+        }
+
+        function getEffectiveWidgetDataSourceId(w) {
+            if (w && Number(w.dataSourceId) > 0) {
+                return Number(w.dataSourceId);
+            }
+            return getDashboardPrimaryDsId();
         }
 
         async function onSelectExistingDash() {
@@ -2831,17 +3089,40 @@
 
         function updateDeleteDashButtonState() {
             const btn = document.getElementById('btnDeleteDash');
-            if (!btn) return;
+            const cloneBtn = document.getElementById('btnCloneDash');
             const d = allDashboards.find(x => x.dashboard_id === editorDashId);
             const canDeactivate = !!(d && d.is_active !== false && d.is_active !== 0);
-            btn.disabled = !canDeactivate;
+            if (btn) btn.disabled = !canDeactivate;
+            if (cloneBtn) cloneBtn.disabled = !d;
+        }
+
+        function cloneCurrentDashboard() {
+            const d = allDashboards.find(x => x.dashboard_id === editorDashId);
+            if (!d) {
+                showToast('Kopyalamak için önce mevcut bir dashboard seçin.', true);
+                return;
+            }
+            // Yeni kayıt moduna geç ama mevcut dashboard'un bilgilerini ve layout'unu koru
+            const clonedFromId = d.dashboard_id;
+            editorDashId = null;
+            document.getElementById('selEditorDash').value = '';
+            document.getElementById('dashCode').value = `${d.code}_TEST`;
+            document.getElementById('dashTitle').value = `${d.title} (Test)`;
+            document.getElementById('dashDesc').value = d.description || '';
+            document.getElementById('dashDsId').value = d.primary_datasource_id;
+            document.getElementById('dashIsActive').value = '1';
+            document.getElementById('dashCode').dataset.clonedLayoutFrom = String(clonedFromId);
+            updateDeleteDashButtonState();
+            showToast('Dashboard kopyalandı. Yeni kod/veri kaynağı seçip "Kaydet" tuşuna basın.');
         }
 
         function clearDashboardEditorForm() {
             editorDashId = null;
             const selEditor = document.getElementById('selEditorDash');
             if (selEditor) selEditor.value = '';
-            document.getElementById('dashCode').value = '';
+            const codeInp = document.getElementById('dashCode');
+            codeInp.value = '';
+            delete codeInp.dataset.clonedLayoutFrom;
             document.getElementById('dashTitle').value = '';
             document.getElementById('dashDesc').value = '';
             document.getElementById('dashDsId').value = '';
@@ -2857,7 +3138,9 @@
                 return;
             }
             editorDashId = d.dashboard_id;
-            document.getElementById('dashCode').value = d.code;
+            const codeInp = document.getElementById('dashCode');
+            codeInp.value = d.code;
+            delete codeInp.dataset.clonedLayoutFrom;
             document.getElementById('dashTitle').value = d.title;
             document.getElementById('dashDesc').value = d.description || '';
             document.getElementById('dashDsId').value = d.primary_datasource_id;
@@ -2866,7 +3149,8 @@
         }
 
         async function saveDashboardFromEditor() {
-            const code = document.getElementById('dashCode').value.trim();
+            const codeInp = document.getElementById('dashCode');
+            const code = codeInp.value.trim();
             const title = document.getElementById('dashTitle').value.trim();
             const dsId = parseInt(document.getElementById('dashDsId').value || '0', 10);
             const isActive = document.getElementById('dashIsActive').value !== '0';
@@ -2879,7 +3163,10 @@
                 return;
             }
 
-            const existingDash = editorDashId ? allDashboards.find(x => x.dashboard_id === editorDashId) : null;
+            const clonedFromId = parseInt(codeInp.dataset.clonedLayoutFrom || '0', 10);
+            const existingDash = editorDashId
+                ? allDashboards.find(x => x.dashboard_id === editorDashId)
+                : (clonedFromId ? allDashboards.find(x => x.dashboard_id === clonedFromId) : null);
             const layoutStr = existingDash
                 ? (editorDashId === currentDashId ? JSON.stringify(designerLayout) : (existingDash.layout_json || '{"widgets":[]}'))
                 : JSON.stringify({ widgets: [], columnFormats: {}, columnAlignments: {} });
@@ -2901,6 +3188,7 @@
             });
             const data = await res.json();
             if (res.ok && data.success) {
+                delete codeInp.dataset.clonedLayoutFrom;
                 currentDashId = data.dashboardId;
                 editorDashId = data.dashboardId;
                 showToast(data.message || 'Dashboard başarıyla kaydedildi.');
@@ -2948,8 +3236,8 @@
         }
 
         async function onDesignerDataSourceChanged() {
-            const d = allDashboards.find(x => x.dashboard_id === currentDashId);
-            const dsId = d ? d.primary_datasource_id : parseInt(document.getElementById('dashDsId').value || '0', 10);
+            designerDataSourceCache = {};
+            const dsId = getDashboardPrimaryDsId();
             if (dsId > 0) {
                 await loadLiveDataSourceData(dsId);
             }
@@ -2957,32 +3245,18 @@
 
         let isCurrentDataSourcePassive = false;
 
-        async function loadLiveDataSourceData(datasourceId) {
+        async function fetchAndCacheDataSource(datasourceId) {
             const dashObj = allDashboards.find(x => x.dashboard_id === currentDashId);
             const isDashPassive = !!(dashObj && (dashObj.is_active === false || dashObj.is_active === 0));
             const dsObj = allDataSources.find(x => x.datasource_id === datasourceId);
             const isDsPassive = !dsObj || dsObj.is_active === false || dsObj.is_active === 0;
-            const isPassive = isDashPassive || isDsPassive;
-            const dsTitlePrefix = dsObj
-                ? `Veri Kaynağı: ${dsObj.code} - ${dsObj.name}${isDsPassive ? ' (PASİF)' : ''}`
-                : 'Veri Kaynağı';
-            document.getElementById('footerDsName').textContent = dsObj
-                ? `Kaynak: ${dsObj.code}${isDsPassive ? ' (PASİF)' : ''}`
-                : 'Veri Kaynağı';
-            const selDashEl = document.getElementById('selExistingDash');
 
-            if (isPassive) {
-                isCurrentDataSourcePassive = true;
-                liveColumns = [];
-                liveRows = [];
-                const passiveMsg = isDashPassive
+            if (isDashPassive || isDsPassive) {
+                const msg = isDashPassive
                     ? '⚠ Dashboard Pasif — Veriler Görüntülenemez'
                     : '⚠ Veri Kaynağı Pasif — Veriler Görüntülenemez';
-                if (selDashEl) selDashEl.title = `${dsTitlePrefix} | ${passiveMsg}`;
-                renderFieldList();
-                renderDesignerCanvas();
-                renderDataBindingPanel();
-                return;
+                designerDataSourceCache[datasourceId] = { columns: [], rows: [], isPassive: true, message: msg };
+                return designerDataSourceCache[datasourceId];
             }
 
             const res = await fetch(`/api/datasources/${datasourceId}/execute`, {
@@ -2992,20 +3266,61 @@
             });
             const data = await res.json();
             if (res.ok && data.success) {
-                isCurrentDataSourcePassive = false;
-                liveColumns = data.columns || [];
-                liveRows = data.rows || [];
-                if (selDashEl) {
-                    selDashEl.title = `${dsTitlePrefix} | Canlı Veri: ${liveRows.length} kayıt, ${liveColumns.length} kolon`;
-                }
+                designerDataSourceCache[datasourceId] = {
+                    columns: data.columns || [],
+                    rows: data.rows || [],
+                    isPassive: false,
+                    message: ''
+                };
             } else {
-                isCurrentDataSourcePassive = true;
-                liveColumns = [];
-                liveRows = [];
-                if (selDashEl) {
-                    selDashEl.title = `${dsTitlePrefix} | ${data?.message || 'Veri yüklenemedi'}`;
-                }
+                designerDataSourceCache[datasourceId] = {
+                    columns: [],
+                    rows: [],
+                    isPassive: true,
+                    message: data?.message || 'Veri yüklenemedi'
+                };
             }
+            return designerDataSourceCache[datasourceId];
+        }
+
+        function syncActiveDataSourceGlobalsForSelectedWidget() {
+            const w = getSelectedWidget();
+            const effDsId = getEffectiveWidgetDataSourceId(w);
+            const entry = designerDataSourceCache[effDsId] || { columns: [], rows: [], isPassive: true, message: '' };
+            liveColumns = entry.columns || [];
+            liveRows = entry.rows || [];
+            isCurrentDataSourcePassive = !!entry.isPassive;
+
+            const dsObj = allDataSources.find(x => x.datasource_id === effDsId);
+            const connName = dsObj ? getConnectionLabelById(dsObj.connection_id) : '';
+            document.getElementById('footerDsName').textContent = dsObj
+                ? `Kaynak: ${dsObj.code} [${connName}]${entry.isPassive ? ' (PASİF)' : ''}`
+                : 'Veri Kaynağı';
+        }
+
+        async function loadLiveDataSourceData(primaryDatasourceId) {
+            const requiredIds = new Set();
+            if (primaryDatasourceId > 0) requiredIds.add(Number(primaryDatasourceId));
+            (designerLayout.widgets || []).forEach(w => {
+                if (Number(w.dataSourceId) > 0) requiredIds.add(Number(w.dataSourceId));
+            });
+
+            await Promise.all(Array.from(requiredIds).map(id => fetchAndCacheDataSource(id)));
+
+            const primaryEntry = designerDataSourceCache[primaryDatasourceId] || { columns: [], rows: [], isPassive: true, message: '' };
+            const dsObj = allDataSources.find(x => x.datasource_id === primaryDatasourceId);
+            const connName = dsObj ? getConnectionLabelById(dsObj.connection_id) : '';
+            const dsTitlePrefix = dsObj
+                ? `Veri Kaynağı: ${dsObj.code} - ${dsObj.name} [${connName}]`
+                : 'Veri Kaynağı';
+            const selDashEl = document.getElementById('selExistingDash');
+            if (selDashEl) {
+                selDashEl.title = primaryEntry.isPassive
+                    ? `${dsTitlePrefix} | ${primaryEntry.message || 'Pasif'}`
+                    : `${dsTitlePrefix} | Canlı Veri: ${primaryEntry.rows.length} kayıt, ${primaryEntry.columns.length} kolon`;
+            }
+
+            syncActiveDataSourceGlobalsForSelectedWidget();
             renderFieldList();
             renderDesignerCanvas();
             renderDataBindingPanel();
@@ -3044,7 +3359,14 @@
 
         function getColumnMeta(colName) {
             if (!colName) return null;
-            return liveColumns.find(x => x.name.toLowerCase() === String(colName).toLowerCase()) || null;
+            const target = String(colName).toLowerCase();
+            const foundInLive = liveColumns.find(x => x.name.toLowerCase() === target);
+            if (foundInLive) return foundInLive;
+            for (const entry of Object.values(designerDataSourceCache || {})) {
+                const found = (entry.columns || []).find(x => x.name.toLowerCase() === target);
+                if (found) return found;
+            }
+            return null;
         }
 
         function getColumnFormat(colName) {
@@ -3427,6 +3749,7 @@
             document.querySelectorAll('#designerCanvas .widget-card').forEach(el => {
                 el.classList.toggle('selected', el.dataset.widgetId === id);
             });
+            syncActiveDataSourceGlobalsForSelectedWidget();
             renderDataBindingPanel();
             renderFieldList();
         }
@@ -3869,6 +4192,17 @@
 
             badge.textContent = `${w.type.toUpperCase()} (${w.w}x${w.h})`;
 
+            const dashPrimaryDsId = parseInt(document.getElementById('dashDsId')?.value || '0', 10);
+            const dashPrimaryDs = allDataSources.find(x => x.datasource_id === dashPrimaryDsId);
+            const dashPrimaryLabel = dashPrimaryDs ? `📌 Varsayılan (${dashPrimaryDs.code} - ${dashPrimaryDs.name})` : '📌 Dashboard Varsayılan Sorgusu';
+            const widgetDsOptionsHtml = `<option value="0" ${!w.dataSourceId ? 'selected' : ''}>${escapeHtml(dashPrimaryLabel)}</option>` +
+                allDataSources.map(ds => {
+                    const isPassive = ds.is_active === false || ds.is_active === 0;
+                    const connObj = (allConnections || []).find(c => c.id === ds.connection_id);
+                    const connBadge = connObj ? ` [${connObj.environmentName}]` : '';
+                    return `<option value="${ds.datasource_id}" ${Number(w.dataSourceId) === Number(ds.datasource_id) ? 'selected' : ''}>${isPassive ? '[PASİF] ' : ''}${escapeHtml(ds.code)} - ${escapeHtml(ds.name)}${escapeHtml(connBadge)}</option>`;
+                }).join('');
+
             let html = `
                 <div style="display:grid;grid-template-columns:1fr 118px;gap:6px;margin-bottom:6px;">
                     <div class="r-field">
@@ -3898,6 +4232,12 @@
                             <option value="pivot" ${w.type === 'pivot' ? 'selected' : ''}>🧮 Pivot</option>
                         </select>
                     </div>
+                </div>
+                <div class="r-field" style="margin-bottom:6px;">
+                    <label>🗄️ Veri Kaynağı (SQL Sorgusu)</label>
+                    <select onchange="onWidgetDataSourceChange(this.value)">
+                        ${widgetDsOptionsHtml}
+                    </select>
                 </div>
                 <div class="widget-align-bar" style="display:flex;align-items:center;justify-content:space-between;background:rgba(15,23,42,0.55);border:1px solid rgba(51,65,85,0.65);border-radius:6px;padding:4px 8px;margin-bottom:8px;">
                     <span style="font-size:0.68rem;font-weight:700;color:#94a3b8;text-transform:uppercase;">Bileşen Hizalaması:</span>
@@ -4797,12 +5137,38 @@
             });
         }
 
+        async function onWidgetDataSourceChange(val) {
+            const w = getSelectedWidget();
+            if (!w) return;
+            const parsed = parseInt(val || '0', 10);
+            if (!parsed || parsed <= 0) {
+                delete w.dataSourceId;
+            } else {
+                w.dataSourceId = parsed;
+            }
+            const effId = getEffectiveWidgetDataSourceId(w);
+            if (effId > 0 && !designerDataSourceCache[effId]) {
+                await fetchAndCacheDataSource(effId);
+            }
+            syncActiveDataSourceGlobalsForSelectedWidget();
+            renderDesignerCanvas();
+            renderDataBindingPanel();
+            renderFieldList();
+        }
+
         function renderWidgetContent(w, container) {
-            if (isCurrentDataSourcePassive) {
-                container.innerHTML = '<div class="dz-empty" style="padding:18px;color:#fca5a5;">Pasif veri kaynağı seçili — veriler görüntülenemiyor.</div>';
+            const effDsId = getEffectiveWidgetDataSourceId(w);
+            const dsEntry = designerDataSourceCache[effDsId] || {
+                columns: liveColumns,
+                rows: liveRows,
+                isPassive: isCurrentDataSourcePassive,
+                message: 'Pasif veri kaynağı seçili — veriler görüntülenemiyor.'
+            };
+            if (dsEntry.isPassive) {
+                container.innerHTML = `<div class="dz-empty" style="padding:18px;color:#fca5a5;">${escapeHtml(dsEntry.message || 'Pasif veri kaynağı seçili — veriler görüntülenemiyor.')}</div>`;
                 return;
             }
-            let rows = liveRows;
+            let rows = dsEntry.rows || [];
             const metrics = getWidgetMetrics(w);
             const primaryMetric = metrics[0] || { field: w.valueField || '', agg: w.agg || 'sum' };
 
@@ -5774,9 +6140,11 @@
 
         function renderDataTable(w, rows, container) {
             const widgetKey = w.id || 'preview_table';
+            const effDsId = getEffectiveWidgetDataSourceId(w);
+            const dsCols = (designerDataSourceCache[effDsId]?.columns) || liveColumns;
             const cols = Array.isArray(w.columns)
                 ? w.columns
-                : liveColumns.map(c => c.name);
+                : dsCols.map(c => c.name);
 
             if (cols.length === 0) {
                 container.innerHTML = '<div class="dz-empty" style="padding:24px;">Tablo sütunları temizlendi. Sütun eklemek için <strong>3. Kolonlar</strong> listesinden sürükleyin, <strong>+</strong> butonuna tıklayın veya sol paneldeki açılır listeden seçin.</div>';
@@ -5786,7 +6154,7 @@
             const sortInfo = widgetSortState[widgetKey] || null;
             let workingRows = rows.slice();
             if (sortInfo && sortInfo.column) {
-                const colMeta = liveColumns.find(x => x.name.toLowerCase() === sortInfo.column.toLowerCase());
+                const colMeta = getColumnMeta(sortInfo.column) || dsCols.find(x => x.name.toLowerCase() === sortInfo.column.toLowerCase());
                 const dType = colMeta ? colMeta.dataType : 'string';
                 const factor = sortInfo.dir === 'desc' ? -1 : 1;
                 workingRows.sort((rA, rB) => compareCellValues(getRowValue(rA, sortInfo.column), getRowValue(rB, sortInfo.column), dType) * factor);
@@ -5813,7 +6181,7 @@
             });
             html += '</tbody><tfoot><tr>';
             cols.forEach((c, idx) => {
-                const colMeta = liveColumns.find(x => x.name.toLowerCase() === c.toLowerCase());
+                const colMeta = getColumnMeta(c) || dsCols.find(x => x.name.toLowerCase() === c.toLowerCase());
                 const cAlign = getColumnAlign(c, w.align || 'left');
                 if (colMeta && colMeta.dataType === 'number' && !c.toLowerCase().endsWith('_id') && !/y[ıi]l|ay\b/i.test(c)) {
                     html += `<td style="text-align:${cAlign};">${escapeHtml(formatValueByColumn(computeAggregate(rows, c, 'sum'), c, 'number'))}</td>`;
@@ -5909,13 +6277,167 @@
             }
         }
 
-        // SEKME 2: SQL VERİ KAYNAĞI EDİTÖRÜ
+        // SEKME 2: SQL VERİ KAYNAĞI EDİTÖRÜ VE LİSTE GRİDİ
+        let dsGridSortState = { column: 'code', dir: 'asc' };
+
+        function toggleDsGridSort(col) {
+            if (dsGridSortState.column === col) {
+                dsGridSortState.dir = dsGridSortState.dir === 'asc' ? 'desc' : 'asc';
+            } else {
+                dsGridSortState.column = col;
+                dsGridSortState.dir = 'asc';
+            }
+            renderDataSourceGrid();
+        }
+
+        function renderDataSourceGrid() {
+            const tbody = document.getElementById('dsGridTableBody');
+            if (!tbody) return;
+
+            const fConn = (document.getElementById('dsGridFilterConn')?.value || '').trim().toLocaleLowerCase('tr-TR');
+            const fCode = (document.getElementById('dsGridFilterCode')?.value || '').trim().toLocaleLowerCase('tr-TR');
+            const fName = (document.getElementById('dsGridFilterName')?.value || '').trim().toLocaleLowerCase('tr-TR');
+            const fCat = (document.getElementById('dsGridFilterCat')?.value || '').trim().toLocaleLowerCase('tr-TR');
+            const fStatus = document.getElementById('dsGridFilterStatus')?.value ?? '';
+
+            ['connection', 'code', 'name', 'category', 'status'].forEach(k => {
+                const el = document.getElementById(`dsSortInd_${k}`);
+                if (!el) return;
+                if (dsGridSortState.column === k) {
+                    el.textContent = dsGridSortState.dir === 'asc' ? '▲' : '▼';
+                    el.style.opacity = '1';
+                } else {
+                    el.textContent = '⇅';
+                    el.style.opacity = '0.35';
+                }
+            });
+
+            const rows = (allDataSources || []).map(ds => {
+                const isAct = ds.is_active !== false && ds.is_active !== 0;
+                const connLabel = getConnectionLabelById(ds.connection_id);
+                return {
+                    raw: ds,
+                    id: ds.datasource_id,
+                    connection: connLabel || '',
+                    code: ds.code || '',
+                    name: ds.name || '',
+                    category: ds.category || '',
+                    isActive: isAct,
+                    statusText: isAct ? 'Aktif' : 'Pasif'
+                };
+            }).filter(item => {
+                if (fConn && !item.connection.toLocaleLowerCase('tr-TR').includes(fConn)) return false;
+                if (fCode && !item.code.toLocaleLowerCase('tr-TR').includes(fCode)) return false;
+                if (fName && !item.name.toLocaleLowerCase('tr-TR').includes(fName)) return false;
+                if (fCat && !item.category.toLocaleLowerCase('tr-TR').includes(fCat)) return false;
+                if (fStatus === '1' && !item.isActive) return false;
+                if (fStatus === '0' && item.isActive) return false;
+                return true;
+            });
+
+            const dirFactor = dsGridSortState.dir === 'desc' ? -1 : 1;
+            const sortCol = dsGridSortState.column;
+            rows.sort((a, b) => {
+                if (sortCol === 'status') {
+                    return ((a.isActive === b.isActive) ? 0 : (a.isActive ? -1 : 1)) * dirFactor;
+                }
+                const va = String(a[sortCol] || '');
+                const vb = String(b[sortCol] || '');
+                return va.localeCompare(vb, 'tr-TR', { numeric: true, sensitivity: 'base' }) * dirFactor;
+            });
+
+            if (rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--muted);">Filtreye uygun veri kaynağı bulunamadı.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = rows.map(item => {
+                const isSelected = Number(currentDsId) === Number(item.id);
+                const statusBadge = item.isActive
+                    ? `<span style="color:#10b981;font-weight:700;">🟢 Aktif</span>`
+                    : `<span style="color:#ef4444;font-weight:700;">🔴 Pasif</span>`;
+                return `
+                    <tr class="ds-grid-row ${isSelected ? 'selected-ds-row' : ''}"
+                        onclick="selectDataSourceFromGrid(${item.id}, false)"
+                        ondblclick="selectDataSourceFromGrid(${item.id}, true)"
+                        title="Seçmek için tek tıklayın, güncelleme penceresini açmak için çift tıklayın veya üstteki Güncelle butonuna basın">
+                        <td>🔌 ${escapeHtml(item.connection)}</td>
+                        <td><strong>${escapeHtml(item.code)}</strong></td>
+                        <td>${escapeHtml(item.name)}</td>
+                        <td>${escapeHtml(item.category || '-')}</td>
+                        <td>${statusBadge}</td>
+                    </tr>`;
+            }).join('');
+            updateDeleteDsButtonState();
+        }
+
+        function openDataSourceFormPanel(modeTitle) {
+            const sec = document.getElementById('dsFormSection');
+            const badge = document.getElementById('dsFormModeBadge');
+            if (sec) sec.classList.add('open');
+            if (badge && modeTitle) badge.textContent = modeTitle;
+        }
+
+        function closeDataSourceFormPanel() {
+            const sec = document.getElementById('dsFormSection');
+            if (sec) sec.classList.remove('open');
+            updateDeleteDsButtonState();
+            renderDataSourceGrid();
+        }
+
+        function startNewDataSourceForm() {
+            clearDataSourceForm();
+            openDataSourceFormPanel('➕ Yeni Veri Kaynağı (SQL Sorgusu) Girişi');
+            renderDataSourceGrid();
+            const codeInp = document.getElementById('dsCode');
+            if (codeInp) setTimeout(() => codeInp.focus(), 40);
+        }
+
+        function selectDataSourceFromGrid(id, openModal = false) {
+            currentDsId = Number(id);
+            const sel = document.getElementById('selExistingDs');
+            if (sel) sel.value = String(id);
+            updateDeleteDsButtonState();
+            renderDataSourceGrid();
+            if (openModal) {
+                openSelectedDataSourceModal();
+            }
+        }
+
+        function openSelectedDataSourceModal() {
+            if (!currentDsId) {
+                showToast('Güncellemek için önce listeden bir veri kaynağı satırı seçin.', true);
+                return;
+            }
+            const sel = document.getElementById('selExistingDs');
+            if (sel) sel.value = String(currentDsId);
+            onSelectExistingDs();
+        }
+
+        function cloneSelectedDataSourceFromGrid() {
+            if (!currentDsId) {
+                showToast('Kopyalamak için önce listeden bir veri kaynağı satırı seçin.', true);
+                return;
+            }
+            openSelectedDataSourceModal();
+            cloneCurrentDataSource();
+        }
+
         function updateDeleteDsButtonState() {
             const btn = document.getElementById('btnDeleteDs');
-            if (!btn) return;
+            const cloneBtn = document.getElementById('btnCloneDs');
+            const topEditBtn = document.getElementById('btnEditSelectedDs');
+            const topCloneBtn = document.getElementById('btnCloneSelectedDs');
+            const topDelBtn = document.getElementById('btnDeleteSelectedDs');
             const ds = allDataSources.find(x => x.datasource_id === currentDsId);
+            const hasSelection = !!ds;
             const canDeactivate = !!(ds && ds.is_active !== false && ds.is_active !== 0);
-            btn.disabled = !canDeactivate;
+
+            if (cloneBtn) cloneBtn.disabled = !hasSelection;
+            if (btn) btn.disabled = !canDeactivate;
+            if (topEditBtn) topEditBtn.disabled = !hasSelection;
+            if (topCloneBtn) topCloneBtn.disabled = !hasSelection;
+            if (topDelBtn) topDelBtn.disabled = !canDeactivate;
         }
 
         function onSelectExistingDs() {
@@ -5927,14 +6449,32 @@
             document.getElementById('dsCode').value = ds.code;
             document.getElementById('dsName').value = ds.name;
             document.getElementById('dsCat').value = ds.category || '';
+            const actSel = document.getElementById('dsIsActive');
+            if (actSel) {
+                actSel.value = (ds.is_active === false || ds.is_active === 0) ? '0' : '1';
+            }
+            populateConnectionSelect();
+            const connSel = document.getElementById('dsConnId');
+            if (connSel) {
+                if (ds.connection_id && !Array.from(connSel.options).some(o => o.value === ds.connection_id)) {
+                    const lbl = getConnectionLabelById(ds.connection_id);
+                    connSel.innerHTML += `<option value="${escapeHtml(ds.connection_id)}">🔌 ${escapeHtml(lbl)}</option>`;
+                }
+                connSel.value = ds.connection_id || (connSel.options[0]?.value || '');
+            }
             document.getElementById('dsSql').value = ds.sql_query;
+            document.getElementById('detectedSchemaBox').innerHTML = '';
+            document.getElementById('sqlPreviewTableWrap').innerHTML = '';
 
             const tbody = document.getElementById('paramsTableBody');
             tbody.innerHTML = '';
             (ds.parameters || []).forEach(p => {
                 addParamRow(p.param_name, p.label, p.param_type, p.lookup_sql || '');
             });
+
+            openDataSourceFormPanel(`✏️ Kayıt Güncelleme: ${ds.code} — ${ds.name}`);
             updateDeleteDsButtonState();
+            renderDataSourceGrid();
         }
 
         function clearDataSourceForm() {
@@ -5943,11 +6483,36 @@
             document.getElementById('dsCode').value = '';
             document.getElementById('dsName').value = '';
             document.getElementById('dsCat').value = '';
+            const actSel = document.getElementById('dsIsActive');
+            if (actSel) actSel.value = '1';
+            populateConnectionSelect();
+            const connSel = document.getElementById('dsConnId');
+            if (connSel && connSel.options.length > 0) connSel.selectedIndex = 0;
             document.getElementById('dsSql').value = '';
             document.getElementById('paramsTableBody').innerHTML = '';
             document.getElementById('detectedSchemaBox').innerHTML = '';
             document.getElementById('sqlPreviewTableWrap').innerHTML = '';
             updateDeleteDsButtonState();
+            renderDataSourceGrid();
+        }
+
+        function cloneCurrentDataSource() {
+            if (!currentDsId) {
+                showToast('Kopyalamak için önce mevcut bir SQL veri kaynağı seçin.', true);
+                return;
+            }
+            currentDsId = null;
+            document.getElementById('selExistingDs').value = '';
+            const curCode = document.getElementById('dsCode').value.trim();
+            const curName = document.getElementById('dsName').value.trim();
+            document.getElementById('dsCode').value = curCode ? `${curCode}_TEST` : 'DS_YENI_TEST';
+            document.getElementById('dsName').value = curName ? `${curName} (Test)` : 'Yeni Veri Kaynağı (Test)';
+            const actSel = document.getElementById('dsIsActive');
+            if (actSel) actSel.value = '1';
+            openDataSourceFormPanel('📋 Kopyadan Yeni Veri Kaynağı Oluşturma');
+            updateDeleteDsButtonState();
+            renderDataSourceGrid();
+            showToast('SQL sorgusu kopyalandı! Bağlantıyı seçip "Kaydet" butonuna basabilirsiniz.');
         }
 
         async function deactivateDataSource() {
@@ -6002,10 +6567,11 @@
 
         async function previewAndDetectSql() {
             const sql = document.getElementById('dsSql').value;
+            const connectionId = document.getElementById('dsConnId')?.value || null;
             const res = await fetch('/api/datasources/preview-sql', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sqlQuery: sql })
+                body: JSON.stringify({ sqlQuery: sql, connectionId })
             });
             const data = await res.json();
             if (!res.ok || !data.success) {
@@ -6050,6 +6616,8 @@
                 code: document.getElementById('dsCode').value.trim(),
                 name: document.getElementById('dsName').value.trim(),
                 category: document.getElementById('dsCat').value.trim(),
+                connectionId: document.getElementById('dsConnId')?.value || null,
+                isActive: document.getElementById('dsIsActive')?.value !== '0',
                 sqlQuery: document.getElementById('dsSql').value,
                 parameters: params
             };
@@ -6065,7 +6633,7 @@
                 showToast(data.message || 'Veri kaynağı kaydedildi.');
                 await loadAllData();
                 document.getElementById('selExistingDs').value = currentDsId;
-                updateDeleteDsButtonState();
+                closeDataSourceFormPanel();
                 document.getElementById('dashDsId').value = currentDsId;
                 await loadLiveDataSourceData(currentDsId);
             } else {

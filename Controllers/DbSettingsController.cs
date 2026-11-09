@@ -31,9 +31,23 @@ namespace SpsWebBI.Controllers
             _dbInitializer = dbInitializer;
         }
 
+        private bool IsAuthenticatedAdmin()
+        {
+            if (User?.Identity?.IsAuthenticated != true) return false;
+            var authMethod = User.FindFirstValue("AuthMethod") ?? "Password";
+            if (authMethod == "Passwordless") return false;
+            var role = User.FindFirstValue(ClaimTypes.Role) ?? "";
+            return string.Equals(role, "admin", System.StringComparison.OrdinalIgnoreCase);
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetCurrentSettings()
         {
+            if (!IsAuthenticatedAdmin())
+            {
+                return Unauthorized(new { success = false, message = "Veri kaynağı ayarlarına yalnızca Admin kullanıcısı erişebilir." });
+            }
+
             var connections = _connManager.GetAllConnections();
             var settings = _connManager.GetCurrentSettings();
             var test = await _connManager.TestConnectionAsync(settings);
@@ -58,9 +72,9 @@ namespace SpsWebBI.Controllers
         [HttpPost("test")]
         public async Task<IActionResult> TestConnection([FromBody] DbSettingsRequest request)
         {
-            if (!await IsAuthorizedToChangeDbAsync(request.AdminPassword))
+            if (!IsAuthenticatedAdmin())
             {
-                return Unauthorized(new { success = false, message = "Güvenlik doğrulaması başarısız: Mevcut veritabanı aktif olduğu için Admin oturumu veya Admin şifresi gereklidir." });
+                return Unauthorized(new { success = false, message = "Veri kaynağı ayarlarını test etmek için Admin oturumu gereklidir." });
             }
 
             var result = await _connManager.TestConnectionAsync(request);
@@ -70,9 +84,9 @@ namespace SpsWebBI.Controllers
         [HttpPost("save")]
         public async Task<IActionResult> SaveConnection([FromBody] DbSettingsRequest request)
         {
-            if (!await IsAuthorizedToChangeDbAsync(request.AdminPassword))
+            if (!IsAuthenticatedAdmin())
             {
-                return Unauthorized(new { success = false, message = "Güvenlik doğrulaması başarısız: Mevcut veritabanı aktif olduğu için Admin oturumu veya Admin şifresi gereklidir." });
+                return Unauthorized(new { success = false, message = "Veri kaynağı ayarlarını değiştirmek için Admin oturumu gereklidir." });
             }
 
             var saveResult = await _connManager.SaveConnectionSettingsAsync(request);
@@ -103,53 +117,6 @@ namespace SpsWebBI.Controllers
                 connections = _connManager.GetAllConnections(),
                 message = saveResult.Message
             });
-        }
-
-        /// <summary>
-        /// Siber Güvenlik Kuralı:
-        /// 1. Kullanıcı zaten 'admin' rolüyle giriş yapmışsa izin ver.
-        /// 2. Mevcut veritabanına bağlanılamıyorsa (ilk kurulum veya IP/şifre değişmişse) kurtarma/kurulum amacıyla izin ver.
-        /// 3. Mevcut veritabanı aktifse ancak oturum yoksa, gönderilen AdminPassword'ü bi_users tablosundaki admin şifresiyle doğrula.
-        /// </summary>
-        private async Task<bool> IsAuthorizedToChangeDbAsync(string? adminPassword)
-        {
-            if (User?.Identity?.IsAuthenticated == true &&
-                User.FindFirstValue(ClaimTypes.Role) == "admin")
-            {
-                return true;
-            }
-
-            var currentSettings = _connManager.GetCurrentSettings();
-            var currentTest = await _connManager.TestConnectionAsync(currentSettings);
-
-            // Mevcut DB'ye erişilemiyorsa (ilk kurulum veya bağlantı kopukluğu) ayar yapılmasına izin ver
-            if (!currentTest.Success)
-            {
-                return true;
-            }
-
-            // Mevcut DB çalışıyorsa Admin şifresini doğrula
-            if (string.IsNullOrWhiteSpace(adminPassword))
-            {
-                return false;
-            }
-
-            try
-            {
-                await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
-                await conn.OpenAsync();
-                var adminUser = await conn.QueryFirstOrDefaultAsync<BiUser>(
-                    "SELECT * FROM bi_users WHERE user_code = 'admin' AND is_active = 1 LIMIT 1;");
-
-                if (adminUser == null)
-                    return true; // Henüz admin kullanıcısı oluşmamışsa izin ver
-
-                return PasswordHasher.VerifyPassword(adminPassword, adminUser.password_hash);
-            }
-            catch
-            {
-                return true;
-            }
         }
     }
 }
