@@ -1,6 +1,6 @@
 # SpsWebBI - Geliştirme Durumu ve Mimari Hafıza
 
-**Son Güncelleme:** 2026-11-07
+**Son Güncelleme:** 2026-11-08
 **Proje Yolu:** `c:\Projeler\SpsWebBI`
 
 ---
@@ -101,6 +101,38 @@
 - **Hızlı Görsel Anahtarları ve İzleme Ekranı (`app.html`) Senkronizasyonu:**
   - `123 Değerler` (`w.showLabel`), `⎯ Ortalama` (`w.showMarkLine`) ve `📍 Min/Maks` (`w.showMarkPoint`) butonları hem `wwwroot/designer.html` hem de `wwwroot/app.html` üzerinde tüm grafik aileleriyle tam uyumlu hale getirildi.
 
+---
 
+### [x] Adım 12: Analytics Studio Hamburger Menü, Veri Kaynağı / Dashboard Tanımlama Panelleri ve Pasife Alma (`is_active = 0`) Mimarisi (2026-11-08)
+- **Analytics Studio Hamburger Menü (`#studioHamburgerMenu` - `wwwroot/designer.html`):**
+  - Üst çubukta `📊 Analytics Studio` logosunun soluna `☰` hamburger menü ikonu eklendi ve eski `1. Görsel Tuval | 2. SQL Veri Kaynağı Editörü` sekmeleri kaldırıldı.
+  - Menü seçenekleri:
+    1. **🗄️ Veri Kaynağı (SQL Datasource):** Tıklandığında doğrudan yeni veri kaynağı oluşturma ekranını (`#sqlEditorView`) açar.
+    2. **📐 Dashboard Ekle / Tanımla:** Tıklandığında yeni dashboard oluşturma ve mevcut dashboard bilgilerini düzenleme panelini (`#dashboardEditorView`) açar.
+    3. **📊 Görsel Tasarım Tuvaline Dön:** Alt ekranlardayken tasarım tuvaline dönüş sağlar.
+- **Üst Çubuk (Topbar) Sadeleştirmesi (`wwwroot/designer.html`):**
+  - Eski `#dashMetaBar` alt şeridi (`Dashboard Kodu`, `Başlık`, `Açıklama`), `⚙ Şablon Bilgileri` ve `+ Yeni` butonları kaldırıldı (`🗑️ Tuvali Temizle` butonu tuval araç çubuğuna taşındı).
+  - Üst çubuğun sağ tarafındaki `Veri Kaynağı:` açılır kutusu kaldırılarak yerine doğrudan **`Dashboard:`** (`#selExistingDash`) seçim listesi yerleştirildi.
+- **SQL Veri Kaynağı Ekranı (`#sqlEditorView`) & Pasife Alma (`Controllers/DataSourceController.cs`, `Services/DynamicQueryService.cs`):**
+  - Sağ üstteki gereksiz `+ Yeni Veri Kaynağı` butonu kaldırıldı; sağ üstte yalnızca **`Sil`** (`#btnDeleteDs`) ve **`Kapat`** butonları bırakıldı.
+  - Kaydet butonu **`Kaydet`** olarak sadeleştirildi.
+  - **`Sil` (Pasife Alma):** `POST /api/datasources/{datasourceId}/deactivate` ucu ile kayıt `bi_datasources` tablosundan fiziksel olarak silinmez, `is_active = 0` yapılarak pasif hale getirilir.
+  - Pasif veri kaynağı seçili olan dashboard'larda hem `designer.html` hem de `app.html` üzerinde sorgu ve filtreler çalıştırılmaz, bileşenlerde veri görüntülenmez.
+- **Dashboard Tanımlama Paneli (`#dashboardEditorView` - `wwwroot/designer.html`, `Controllers/DashboardController.cs`):**
+  - Ekran ilk açıldığında veya `-- Yeni Dashboard Oluştur --` seçildiğinde **Dashboard Kodu**, **Başlık**, **Veri Kaynağı** (`-- Veri Kaynağı Seçin --`) ve **Açıklama** alanları tamamen boş gelir; mevcut bir dashboard seçildiğinde ilgili kaydın verileriyle dolar.
+  - **`Durum` (`🟢 Aktif` / `🔴 Pasif`) Seçeneği ve `Sil` Butonu:** Dashboard doğrudan form üzerinden veya `POST /api/dashboards/{dashboardId}/deactivate` ucu ile veritabanından silinmeden aktif/pasif (`is_active`) yapılabilir.
 
+---
+
+### [x] Adım 13: Üst Bar Düzenlemesi, 3. Tema (`💎 SpsTeks Mavi`), Açık Tema Kontrast İyileştirmeleri ve Çoklu Bağlantı Ayarları (2026-11-09)
+- **Tasarım Stüdyosu (`wwwroot/designer.html`) Kompakt Üst Bar & Panel Başlıkları:**
+  - Üst çubuk (`34px`) ve panel başlıkları (`26px`) daraltılarak tuvale daha fazla çalışma alanı açıldı.
+  - Panel başlıkları **`GRAFİK ÖZELLİKLERİ`**, **`KOLONLAR`** ve **`TUVAL ÇALIŞMA ALANI`** olarak güncellendi ve belirgin zemin rengi verildi.
+  - `Canlı Veri: ... kayıt, ... kolon` bilgisi `Dashboard:` açılır kutusunun üzerine gelindiğinde (`title` ipucu olarak) gösterilecek şekilde taşındı.
+  - `Yetkilendirme` (`/admin`) ve `Veritabanı Ayarları` (`/db-settings`) seçenekleri sol üst `☰` hamburger menüsü altına alındı.
+- **3. Tema (`💎 SpsTeks Mavi` - `spsteks-theme`) ve Çoktan Seçmeli Tema Kutusu (`#selThemeMode`):**
+  - Hem `wwwroot/designer.html` hem de `wwwroot/app.html` ekranlarına çoktan seçmeli tema açılır kutusu (`🌙 Koyu Tema`, `☀️ Açık Tema`, `💎 SpsTeks Mavi`) eklendi.
+  - Açık temadaki okunmayan koyu zeminli alanlar düzeltildi ve NBG Bilişim SpsTeks masaüstü ERP renk paletine uygun 3. tema (`body.spsteks-theme`) oluşturuldu.
+- **Çoklu Veritabanı Bağlantı Profili Ekranı (`wwwroot/db-settings.html`, `Services/DbConnectionManager.cs`, `Controllers/DbSettingsController.cs`):**
+  - `/db-settings` ekranı sol tarafta kayıtlı bağlantıların listelendiği (`+ Yeni Bağlantı`), sağ tarafta ise bağlantı detaylarının (**Ortam İsmi**, **Açıklama**, **Sunucu**, **Port**, **Veritabanı**, **Kullanıcı**, **Şifre** ve **Bağlantı Aktif** onay kutusu) düzenlendiği iki sütunlu yapıya kavuşturuldu.
 

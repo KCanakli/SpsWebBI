@@ -34,17 +34,24 @@ namespace SpsWebBI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCurrentSettings()
         {
+            var connections = _connManager.GetAllConnections();
             var settings = _connManager.GetCurrentSettings();
             var test = await _connManager.TestConnectionAsync(settings);
+
             return Ok(new
             {
+                settings.Id,
+                settings.EnvironmentName,
+                settings.Description,
+                settings.IsActive,
                 settings.Server,
                 settings.Port,
                 settings.Database,
                 settings.UserId,
                 settings.HasSavedPassword,
                 IsConnected = test.Success,
-                StatusMessage = test.Message
+                StatusMessage = test.Message,
+                Connections = connections
             });
         }
 
@@ -74,14 +81,27 @@ namespace SpsWebBI.Controllers
                 return BadRequest(new { success = false, message = saveResult.Message });
             }
 
-            // Yeni veritabanında sistem tablolarını (bi_*) doğrula / oluştur
-            var initResult = await _dbInitializer.InitializeAsync();
+            // Bağlantı Aktif olarak kaydedildiyse ilgili veritabanında sistem tablolarını (bi_*) doğrula / oluştur
+            if (request.IsActive)
+            {
+                var initResult = await _dbInitializer.InitializeAsync();
+                return Ok(new
+                {
+                    success = initResult.Success,
+                    savedId = saveResult.SavedId,
+                    connections = _connManager.GetAllConnections(),
+                    message = initResult.Success
+                        ? $"{saveResult.Message} {initResult.Message}"
+                        : $"Bağlantı kaydedildi ancak şema kurulumunda uyarı: {initResult.Message}"
+                });
+            }
+
             return Ok(new
             {
-                success = initResult.Success,
-                message = initResult.Success
-                    ? $"{saveResult.Message} {initResult.Message}"
-                    : $"Bağlantı kaydedildi ancak şema kurulumunda uyarı: {initResult.Message}"
+                success = true,
+                savedId = saveResult.SavedId,
+                connections = _connManager.GetAllConnections(),
+                message = saveResult.Message
             });
         }
 

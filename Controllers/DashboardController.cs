@@ -21,6 +21,7 @@ namespace SpsWebBI.Controllers
         public string Title { get; set; } = string.Empty;
         public string? Description { get; set; }
         public int PrimaryDataSourceId { get; set; }
+        public bool IsActive { get; set; } = true;
         public string LayoutJson { get; set; } = "{}";
     }
 
@@ -139,6 +140,7 @@ namespace SpsWebBI.Controllers
             await conn.OpenAsync();
 
             int dashId = request.DashboardId ?? 0;
+            int isActiveBit = request.IsActive ? 1 : 0;
             if (dashId > 0)
             {
                 await conn.ExecuteAsync(@"
@@ -148,6 +150,7 @@ namespace SpsWebBI.Controllers
                            description = @Description,
                            primary_datasource_id = @DsId,
                            layout_json = @LayoutJson,
+                           is_active = @IsActive,
                            updated_at = NOW()
                      WHERE dashboard_id = @Id;",
                     new
@@ -157,14 +160,15 @@ namespace SpsWebBI.Controllers
                         Title = request.Title.Trim(),
                         Description = request.Description,
                         DsId = request.PrimaryDataSourceId,
-                        LayoutJson = request.LayoutJson
+                        LayoutJson = request.LayoutJson,
+                        IsActive = isActiveBit
                     });
             }
             else
             {
                 dashId = await conn.ExecuteScalarAsync<int>(@"
                     INSERT INTO bi_dashboards (code, title, description, primary_datasource_id, layout_json, is_active)
-                    VALUES (@Code, @Title, @Description, @DsId, @LayoutJson, 1);
+                    VALUES (@Code, @Title, @Description, @DsId, @LayoutJson, @IsActive);
                     SELECT LAST_INSERT_ID();",
                     new
                     {
@@ -172,7 +176,8 @@ namespace SpsWebBI.Controllers
                         Title = request.Title.Trim(),
                         Description = request.Description,
                         DsId = request.PrimaryDataSourceId,
-                        LayoutJson = request.LayoutJson
+                        LayoutJson = request.LayoutJson,
+                        IsActive = isActiveBit
                     });
 
                 // Oluşturan kullanıcıya otomatik yetki ver
@@ -190,6 +195,50 @@ namespace SpsWebBI.Controllers
                 success = true,
                 dashboardId = dashId,
                 message = "Ana dashboard tasarımı MariaDB'ye kaydedildi."
+            });
+        }
+
+        /// <summary>
+        /// Seçilen dashboard'u veritabanından fiziksel olarak silmeden pasif (is_active = 0) hale getirir.
+        /// </summary>
+        [HttpPost("{dashboardId:int}/deactivate")]
+        public async Task<IActionResult> DeactivateDashboard(int dashboardId)
+        {
+            if (CurrentAuthMethod == "Passwordless" ||
+                (!string.Equals(CurrentUserRole, "admin", StringComparison.OrdinalIgnoreCase) &&
+                 !string.Equals(CurrentUserRole, "designer", StringComparison.OrdinalIgnoreCase)))
+            {
+                return Forbid();
+            }
+
+            if (dashboardId <= 0)
+            {
+                return BadRequest(new { success = false, message = "Geçersiz dashboard seçimi." });
+            }
+
+            await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await conn.OpenAsync();
+
+            int affected = await conn.ExecuteAsync(@"
+                UPDATE bi_dashboards
+                   SET is_active = 0,
+                       updated_at = NOW()
+                 WHERE dashboard_id = @Id;",
+                new { Id = dashboardId });
+
+            if (affected <= 0)
+            {
+                return NotFound(new { success = false, message = "Dashboard bulunamadı." });
+            }
+
+            string? ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+            await _authService.WriteAuditLogAsync(conn, CurrentUserCode, "DASHBOARD_DEACTIVATE", ip, $"Dashboard ID={dashboardId} pasif hale getirildi.");
+
+            return Ok(new
+            {
+                success = true,
+                dashboardId,
+                message = "Dashboard pasif hale getirildi."
             });
         }
     }

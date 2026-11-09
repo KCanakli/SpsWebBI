@@ -195,6 +195,7 @@ namespace SpsWebBI.Controllers
                            category = @Category,
                            sql_query = @SqlQuery,
                            columns_schema_json = @SchemaJson,
+                           is_active = 1,
                            updated_at = NOW()
                      WHERE datasource_id = @Id;",
                     new
@@ -252,6 +253,45 @@ namespace SpsWebBI.Controllers
                 datasourceId = dsId,
                 columns = testExec.Columns,
                 message = "Veri kaynağı ve parametreleri başarıyla kaydedildi."
+            });
+        }
+
+        /// <summary>
+        /// Seçilen veri kaynağını veritabanından fiziksel olarak silmeden pasif (is_active = 0) hale getirir.
+        /// </summary>
+        [HttpPost("{datasourceId:int}/deactivate")]
+        public async Task<IActionResult> DeactivateDataSource(int datasourceId)
+        {
+            if (!IsDesignerOrAdminWithPassword())
+            {
+                return Forbid();
+            }
+
+            if (datasourceId <= 0)
+            {
+                return BadRequest(new { success = false, message = "Geçersiz veri kaynağı seçimi." });
+            }
+
+            await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await conn.OpenAsync();
+
+            int affected = await conn.ExecuteAsync(@"
+                UPDATE bi_datasources
+                   SET is_active = 0,
+                       updated_at = NOW()
+                 WHERE datasource_id = @Id;",
+                new { Id = datasourceId });
+
+            if (affected <= 0)
+            {
+                return NotFound(new { success = false, message = "Veri kaynağı bulunamadı." });
+            }
+
+            return Ok(new
+            {
+                success = true,
+                datasourceId,
+                message = "Veri kaynağı pasif hale getirildi."
             });
         }
 

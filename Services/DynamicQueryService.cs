@@ -83,7 +83,7 @@ namespace SpsWebBI.Services
                        CASE WHEN ud.custom_layout_json IS NOT NULL AND ud.custom_layout_json <> '' THEN 1 ELSE 0 END AS has_custom_layout
                   FROM bi_user_dashboards ud
                   INNER JOIN bi_dashboards d ON d.dashboard_id = ud.dashboard_id AND d.is_active = 1
-                  INNER JOIN bi_datasources ds ON ds.datasource_id = d.primary_datasource_id AND ds.is_active = 1
+                  LEFT JOIN bi_datasources ds ON ds.datasource_id = d.primary_datasource_id
                  WHERE ud.user_id = @UserId
                    AND ud.can_view = 1
                  ORDER BY ud.display_order ASC, d.dashboard_id ASC;";
@@ -123,8 +123,21 @@ namespace SpsWebBI.Services
         /// </summary>
         public async Task<List<ParameterWithOptionsDto>> GetDataSourceParametersAsync(int datasourceId)
         {
+            if (!_connManager.IsActiveConnectionEnabled())
+            {
+                return new List<ParameterWithOptionsDto>();
+            }
+
             await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
             await conn.OpenAsync();
+
+            int isActive = await conn.ExecuteScalarAsync<int>(
+                "SELECT COUNT(1) FROM bi_datasources WHERE datasource_id = @DataSourceId AND is_active = 1;",
+                new { DataSourceId = datasourceId });
+            if (isActive == 0)
+            {
+                return new List<ParameterWithOptionsDto>();
+            }
 
             var parameters = (await conn.QueryAsync<BiDataSourceParam>(@"
                 SELECT * FROM bi_datasource_params 
@@ -187,6 +200,11 @@ namespace SpsWebBI.Services
             int datasourceId,
             Dictionary<string, string?>? filterValues)
         {
+            if (!_connManager.IsActiveConnectionEnabled())
+            {
+                return new DynamicQueryResult { Success = false, Message = "Veritabanı bağlantısı pasif durumda." };
+            }
+
             await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
             await conn.OpenAsync();
 

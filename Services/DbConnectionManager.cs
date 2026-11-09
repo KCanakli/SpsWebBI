@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
@@ -12,6 +14,10 @@ namespace SpsWebBI.Services
 {
     public class DbConnectionInfoDto
     {
+        public string? Id { get; set; }
+        public string EnvironmentName { get; set; } = "Canlı Ortam";
+        public string Description { get; set; } = string.Empty;
+        public bool IsActive { get; set; } = true;
         public string Server { get; set; } = "127.0.0.1";
         public uint Port { get; set; } = 3323;
         public string Database { get; set; } = "spsteks";
@@ -21,8 +27,8 @@ namespace SpsWebBI.Services
     }
 
     /// <summary>
-    /// MariaDB bağlantı bilgilerini çalışma zamanında okuyan, test eden ve şifreyi DPAPI (ENC:...)
-    /// ile şifreleyerek appsettings.json dosyasına güvenli biçimde kaydeden servis.
+    /// MariaDB bağlantı profillerini (Ortam İsmi, Açıklama, Aktif/Pasif, Sunucu, DB ve DPAPI şifreli parola)
+    /// appsettings.json üzerinde çoklu kayıt olarak yöneten servis.
     /// </summary>
     public class DbConnectionManager
     {
@@ -43,20 +49,29 @@ namespace SpsWebBI.Services
         }
 
         /// <summary>
-        /// appsettings.json içindeki parola açık metin olarak yazılmışsa ilk açılışta otomatik olarak DPAPI (ENC:...) formatına çevirir.
+        /// appsettings.json içindeki parolaları DPAPI (ENC:...) formatına çevirir ve
+        /// DatabaseConnections listesi henüz yoksa mevcut bağlantıdan ilk kaydı oluşturur.
         /// </summary>
         public void EnsurePasswordEncryptedOnDisk()
         {
             try
             {
                 string raw = _configuration.GetConnectionString("MariaDbConnection") ?? string.Empty;
-                if (string.IsNullOrWhiteSpace(raw)) return;
-
-                var builder = new MySqlConnectionStringBuilder(raw);
-                if (!string.IsNullOrEmpty(builder.Password) && !builder.Password.StartsWith("ENC:", StringComparison.Ordinal))
+                if (!string.IsNullOrWhiteSpace(raw))
                 {
-                    string protectedConnStr = ConnectionProtector.ProtectConnectionStringPassword(raw);
-                    WriteConnectionStringToFile(protectedConnStr);
+                    var builder = new MySqlConnectionStringBuilder(raw);
+                    if (!string.IsNullOrEmpty(builder.Password) && !builder.Password.StartsWith("ENC:", StringComparison.Ordinal))
+                    {
+                        raw = ConnectionProtector.ProtectConnectionStringPassword(raw);
+                        _configuration["ConnectionStrings:MariaDbConnection"] = raw;
+                    }
+                }
+
+                var list = ReadConnectionsFromDisk();
+                if (list.Count == 0 && !string.IsNullOrWhiteSpace(raw))
+                {
+                    var initial = ParseConnectionNode("conn_default", "Canlı Ortam", "Varsayılan MariaDB Bağlantısı", true, raw);
+                    WriteConnectionToDisk(initial, raw, setAsActiveMariaDb: true);
                 }
             }
             catch
@@ -65,52 +80,147 @@ namespace SpsWebBI.Services
             }
         }
 
+        private static DbConnectionInfoDto ParseConnectionNode(
+            string id,
+            string envName,
+            string description,
+            bool isActive,
+            string rawConnStr)
+        {
+            if (string.IsNullOrWhiteSpace(rawConnStr))
+            {
+                return new DbConnectionInfoDto
+                {
+                    Id = id,
+                    EnvironmentName = envName,
+                    Description = description,
+                    IsActive = isActive
+                };
+            }
+
+            var builder = new MySqlConnectionStringBuilder(rawConnStr);
+            string decryptedPwd = ConnectionProtector.DecryptSecret(builder.Password);
+
+            return new DbConnectionInfoDto
+            {
+                Id = id,
+                EnvironmentName = string.IsNullOrWhiteSpace(envName) ? "Canlı Ortam" : envName,
+                Description = description ?? string.Empty,
+                IsActive = isActive,
+                Server = string.IsNullOrWhiteSpace(builder.Server) ? "127.0.0.1" : builder.Server,
+                Port = builder.Port == 0 ? 3323u : builder.Port,
+                Database = string.IsNullOrWhiteSpace(builder.Database) ? "spsteks" : builder.Database,
+                UserId = string.IsNullOrWhiteSpace(builder.UserID) ? "root" : builder.UserID,
+                Password = string.Empty,
+                HasSavedPassword = !string.IsNullOrEmpty(decryptedPwd)
+            };
+        }
+
+        private List<(DbConnectionInfoDto Dto, string RawConnectionString)> ReadConnectionsFromDisk()
+        {
+            var result = new List<(DbConnectionInfoDto, string)>();
+            lock (_fileLock)
+            {
+                string path = GetAppSettingsPath();
+                if (!File.Exists(path)) return result;
+
+                string json = File.ReadAllText(path);
+                var rootNode = JsonNode.Parse(json);
+                if (rootNode?["DatabaseConnections"] is JsonArray arr)
+                {
+                    foreach (var item in arr)
+                    {
+                        if (item is not JsonObject obj) continue;
+                        string id = obj["Id"]?.GetValue<string>() ?? ("conn_" + Guid.NewGuid().ToString("N")[..8]);
+                        string envName = obj["EnvironmentName"]?.GetValue<string>() ?? "Canlı Ortam";
+                        string desc = obj["Description"]?.GetValue<string>() ?? string.Empty;
+                        bool isActive = obj["IsActive"]?.GetValue<bool>() ?? false;
+                        string rawConn = obj["ConnectionString"]?.GetValue<string>() ?? string.Empty;
+                        result.Add((ParseConnectionNode(id, envName, desc, isActive, rawConn), rawConn));
+                    }
+                }
+            }
+            return result;
+        }
+
+        public List<DbConnectionInfoDto> GetAllConnections()
+        {
+            var list = ReadConnectionsFromDisk().Select(x => x.Dto).ToList();
+            if (list.Count == 0)
+            {
+                string raw = _configuration.GetConnectionString("MariaDbConnection") ?? string.Empty;
+                list.Add(ParseConnectionNode("conn_default", "Canlı Ortam", "Varsayılan MariaDB Bağlantısı", true, raw));
+            }
+            return list;
+        }
+
+        public bool IsActiveConnectionEnabled()
+        {
+            var list = GetAllConnections();
+            return list.Any(x => x.IsActive);
+        }
+
         public string GetActiveConnectionString()
         {
+            var entries = ReadConnectionsFromDisk();
+            var activeEntry = entries.FirstOrDefault(x => x.Dto.IsActive);
+            if (!string.IsNullOrWhiteSpace(activeEntry.RawConnectionString))
+            {
+                return ConnectionProtector.GetUsableConnectionString(activeEntry.RawConnectionString);
+            }
+
+            if (entries.Count > 0 && !string.IsNullOrWhiteSpace(entries[0].RawConnectionString))
+            {
+                return ConnectionProtector.GetUsableConnectionString(entries[0].RawConnectionString);
+            }
+
             string raw = _configuration.GetConnectionString("MariaDbConnection") ?? string.Empty;
             return ConnectionProtector.GetUsableConnectionString(raw);
         }
 
         public DbConnectionInfoDto GetCurrentSettings()
         {
-            string raw = _configuration.GetConnectionString("MariaDbConnection") ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(raw))
-                return new DbConnectionInfoDto();
+            var all = GetAllConnections();
+            return all.FirstOrDefault(x => x.IsActive) ?? all.FirstOrDefault() ?? new DbConnectionInfoDto();
+        }
 
-            var builder = new MySqlConnectionStringBuilder(raw);
-            string decryptedPwd = ConnectionProtector.DecryptSecret(builder.Password);
+        private string ResolvePassword(DbConnectionInfoDto dto)
+        {
+            if (!string.IsNullOrEmpty(dto.Password))
+                return dto.Password;
 
-            return new DbConnectionInfoDto
+            var entries = ReadConnectionsFromDisk();
+            if (!string.IsNullOrWhiteSpace(dto.Id))
             {
-                Server = string.IsNullOrWhiteSpace(builder.Server) ? "127.0.0.1" : builder.Server,
-                Port = builder.Port == 0 ? 3323u : builder.Port,
-                Database = string.IsNullOrWhiteSpace(builder.Database) ? "spsteks" : builder.Database,
-                UserId = string.IsNullOrWhiteSpace(builder.UserID) ? "root" : builder.UserID,
-                Password = string.Empty, // Güvenlik gereği arayüze mevcut şifre açık gönderilmez
-                HasSavedPassword = !string.IsNullOrEmpty(decryptedPwd)
-            };
+                var found = entries.FirstOrDefault(x => string.Equals(x.Dto.Id, dto.Id, StringComparison.OrdinalIgnoreCase));
+                if (!string.IsNullOrWhiteSpace(found.RawConnectionString))
+                {
+                    var b = new MySqlConnectionStringBuilder(found.RawConnectionString);
+                    string pwd = ConnectionProtector.DecryptSecret(b.Password);
+                    if (!string.IsNullOrEmpty(pwd)) return pwd;
+                }
+            }
+
+            string fallbackRaw = _configuration.GetConnectionString("MariaDbConnection") ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(fallbackRaw))
+            {
+                var fbBuilder = new MySqlConnectionStringBuilder(fallbackRaw);
+                return ConnectionProtector.DecryptSecret(fbBuilder.Password);
+            }
+
+            return string.Empty;
         }
 
         public string BuildConnectionString(DbConnectionInfoDto dto)
         {
-            string passwordToUse = dto.Password;
-            if (string.IsNullOrEmpty(passwordToUse))
-            {
-                // Kullanıcı şifre alanını boş bıraktıysa mevcut kayıtlı şifreyi koru
-                string raw = _configuration.GetConnectionString("MariaDbConnection") ?? string.Empty;
-                if (!string.IsNullOrWhiteSpace(raw))
-                {
-                    var currentBuilder = new MySqlConnectionStringBuilder(raw);
-                    passwordToUse = ConnectionProtector.DecryptSecret(currentBuilder.Password);
-                }
-            }
+            string passwordToUse = ResolvePassword(dto);
 
             var builder = new MySqlConnectionStringBuilder
             {
-                Server = dto.Server.Trim(),
-                Port = dto.Port,
-                Database = dto.Database.Trim(),
-                UserID = dto.UserId.Trim(),
+                Server = (dto.Server ?? "127.0.0.1").Trim(),
+                Port = dto.Port == 0 ? 3323u : dto.Port,
+                Database = (dto.Database ?? "spsteks").Trim(),
+                UserID = (dto.UserId ?? "root").Trim(),
                 Password = passwordToUse,
                 AllowUserVariables = true,
                 AllowLoadLocalInfile = false,
@@ -128,7 +238,8 @@ namespace SpsWebBI.Services
                 await using var conn = new MySqlConnection(connStr);
                 await conn.OpenAsync();
                 string serverVersion = conn.ServerVersion;
-                return (true, $"Bağlantı başarılı! (MariaDB Sürümü: {serverVersion}, Veritabanı: {conn.Database})");
+                string envTitle = string.IsNullOrWhiteSpace(dto.EnvironmentName) ? "Bağlantı" : dto.EnvironmentName.Trim();
+                return (true, $"[{envTitle}] Bağlantı başarılı! (MariaDB Sürümü: {serverVersion}, Veritabanı: {conn.Database})");
             }
             catch (Exception ex)
             {
@@ -136,32 +247,36 @@ namespace SpsWebBI.Services
             }
         }
 
-        public async Task<(bool Success, string Message)> SaveConnectionSettingsAsync(DbConnectionInfoDto dto)
+        public async Task<(bool Success, string Message, string SavedId)> SaveConnectionSettingsAsync(DbConnectionInfoDto dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.EnvironmentName))
+            {
+                return (false, "Lütfen Ortam İsmi alanını doldurun.", string.Empty);
+            }
+
             var testResult = await TestConnectionAsync(dto);
             if (!testResult.Success)
             {
-                return testResult;
+                return (false, testResult.Message, string.Empty);
             }
 
             try
             {
                 string usableConnStr = BuildConnectionString(dto);
                 string protectedConnStr = ConnectionProtector.ProtectConnectionStringPassword(usableConnStr);
-                WriteConnectionStringToFile(protectedConnStr);
 
-                // Bellekteki IConfiguration değerini de anında güncelle
-                _configuration["ConnectionStrings:MariaDbConnection"] = protectedConnStr;
+                string savedId = WriteConnectionToDisk(dto, protectedConnStr, setAsActiveMariaDb: dto.IsActive);
 
-                return (true, "Veritabanı bağlantı ayarları şifrelenerek kaydedildi.");
+                string stateText = dto.IsActive ? "Aktif" : "Pasif";
+                return (true, $"'{dto.EnvironmentName.Trim()}' ({stateText}) bağlantı ayarları şifrelenerek kaydedildi.", savedId);
             }
             catch (Exception ex)
             {
-                return (false, $"Ayarlar kaydedilirken hata oluştu: {ex.Message}");
+                return (false, $"Ayarlar kaydedilirken hata oluştu: {ex.Message}", string.Empty);
             }
         }
 
-        private void WriteConnectionStringToFile(string protectedConnectionString)
+        private string WriteConnectionToDisk(DbConnectionInfoDto dto, string protectedConnectionString, bool setAsActiveMariaDb)
         {
             lock (_fileLock)
             {
@@ -175,16 +290,74 @@ namespace SpsWebBI.Services
                 }
 
                 rootNode ??= new JsonObject();
+
                 if (rootNode["ConnectionStrings"] is not JsonObject connStringsObj)
                 {
                     connStringsObj = new JsonObject();
                     rootNode["ConnectionStrings"] = connStringsObj;
                 }
 
-                connStringsObj["MariaDbConnection"] = protectedConnectionString;
+                if (rootNode["DatabaseConnections"] is not JsonArray connArray)
+                {
+                    connArray = new JsonArray();
+                    rootNode["DatabaseConnections"] = connArray;
+                }
+
+                string targetId = string.IsNullOrWhiteSpace(dto.Id)
+                    ? "conn_" + Guid.NewGuid().ToString("N")[..8]
+                    : dto.Id.Trim();
+
+                // Yeni/güncellenen kayıt Aktif ise diğer kayıtları Pasif yap
+                if (dto.IsActive)
+                {
+                    foreach (var item in connArray)
+                    {
+                        if (item is JsonObject existingObj)
+                        {
+                            existingObj["IsActive"] = false;
+                        }
+                    }
+                }
+
+                JsonObject? foundObj = null;
+                foreach (var item in connArray)
+                {
+                    if (item is JsonObject obj &&
+                        string.Equals(obj["Id"]?.GetValue<string>(), targetId, StringComparison.OrdinalIgnoreCase))
+                    {
+                        foundObj = obj;
+                        break;
+                    }
+                }
+
+                if (foundObj == null)
+                {
+                    foundObj = new JsonObject();
+                    connArray.Add(foundObj);
+                }
+
+                foundObj["Id"] = targetId;
+                foundObj["EnvironmentName"] = dto.EnvironmentName.Trim();
+                foundObj["Description"] = (dto.Description ?? string.Empty).Trim();
+                foundObj["IsActive"] = dto.IsActive;
+                foundObj["ConnectionString"] = protectedConnectionString;
+
+                // Eski düğüm varsa temizle
+                if (rootNode is JsonObject rootObj && rootObj.ContainsKey("DatabaseEnvironments"))
+                {
+                    rootObj.Remove("DatabaseEnvironments");
+                }
+
+                if (setAsActiveMariaDb)
+                {
+                    connStringsObj["MariaDbConnection"] = protectedConnectionString;
+                    _configuration["ConnectionStrings:MariaDbConnection"] = protectedConnectionString;
+                }
 
                 var options = new JsonSerializerOptions { WriteIndented = true };
                 File.WriteAllText(path, rootNode.ToJsonString(options));
+
+                return targetId;
             }
         }
     }

@@ -218,6 +218,53 @@
         body.light-theme table.bi-table td { color: #1e293b; border-bottom: 1px solid #e2e8f0; }
         body.light-theme table.bi-table tbody tr:hover td { background: rgba(59,130,246,0.08); }
         body.light-theme table.bi-table tfoot td { background: #f1f5f9; color: #047857; border-top: 2px solid #cbd5e1; }
+
+        /* 3. TEMA: SPSTEKS ERP MAVİ TEMASI */
+        body.spsteks-theme {
+            --bg: #dfeaf7;
+            --panel: #eef5fc;
+            --card: #f8fbff;
+            --border: #8db2e3;
+            --text: #102a4c;
+            --muted: #36557d;
+            --primary: #2b62a8;
+        }
+        body.spsteks-theme .top-header {
+            background: linear-gradient(180deg, #dce9f9 0%, #bdd4f1 100%);
+            border-bottom: 1px solid #7da2ce;
+        }
+        body.spsteks-theme .control-bar {
+            background: linear-gradient(180deg, #eef5fc 0%, #e1edf9 100%);
+            border-bottom: 1px solid #8db2e3;
+        }
+        body.spsteks-theme .btn {
+            background: linear-gradient(180deg, #f5f9ff 0%, #d4e5f9 55%, #c1d8f4 100%);
+            color: #123560;
+            border: 1px solid #7da2ce;
+        }
+        body.spsteks-theme .btn:hover {
+            background: linear-gradient(180deg, #3b6ea5 0%, #285284 100%);
+            color: #ffffff;
+            border-color: #1e3f66;
+        }
+        body.spsteks-theme .widget-card {
+            background: #f8fbff;
+            border: 1px solid #8db2e3;
+            box-shadow: 0 3px 10px rgba(16,42,76,0.08);
+        }
+        body.spsteks-theme .widget-header {
+            background: linear-gradient(180deg, #dceaf9 0%, #bfd6f2 100%);
+            border-bottom: 1px solid #8db2e3;
+        }
+        body.spsteks-theme .widget-title { color: #102a4c; }
+        body.spsteks-theme .kpi-val { color: #102a4c; }
+        body.spsteks-theme table.bi-table thead th {
+            background: linear-gradient(180deg, #dceaf9 0%, #c1d8f4 100%);
+            color: #102a4c;
+            border-bottom: 2px solid #7da2ce;
+        }
+        body.spsteks-theme table.bi-table td { color: #102a4c; border-bottom: 1px solid #cbe0f7; }
+        body.spsteks-theme table.bi-table tfoot td { background: #d5e6f9; color: #0d3b66; border-top: 2px solid #7da2ce; }
     </style>
 </head>
 <body>
@@ -229,7 +276,11 @@
             <span id="timerStatusBadge" style="font-size:0.8rem;color:#6ee7b7;background:rgba(16,185,129,0.12);padding:4px 10px;border-radius:999px;display:none;"></span>
         </div>
         <div class="user-nav">
-            <button type="button" class="btn" id="btnThemeToggle" onclick="toggleTheme()">☀️ Açık Tema</button>
+            <select id="selThemeMode" class="btn" onchange="onThemeSelectChange(this.value)" title="Görünüm Teması Seçin" style="padding:5px 10px;cursor:pointer;">
+                <option value="dark">🌙 Koyu Tema</option>
+                <option value="light">☀️ Açık Tema</option>
+                <option value="spsteks">💎 SpsTeks Mavi</option>
+            </select>
             <button type="button" class="btn" id="btnToggleFilterBar" onclick="toggleControlBar()">Kontrol Panelini Gizle/Göster</button>
             <button type="button" class="btn btn-warning" id="btnCustomizeLayout" onclick="toggleUserEditMode()">Tasarımımı Özelleştir</button>
             <button type="button" class="btn btn-accent" id="btnSaveUserLayout" style="display:none;" onclick="saveUserCustomLayout()">Tasarımımı Kaydet</button>
@@ -330,18 +381,19 @@
         }
 
         function isLightTheme() {
-            return document.body.classList.contains('light-theme');
+            return document.body.classList.contains('light-theme') || document.body.classList.contains('spsteks-theme');
         }
 
         function applySavedTheme() {
             const saved = localStorage.getItem('sps_bi_theme') || 'dark';
-            document.body.classList.toggle('light-theme', saved === 'light');
-            const btn = document.getElementById('btnThemeToggle');
-            if (btn) btn.innerHTML = saved === 'light' ? '🌙 Koyu Tema' : '☀️ Açık Tema';
+            document.body.classList.toggle('light-theme', saved === 'light' || saved === 'spsteks');
+            document.body.classList.toggle('spsteks-theme', saved === 'spsteks');
+            const sel = document.getElementById('selThemeMode');
+            if (sel) sel.value = (saved === 'light' || saved === 'spsteks') ? saved : 'dark';
         }
 
-        function toggleTheme() {
-            const next = isLightTheme() ? 'dark' : 'light';
+        function onThemeSelectChange(mode) {
+            const next = (mode === 'light' || mode === 'spsteks') ? mode : 'dark';
             localStorage.setItem('sps_bi_theme', next);
             applySavedTheme();
             renderAllWidgets();
@@ -596,8 +648,12 @@
 
             const data = await res.json();
             if (!res.ok || !data.success) {
+                currentColumns = [];
+                rawRows = [];
+                chartInstances.forEach(c => { try { c.dispose(); } catch (_) {} });
+                chartInstances = [];
                 document.getElementById('dashboardCanvas').innerHTML =
-                    `<div style="grid-column:span 12;padding:24px;color:#fca5a5;">Veri çekme hatası: ${escapeHtml(data.message || 'Bilinmeyen hata')}</div>`;
+                    `<div style="grid-column:span 120;grid-row:span 10;padding:28px;border:1px dashed rgba(239,68,68,0.45);border-radius:12px;color:#fca5a5;text-align:center;">${escapeHtml(data.message || 'Veri kaynağı pasif veya veri çekilemedi.')}</div>`;
                 return;
             }
 
