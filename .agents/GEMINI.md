@@ -24,6 +24,11 @@ Bu dosya, `c:\Projeler\SpsWebBI` projesinde alınan tüm mimari, siber güvenlik
   - `#sqlEditorView` içinde veri kaynakları tam boy, sıralanabilir/aranabilir grid (`#dsMasterGridTable`) üzerinde yönetilir; `✏️ Güncelle` veya çift tık ortalanmış modal (`#dsFormSection`) açar. Kaynaklar aktif/pasif (`is_active`) yapılabilir.
   - Viewer (`app.html`): Üst başlık 36px kompakttır. Sol panel (`#controlBarSection`) dikey, parametreleri alt alta barındıran, `«` ile gizlenebilen ve `#sidebarResizer` ile fareyle 180px–520px genişletilebilen yapıdadır.
   - Viewer Alt Durum Çubuğu (`#viewerStatusBar`): Ekranın en altına sabitlenmiş 26px çubuk; aktif cross-filter rozetlerini (`Kolon = Değer ✕`), anlık kayıt sayacını (`filtrelenen / toplam`) ve `Tümünü Temizle` butonunu barındırır.
+- **BI Sistem Veritabanı ve İşletme Veri Kaynakları Ayrımı (`/bi-settings` vs `/db-settings`):**
+  - BI sisteminin kendi tabloları (`bi_users`, `bi_dashboards`, `bi_datasources` vb.) `appsettings.bi.json` ve `/bi-settings` ekranından yönetilir. İşletme ERP/SQL veritabanı bağlantıları ise `/db-settings` ekranından yönetilir ve ikisi birbirinden izoledir.
+- **Görsel Alt Stil Galerisi (`🎨 Galeri`), 39 SVG Vektör ve Kalıcı Hafıza Mekanizması:**
+  - Hem `designer.html` hem de `app.html` ekranlarında tüm grafik kartlarının başlığında `🎨 Galeri` butonu yer alır; tıklandığında ilgili grafik ailesine ait alt varyantları gösteren modal açılır.
+  - Kullanıcı/tasarımcı bir varyant seçtiğinde seçim `localStorage` (`sps_widget_subtype_${dashId}_${widgetId}`) içine kaydedilir; sayfa yenilendiğinde veya tarayıcı yeniden açıldığında son seçilen stil ile doğrudan yüklenir.
 
 ## 5. Referans Dosyalar
 - Detaylı adım özeti: `c:\Projeler\SpsWebBI\PROJE_DURUMU.md`

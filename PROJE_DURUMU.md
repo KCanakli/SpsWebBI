@@ -1,6 +1,6 @@
 # SpsWebBI - Geliştirme Durumu ve Mimari Hafıza
 
-**Son Güncelleme:** 2026-11-09
+**Son Güncelleme:** 2026-11-10
 **Proje Yolu:** `c:\Projeler\SpsWebBI`
 
 ---
@@ -169,5 +169,43 @@
     - 🔎 **Filtre:** Grafiğe tıklandığında oluşan filtreler kolon formatı ve değeriyle rozet olarak listelenir (örn: `Cari Adı = ABC ✕`), tek tıkla kaldırılabilir.
     - **Kayıt Sayacı:** Filtrelenen ve toplam satır sayısını dinamik gösterir (örn: `124 / 3.560`).
     - **Tümünü Temizle:** Yalnızca aktif filtre varken görünen tek tık temizleme butonu.
+
+---
+
+### [x] Adım 16: BI Veritabanı ve İşletme Veritabanı Bağlantı Mimarisi Ayrımı (2026-11-10)
+- **BI Sistem Ayarları (`/bi-settings`, `appsettings.bi.json`):**
+  - BI sisteminin kullanıcıları, dashboard'ları ve yetkileri barındıran kendi tabloları (`bi_*`) işletme ERP/SQL bağlantılarından tamamen izole edildi.
+  - `Services/BiDbConnectionManager.cs`, `Controllers/BiSettingsController.cs` ve `wwwroot/bi-settings.html` oluşturuldu; şifreler Windows DPAPI (`ENC:...`) ile korunmaktadır.
+- **İşletme Veri Kaynakları Ekranı Düzenlemesi (`/db-settings`):**
+  - `Controllers/DbSettingsController.cs` içinden `bi_*` tablo doğrulamaları kaldırıldı, sadece işletme SQL bağlantılarını yönetecek şekilde sadeleştirildi.
+  - `wwwroot/db-settings.html` sağ panel yerleşimi (`320px 580px`) ve başlık hizalaması taşma yapmayacak şekilde düzeltildi; "Kapat" ve "Çıkış" butonları eklendi.
+
+---
+
+### [x] Adım 17: Yetkisiz Kullanıcı Açılış Ekranı İyileştirmesi (`wwwroot/app.html` - 2026-11-10)
+- Kullanıcının yetkili olduğu aktif bir dashboard bulunmadığında çıkan bildirim alanı 120 kolon tam tuvale yayıldı, ortalandı ve kurumsal kilit ikonu (`🔒`) ile *"HESABINIZA TANIMLANMIŞ AKTİF BİR DASHBOARD YETKİSİ BULUNMAMAKTADIR"* mesajı verildi.
+
+---
+
+### [x] Adım 18: 39 Alt Grafik Görsel Stil Galeri Paneli (`🎨 Galeri`), Özel SVG Vektör Çizimleri ve Kalıcı Hafıza Mekanizması (2026-11-10)
+- **Görsel Alt Stil Galerisi Paneli (`#subTypeGalleryPopover`):**
+  - 8 ana grafik ailesi (`bar`, `line`, `pie`, `gauge`, `hierarchy`, `funnel`, `radar`, `scatter`) altındaki tüm 39 varyant için temaya duyarlı, yüksek çözünürlüklü SVG vektör ikonları kodlandı (`SUBTYPE_SVG_CATALOG`).
+  - İsteğe bağlı özel PNG/SVG görsel yüklemek isteyen kullanıcılar için `wwwroot/img/charts/` klasörü ve `README.txt` kılavuzu hazırlandı.
+- **Grafik Başlıklarına `🎨 Galeri` Butonu Entegrasyonu:**
+  - Hem Tasarım Stüdyosu (`designer.html`) hem de İzleme Ekranı (`app.html`) üzerindeki her grafik kartının başlığına tek tıkla açılan `🎨 Galeri` butonu eklendi.
+  - Popover modalın tuval arkasında kalmaması için `body` seviyesine taşındı (`z-index: 9999`).
+- **Kalıcı Hafıza Mekanizması (`localStorage`):**
+  - Kullanıcı veya tasarımcı galeri panelinden bir stil seçtiğinde seçim `localStorage.setItem('sps_widget_subtype_${dashId}_${widgetId}', subType)` ile saklanır.
+  - Sayfa yenilendiğinde veya tarayıcı kapatılıp tekrar açıldığında ilgili grafik doğrudan son seçilen alt stil ile yüklenir.
+- **Tasarım Paneli Sadeleştirmesi:**
+  - Sol özellikler panelindeki mükerrer `🎨 Galeri` butonu kaldırılarak fonksiyon tamamen grafik başlıklarına devredildi.
+
+---
+
+### [x] Adım 19: Git Sürüm Kontrolü ve GitHub Senkronizasyonu (2026-11-10)
+- Tüm yeni dosyalar (`BiSettingsController.cs`, `BiDbConnectionManager.cs`, `appsettings.bi.json`, `bi-settings.html`, `img/charts/` ve güncellenen frontend/backend dosyaları) sahnelendi.
+- `c669c6b` commit hash'i ile `feat: BI ve Veri Kaynagi ayarlarinin ayrilmasi, 39 alt grafik gorsel galeri paneli ve kalici hafiza entegrasyonu` başlığıyla kaydedildi.
+- `https://github.com/KCanakli/SpsWebBI.git` deposundaki `master` dalına başarıyla push edildi.
+
 
 
