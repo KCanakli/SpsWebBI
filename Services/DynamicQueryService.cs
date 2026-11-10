@@ -51,10 +51,12 @@ namespace SpsWebBI.Services
     public class DynamicQueryService
     {
         private readonly DbConnectionManager _connManager;
+        private readonly BiDbConnectionManager _biConnManager;
 
-        public DynamicQueryService(DbConnectionManager connManager)
+        public DynamicQueryService(DbConnectionManager connManager, BiDbConnectionManager biConnManager)
         {
             _connManager = connManager;
+            _biConnManager = biConnManager;
         }
 
         /// <summary>
@@ -63,7 +65,7 @@ namespace SpsWebBI.Services
         /// </summary>
         public async Task<List<AuthorizedDashboardView>> GetAuthorizedDashboardsAsync(int userId)
         {
-            await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
             await conn.OpenAsync();
 
             const string sql = @"
@@ -104,7 +106,7 @@ namespace SpsWebBI.Services
                 return true;
             }
 
-            await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
             await conn.OpenAsync();
 
             const string sql = @"
@@ -133,7 +135,7 @@ namespace SpsWebBI.Services
         /// </summary>
         public async Task<List<ParameterWithOptionsDto>> GetDataSourceParametersAsync(int datasourceId)
         {
-            await using var sysConn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await using var sysConn = new MySqlConnection(_biConnManager.GetBiConnectionString());
             await sysConn.OpenAsync();
 
             var ds = await sysConn.QueryFirstOrDefaultAsync<BiDataSource>(
@@ -214,7 +216,7 @@ namespace SpsWebBI.Services
             int datasourceId,
             Dictionary<string, string?>? filterValues)
         {
-            await using var sysConn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await using var sysConn = new MySqlConnection(_biConnManager.GetBiConnectionString());
             await sysConn.OpenAsync();
 
             var ds = await sysConn.QueryFirstOrDefaultAsync<BiDataSource>(

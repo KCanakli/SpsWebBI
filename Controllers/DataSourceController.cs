@@ -44,11 +44,16 @@ namespace SpsWebBI.Controllers
     {
         private readonly DynamicQueryService _queryService;
         private readonly DbConnectionManager _connManager;
+        private readonly BiDbConnectionManager _biConnManager;
 
-        public DataSourceController(DynamicQueryService queryService, DbConnectionManager connManager)
+        public DataSourceController(
+            DynamicQueryService queryService,
+            DbConnectionManager connManager,
+            BiDbConnectionManager biConnManager)
         {
             _queryService = queryService;
             _connManager = connManager;
+            _biConnManager = biConnManager;
         }
 
         private int CurrentUserId => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : 0;
@@ -206,7 +211,7 @@ namespace SpsWebBI.Controllers
                 return BadRequest(new { success = false, message = targetConnInfo.ErrorMessage });
             }
 
-            await using var sysConn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await using var sysConn = new MySqlConnection(_biConnManager.GetBiConnectionString());
             await sysConn.OpenAsync();
 
             int dsId = request.DataSourceId ?? 0;
@@ -311,7 +316,7 @@ namespace SpsWebBI.Controllers
                 return BadRequest(new { success = false, message = "Geçersiz veri kaynağı seçimi." });
             }
 
-            await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
             await conn.OpenAsync();
 
             int affected = await conn.ExecuteAsync(@"

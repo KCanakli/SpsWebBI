@@ -133,8 +133,9 @@
             <button type="submit" class="btn-submit" id="btnLogin">Giriş Yap</button>
         </form>
 
-        <div class="footer" style="justify-content:center;">
+        <div class="footer" style="justify-content:center;gap:12px;flex-wrap:wrap;">
             <span>🔒 Kapalı Devre Güvenli Oturum</span>
+            <a href="/bi-settings" id="linkInitialSetup" style="display:none;color:#f59e0b;font-weight:700;text-decoration:none;font-size:0.8rem;">⚙️ İlk Kurulum (BI Ayarları)</a>
         </div>
     </div>
 
@@ -208,7 +209,21 @@
                 redirectAfterAuth(data.action, data.mode);
             } catch (err) {
                 showError('İstek sırasında hata oluştu: ' + err.message);
+                checkInitialSetupLink();
             }
+        }
+
+        async function checkInitialSetupLink() {
+            try {
+                const res = await fetch('/api/bi-settings');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.isInitialSetup) {
+                        const link = document.getElementById('linkInitialSetup');
+                        if (link) link.style.display = 'inline-block';
+                    }
+                }
+            } catch (_) {}
         }
 
         function redirectAfterAuth(action, mode) {
@@ -228,6 +243,7 @@
         }
 
         initEntryCheck();
+        checkInitialSetupLink();
     </script>
 </body>
 </html>

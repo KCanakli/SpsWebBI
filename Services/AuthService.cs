@@ -22,12 +22,12 @@ namespace SpsWebBI.Services
     /// </summary>
     public class AuthService
     {
-        private readonly DbConnectionManager _connManager;
+        private readonly BiDbConnectionManager _biConnManager;
         private readonly IConfiguration _configuration;
 
-        public AuthService(DbConnectionManager connManager, IConfiguration configuration)
+        public AuthService(BiDbConnectionManager biConnManager, IConfiguration configuration)
         {
-            _connManager = connManager;
+            _biConnManager = biConnManager;
             _configuration = configuration;
         }
 
@@ -40,7 +40,7 @@ namespace SpsWebBI.Services
 
             try
             {
-                await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
+                await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
                 await conn.OpenAsync();
 
                 var user = await conn.QueryFirstOrDefaultAsync<BiUser>(
@@ -121,7 +121,7 @@ namespace SpsWebBI.Services
 
             try
             {
-                await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
+                await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
                 await conn.OpenAsync();
 
                 var user = await conn.QueryFirstOrDefaultAsync<BiUser>(

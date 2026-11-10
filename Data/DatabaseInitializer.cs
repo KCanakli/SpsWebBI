@@ -10,16 +10,16 @@ namespace SpsWebBI.Data
 {
     public class DatabaseInitializer
     {
-        private readonly DbConnectionManager _connManager;
+        private readonly BiDbConnectionManager _biConnManager;
         private readonly ILogger<DatabaseInitializer> _logger;
 
-        public DatabaseInitializer(DbConnectionManager connManager, ILogger<DatabaseInitializer> logger)
+        public DatabaseInitializer(BiDbConnectionManager biConnManager, ILogger<DatabaseInitializer> logger)
         {
-            _connManager = connManager;
+            _biConnManager = biConnManager;
             _logger = logger;
         }
 
-        public string GetConnectionString() => _connManager.GetActiveConnectionString();
+        public string GetConnectionString() => _biConnManager.GetBiConnectionString();
 
         public async Task<(bool Success, string Message)> InitializeAsync()
         {

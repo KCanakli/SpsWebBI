@@ -2105,10 +2105,185 @@
         body.light-theme .hamburger-item-sub {
             color: #64748b;
         }
+
+        /* ALT GRAFİK STİLİ GÖRSEL GALERİ PANELİ (POPOVER) */
+        .subtype-gallery-popover {
+            position: fixed;
+            z-index: 9999;
+            width: 390px;
+            max-height: 480px;
+            background: #0f172a;
+            border: 1px solid rgba(56, 189, 248, 0.45);
+            border-radius: 12px;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), 0 0 16px rgba(56, 189, 248, 0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            animation: galleryFadeIn 0.18s ease-out;
+        }
+        @keyframes galleryFadeIn {
+            from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .subtype-gallery-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(15, 23, 42, 0.95);
+        }
+        .btn-gallery-close {
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+        .btn-gallery-close:hover {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.15);
+        }
+        .subtype-gallery-sub {
+            padding: 4px 12px 6px 12px;
+            font-size: 0.68rem;
+            color: var(--muted);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.15);
+        }
+        .subtype-gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 7px;
+            padding: 10px;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+        .subtype-gallery-card {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 6px 4px 5px 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.14s ease;
+            position: relative;
+            min-height: 82px;
+            user-select: none;
+        }
+        .subtype-gallery-card:hover {
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.14);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+        }
+        .subtype-gallery-card.active {
+            border-color: #38bdf8;
+            background: rgba(14, 165, 233, 0.22);
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
+        }
+        .subtype-gallery-card.active::after {
+            content: "✓";
+            position: absolute;
+            top: 3px;
+            right: 4px;
+            font-size: 0.62rem;
+            font-weight: 900;
+            color: #38bdf8;
+            background: rgba(14, 165, 233, 0.25);
+            border-radius: 999px;
+            width: 14px;
+            height: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .subtype-card-thumb {
+            width: 100%;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+        }
+        .subtype-card-label {
+            font-size: 0.67rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            text-align: center;
+            line-height: 1.15;
+            margin-top: 4px;
+            max-width: 100%;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        .subtype-gallery-card:hover .subtype-card-label {
+            color: #7dd3fc;
+        }
+        body.light-theme .subtype-gallery-popover {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16);
+        }
+        body.light-theme .subtype-gallery-header {
+            background: #f8fafc;
+            border-bottom-color: #e2e8f0;
+        }
+        body.light-theme .subtype-gallery-sub {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        body.light-theme .subtype-gallery-card {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+        }
+        body.light-theme .subtype-gallery-card:hover {
+            background: #e0f2fe;
+            border-color: #38bdf8;
+        }
+        body.light-theme .subtype-card-label {
+            color: #1e293b;
+        }
+        body.spsteks-theme .subtype-gallery-popover {
+            background: #edf4fc;
+            border-color: #94b8db;
+        }
+        body.spsteks-theme .subtype-gallery-header {
+            background: #d9e7f5;
+        }
+        body.spsteks-theme .subtype-gallery-card {
+            background: #ffffff;
+            border-color: #cbdcf0;
+        }
+        body.spsteks-theme .subtype-card-label {
+            color: #0c2340;
+        }
     </style>
 </head>
 
 <body>
+    <!-- ALT GRAFİK STİLLERİ GÖRSEL SEÇİM PANELİ (POPOVER) -->
+    <div id="subTypeGalleryPopover" class="subtype-gallery-popover" style="display:none;" onmouseleave="scheduleGalleryClose()" onmouseenter="cancelGalleryClose()">
+        <div class="subtype-gallery-header">
+            <div style="display:flex;align-items:center;gap:6px;">
+                <span style="font-size:1rem;">🎨</span>
+                <span id="subTypeGalleryTitle" style="font-weight:800;font-size:0.85rem;color:#38bdf8;">Alt Grafik Stilleri</span>
+            </div>
+            <button type="button" class="btn-gallery-close" onclick="closeSubTypeGallery()" title="Kapat">✕</button>
+        </div>
+        <div class="subtype-gallery-sub">Stil seçmek için tıklayın • Tuval anlık güncellenir</div>
+        <div id="subTypeGalleryGrid" class="subtype-gallery-grid"></div>
+    </div>
+
     <!-- 1. ÜST STUDIO BAŞLIK ÇUBUĞU -->
     <header class="studio-topbar">
         <div class="studio-brand">
@@ -2127,13 +2302,20 @@
                         <div class="hamburger-sec-title">
                             <span>⚙️ Stüdyo Modülleri</span>
                         </div>
+                        <button type="button" class="hamburger-item" id="hmBtnBiSettings"
+                            onclick="window.location.href='/bi-settings'">
+                            <span style="font-size:1.1rem;">⚙️</span>
+                            <span>
+                                BI Ayarları
+                                <span class="hamburger-item-sub">BI sistem tablolarının (bi_*) ve kullanıcı/yetki veritabanının bağlantı ayarları</span>
+                            </span>
+                        </button>
                         <button type="button" class="hamburger-item" id="hmBtnDbSettings"
                             onclick="window.location.href='/db-settings'">
                             <span style="font-size:1.1rem;">🔌</span>
                             <span>
-                                Veri Kaynağı Ayarları
-                                <span class="hamburger-item-sub">Canlı ve Test ortamı bağlantı ve DB ayarlarını
-                                    yönet</span>
+                                Veri Kaynağı Bağlantıları
+                                <span class="hamburger-item-sub">SQL sorguları için Canlı, Test vb. hedef ERP/iş veritabanı bağlantıları</span>
                             </span>
                         </button>
                         <button type="button" class="hamburger-item" id="hmBtnSql" onclick="openNewDataSourceScreen()">
@@ -2785,10 +2967,20 @@
             if (wrap && !wrap.contains(e.target)) {
                 closeStudioHamburgerMenu();
             }
+            const pop = document.getElementById('subTypeGalleryPopover');
+            const trigger = document.getElementById('btnSubTypeGalleryTrigger');
+            if (pop && pop.style.display === 'flex') {
+                if (!pop.contains(e.target) && (!trigger || !trigger.contains(e.target))) {
+                    closeSubTypeGallery();
+                }
+            }
         });
 
         document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') closeStudioHamburgerMenu();
+            if (e.key === 'Escape') {
+                closeStudioHamburgerMenu();
+                closeSubTypeGallery();
+            }
         });
 
         function updatePanelRestoreButtons() {
@@ -2919,8 +3111,10 @@
                 return;
             }
             if (user.role !== 'admin') {
+                const biBtn = document.getElementById('hmBtnBiSettings');
                 const dbBtn = document.getElementById('hmBtnDbSettings');
                 const authBtn = document.getElementById('hmBtnAuth');
+                if (biBtn) biBtn.style.display = 'none';
                 if (dbBtn) dbBtn.style.display = 'none';
                 if (authBtn) authBtn.style.display = 'none';
             }
@@ -3081,6 +3275,15 @@
                 }
             } catch (_) {
                 designerLayout = { widgets: [], columnFormats: {}, columnAlignments: {} };
+            }
+
+            if (Array.isArray(designerLayout.widgets)) {
+                designerLayout.widgets.forEach(w => {
+                    const savedSub = localStorage.getItem(`sps_widget_subtype_${currentDashId}_${w.id}`);
+                    if (savedSub) {
+                        applyWidgetSubTypeLogic(w, savedSub);
+                    }
+                });
             }
 
             selectedWidgetId = designerLayout.widgets[0]?.id || null;
@@ -4089,10 +4292,11 @@
             return { singleValueOnly: false, allowSeriesMode: true, requiresStackingLayer: false, minDimensions: 1, valueLabel: 'Değer / Ölçüm (Values - Çoklu)', dimLabel: 'Boyut & Kırılım (Arguments)', ruleBadge: '' };
         }
 
-        function onChartSubTypeChange(newSubType) {
-            const w = getSelectedWidget();
-            if (!w) return;
+        function applyWidgetSubTypeLogic(w, newSubType) {
+            if (!w || !newSubType) return;
             const fam = getChartFamily(w);
+            if (!fam || !CHART_SUBTYPE_CATALOG[fam]) return;
+            if (!CHART_SUBTYPE_CATALOG[fam].options.some(o => o.value === newSubType)) return;
             w.subType = newSubType;
 
             if (fam === 'bar') {
@@ -4110,6 +4314,12 @@
                     w.type = newSubType;
                 }
             }
+        }
+
+        function onChartSubTypeChange(newSubType) {
+            const w = getSelectedWidget();
+            if (!w) return;
+            applyWidgetSubTypeLogic(w, newSubType);
 
             const policy = getVariantSlotPolicy(w);
             const hierarchy = getWidgetHierarchy(w);
@@ -4132,6 +4342,314 @@
             renderDataBindingPanel();
         }
 
+        let galleryCloseTimer = null;
+        let galleryOpenTimer = null;
+
+        function getSubTypeThumbnailSvg(fam, val) {
+            const w = 54, h = 34;
+            const cBlue = '#38bdf8', cIndigo = '#818cf8', cEmerald = '#34d399', cAmber = '#fbbf24', cRose = '#f43f5e', cTrack = 'rgba(255,255,255,0.12)';
+
+            // 1. SÜTUN VARYANTLARI (bar)
+            if (fam === 'bar') {
+                if (val === 'basic') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><rect x="7" y="16" width="7" height="14" rx="2" fill="${cBlue}"/><rect x="18" y="7" width="7" height="23" rx="2" fill="${cIndigo}"/><rect x="29" y="13" width="7" height="17" rx="2" fill="${cEmerald}"/><rect x="40" y="4" width="7" height="26" rx="2" fill="${cAmber}"/><line x1="4" y1="30" x2="50" y2="30" stroke="${cTrack}" stroke-width="1.5"/></svg>`;
+                }
+                if (val === 'background') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><rect x="7" y="4" width="7" height="26" rx="2" fill="${cTrack}"/><rect x="7" y="16" width="7" height="14" rx="2" fill="${cBlue}"/><rect x="18" y="4" width="7" height="26" rx="2" fill="${cTrack}"/><rect x="18" y="8" width="7" height="22" rx="2" fill="${cIndigo}"/><rect x="29" y="4" width="7" height="26" rx="2" fill="${cTrack}"/><rect x="29" y="14" width="7" height="16" rx="2" fill="${cEmerald}"/><rect x="40" y="4" width="7" height="26" rx="2" fill="${cTrack}"/><rect x="40" y="6" width="7" height="24" rx="2" fill="${cAmber}"/></svg>`;
+                }
+                if (val === 'stacked') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><rect x="9" y="19" width="8" height="11" rx="1.5" fill="${cBlue}"/><rect x="9" y="11" width="8" height="7" fill="${cIndigo}"/><rect x="9" y="5" width="8" height="5" rx="1.5" fill="${cAmber}"/><rect x="23" y="15" width="8" height="15" rx="1.5" fill="${cBlue}"/><rect x="23" y="7" width="8" height="7" fill="${cIndigo}"/><rect x="37" y="21" width="8" height="9" rx="1.5" fill="${cBlue}"/><rect x="37" y="13" width="8" height="7" fill="${cIndigo}"/><rect x="37" y="4" width="8" height="8" rx="1.5" fill="${cEmerald}"/><line x1="5" y1="30" x2="49" y2="30" stroke="${cTrack}" stroke-width="1.5"/></svg>`;
+                }
+                if (val === 'stacked100') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><rect x="9" y="18" width="8" height="12" fill="${cBlue}"/><rect x="9" y="10" width="8" height="8" fill="${cIndigo}"/><rect x="9" y="4" width="8" height="6" fill="${cAmber}"/><rect x="23" y="15" width="8" height="15" fill="${cBlue}"/><rect x="23" y="8" width="8" height="7" fill="${cIndigo}"/><rect x="23" y="4" width="8" height="4" fill="${cAmber}"/><rect x="37" y="19" width="8" height="11" fill="${cBlue}"/><rect x="37" y="12" width="8" height="7" fill="${cIndigo}"/><rect x="37" y="4" width="8" height="8" fill="${cAmber}"/><rect x="7" y="4" width="40" height="26" rx="2" fill="none" stroke="${cTrack}" stroke-dasharray="2,2"/></svg>`;
+                }
+                if (val === 'horizontal') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><line x1="8" y1="4" x2="8" y2="30" stroke="${cTrack}" stroke-width="1.5"/><rect x="8" y="6" width="22" height="4" rx="1.5" fill="${cBlue}"/><rect x="8" y="12" width="36" height="4" rx="1.5" fill="${cIndigo}"/><rect x="8" y="18" width="28" height="4" rx="1.5" fill="${cEmerald}"/><rect x="8" y="24" width="40" height="4" rx="1.5" fill="${cAmber}"/></svg>`;
+                }
+                if (val === 'horizontalStacked') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><line x1="8" y1="4" x2="8" y2="30" stroke="${cTrack}" stroke-width="1.5"/><rect x="8" y="7" width="14" height="5" fill="${cBlue}"/><rect x="22" y="7" width="10" height="5" fill="${cIndigo}"/><rect x="32" y="7" width="8" height="5" fill="${cAmber}"/><rect x="8" y="15" width="18" height="5" fill="${cBlue}"/><rect x="26" y="15" width="14" height="5" fill="${cIndigo}"/><rect x="8" y="23" width="12" height="5" fill="${cBlue}"/><rect x="20" y="23" width="16" height="5" fill="${cIndigo}"/><rect x="36" y="23" width="10" height="5" fill="${cEmerald}"/></svg>`;
+                }
+                if (val === 'waterfall') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><rect x="6" y="17" width="6" height="13" rx="1" fill="${cBlue}"/><line x1="12" y1="17" x2="16" y2="17" stroke="${cTrack}" stroke-dasharray="1.5,1.5"/><rect x="16" y="9" width="6" height="8" rx="1" fill="${cEmerald}"/><line x1="22" y1="9" x2="26" y2="9" stroke="${cTrack}" stroke-dasharray="1.5,1.5"/><rect x="26" y="9" width="6" height="5" rx="1" fill="${cRose}"/><line x1="32" y1="14" x2="36" y2="14" stroke="${cTrack}" stroke-dasharray="1.5,1.5"/><rect x="36" y="6" width="6" height="8" rx="1" fill="${cEmerald}"/><rect x="44" y="6" width="6" height="24" rx="1" fill="${cIndigo}"/><line x1="4" y1="30" x2="52" y2="30" stroke="${cTrack}"/></svg>`;
+                }
+                if (val === 'polarRadial') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><circle cx="27" cy="17" r="14" fill="none" stroke="${cTrack}" stroke-width="1"/><line x1="27" y1="17" x2="27" y2="4" stroke="${cBlue}" stroke-width="3" stroke-linecap="round"/><line x1="27" y1="17" x2="39" y2="9" stroke="${cIndigo}" stroke-width="3" stroke-linecap="round"/><line x1="27" y1="17" x2="38" y2="25" stroke="${cEmerald}" stroke-width="3" stroke-linecap="round"/><line x1="27" y1="17" x2="22" y2="30" stroke="${cAmber}" stroke-width="3" stroke-linecap="round"/><line x1="27" y1="17" x2="14" y2="17" stroke="${cRose}" stroke-width="3" stroke-linecap="round"/><circle cx="27" cy="17" r="3" fill="#0f172a" stroke="${cBlue}"/></svg>`;
+                }
+                if (val === 'polarTangential') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><circle cx="27" cy="17" r="14" fill="none" stroke="${cTrack}" stroke-width="2"/><circle cx="27" cy="17" r="10" fill="none" stroke="${cTrack}" stroke-width="2"/><circle cx="27" cy="17" r="6" fill="none" stroke="${cTrack}" stroke-width="2"/><path d="M 27 3 A 14 14 0 0 1 41 17" fill="none" stroke="${cBlue}" stroke-width="2.5" stroke-linecap="round"/><path d="M 27 7 A 10 10 0 1 1 17 17" fill="none" stroke="${cIndigo}" stroke-width="2.5" stroke-linecap="round"/><path d="M 27 11 A 6 6 0 0 1 33 17" fill="none" stroke="${cEmerald}" stroke-width="2.5" stroke-linecap="round"/></svg>`;
+                }
+                if (val === 'pictorialDotted') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><circle cx="11" cy="27" r="2" fill="${cBlue}"/><circle cx="11" cy="21" r="2" fill="${cBlue}"/><circle cx="11" cy="15" r="2" fill="${cBlue}"/><circle cx="22" cy="27" r="2" fill="${cIndigo}"/><circle cx="22" cy="21" r="2" fill="${cIndigo}"/><circle cx="22" cy="15" r="2" fill="${cIndigo}"/><circle cx="22" cy="9" r="2" fill="${cIndigo}"/><circle cx="33" cy="27" r="2" fill="${cEmerald}"/><circle cx="33" cy="21" r="2" fill="${cEmerald}"/><circle cx="44" cy="27" r="2" fill="${cAmber}"/><circle cx="44" cy="21" r="2" fill="${cAmber}"/><circle cx="44" cy="15" r="2" fill="${cAmber}"/><circle cx="44" cy="9" r="2" fill="${cAmber}"/><circle cx="44" cy="3" r="2" fill="${cAmber}"/></svg>`;
+                }
+            }
+
+            // 2. ÇİZGİ & ALAN VARYANTLARI (line)
+            if (fam === 'line') {
+                if (val === 'smooth') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><path d="M 6 24 C 14 26, 18 8, 28 14 C 36 19, 42 6, 48 8" fill="none" stroke="${cBlue}" stroke-width="2.5" stroke-linecap="round"/><circle cx="6" cy="24" r="2" fill="${cBlue}"/><circle cx="28" cy="14" r="2" fill="${cBlue}"/><circle cx="48" cy="8" r="2" fill="${cBlue}"/><line x1="4" y1="30" x2="50" y2="30" stroke="${cTrack}"/></svg>`;
+                }
+                if (val === 'basic') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><polyline points="6,24 16,8 28,20 38,6 48,16" fill="none" stroke="${cBlue}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="24" r="2" fill="${cBlue}"/><circle cx="16" cy="8" r="2" fill="${cBlue}"/><circle cx="28" cy="20" r="2" fill="${cBlue}"/><circle cx="38" cy="6" r="2" fill="${cBlue}"/><circle cx="48" cy="16" r="2" fill="${cBlue}"/><line x1="4" y1="30" x2="50" y2="30" stroke="${cTrack}"/></svg>`;
+                }
+                if (val === 'stackedLine') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><path d="M 6 25 C 16 27, 24 18, 34 22 C 40 24, 44 14, 48 16" fill="none" stroke="${cBlue}" stroke-width="2" stroke-linecap="round"/><path d="M 6 17 C 16 19, 24 10, 34 14 C 40 16, 44 7, 48 9" fill="none" stroke="${cIndigo}" stroke-width="2" stroke-linecap="round"/><path d="M 6 10 C 16 11, 24 4, 34 7 C 40 8, 44 3, 48 4" fill="none" stroke="${cAmber}" stroke-width="2" stroke-linecap="round"/><line x1="4" y1="30" x2="50" y2="30" stroke="${cTrack}"/></svg>`;
+                }
+                if (val === 'step') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><path d="M 6 26 H 16 V 18 H 28 V 10 H 38 V 16 H 48" fill="none" stroke="${cBlue}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><line x1="4" y1="30" x2="50" y2="30" stroke="${cTrack}"/></svg>`;
+                }
+                if (val === 'area') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><path d="M 6 22 C 16 25, 22 9, 32 15 C 40 20, 44 8, 48 10 L 48 30 L 6 30 Z" fill="rgba(56,189,248,0.3)"/><path d="M 6 22 C 16 25, 22 9, 32 15 C 40 20, 44 8, 48 10" fill="none" stroke="${cBlue}" stroke-width="2" stroke-linecap="round"/><line x1="4" y1="30" x2="50" y2="30" stroke="${cTrack}"/></svg>`;
+                }
+                if (val === 'stackedArea') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><path d="M 6 18 C 16 20, 24 14, 34 17 C 42 19, 44 11, 48 13 L 48 30 L 6 30 Z" fill="rgba(56,189,248,0.4)"/><path d="M 6 9 C 16 12, 24 5, 34 9 C 42 11, 44 4, 48 6 L 48 13 C 44 11, 42 19, 34 17 C 24 14, 16 20, 6 18 Z" fill="rgba(129,140,248,0.45)"/><line x1="4" y1="30" x2="50" y2="30" stroke="${cTrack}"/></svg>`;
+                }
+                if (val === 'gradientArea') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><defs><linearGradient id="gradArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${cBlue}" stop-opacity="0.65"/><stop offset="100%" stop-color="${cIndigo}" stop-opacity="0.05"/></linearGradient></defs><path d="M 6 20 C 14 24, 20 6, 30 12 C 38 18, 42 5, 48 7 L 48 30 L 6 30 Z" fill="url(#gradArea)"/><path d="M 6 20 C 14 24, 20 6, 30 12 C 38 18, 42 5, 48 7" fill="none" stroke="${cBlue}" stroke-width="2"/><circle cx="30" cy="12" r="3" fill="#fff" stroke="${cBlue}" stroke-width="1.5"/><circle cx="48" cy="7" r="3" fill="#fff" stroke="${cBlue}" stroke-width="1.5"/><line x1="4" y1="30" x2="50" y2="30" stroke="${cTrack}"/></svg>`;
+                }
+            }
+
+            // 3. PASTA & HALKA VARYANTLARI (pie)
+            if (fam === 'pie') {
+                if (val === 'pie') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><circle cx="27" cy="17" r="13" fill="${cIndigo}"/><path d="M 27 17 L 27 4 A 13 13 0 0 1 40 17 Z" fill="${cBlue}"/><path d="M 27 17 L 40 17 A 13 13 0 0 1 27 30 Z" fill="${cEmerald}"/><path d="M 27 17 L 27 30 A 13 13 0 0 1 14 17 Z" fill="${cAmber}"/></svg>`;
+                }
+                if (val === 'donut') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><circle cx="27" cy="17" r="13" fill="none" stroke="${cIndigo}" stroke-width="6"/><path d="M 27 4 A 13 13 0 0 1 40 17" fill="none" stroke="${cBlue}" stroke-width="6"/><path d="M 40 17 A 13 13 0 0 1 27 30" fill="none" stroke="${cEmerald}" stroke-width="6"/><circle cx="27" cy="17" r="7" fill="#0f172a"/></svg>`;
+                }
+                if (val === 'halfDonut') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><path d="M 12 24 A 15 15 0 0 1 42 24" fill="none" stroke="${cTrack}" stroke-width="6" stroke-linecap="round"/><path d="M 12 24 A 15 15 0 0 1 34 11" fill="none" stroke="${cBlue}" stroke-width="6" stroke-linecap="round"/></svg>`;
+                }
+                if (val === 'roseArea') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><circle cx="27" cy="17" r="4" fill="#0f172a"/><path d="M 27 17 L 27 3 A 14 14 0 0 1 39 12 Z" fill="${cBlue}"/><path d="M 27 17 L 39 12 A 11 11 0 0 1 37 24 Z" fill="${cIndigo}"/><path d="M 27 17 L 37 24 A 15 15 0 0 1 25 32 Z" fill="${cEmerald}"/><path d="M 27 17 L 25 32 A 9 9 0 0 1 18 21 Z" fill="${cAmber}"/><path d="M 27 17 L 18 21 A 13 13 0 0 1 27 3 Z" fill="${cRose}"/></svg>`;
+                }
+                if (val === 'roseRadius') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><circle cx="27" cy="17" r="3" fill="#0f172a"/><path d="M 27 17 L 27 5 A 12 12 0 0 1 37 10 Z" fill="${cBlue}"/><path d="M 27 17 L 37 10 A 15 15 0 0 1 39 25 Z" fill="${cIndigo}"/><path d="M 27 17 L 39 25 A 8 8 0 0 1 23 25 Z" fill="${cEmerald}"/><path d="M 27 17 L 23 25 A 14 14 0 0 1 13 17 Z" fill="${cAmber}"/><path d="M 27 17 L 13 17 A 10 10 0 0 1 27 5 Z" fill="${cRose}"/></svg>`;
+                }
+                if (val === 'nested') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><circle cx="27" cy="17" r="6" fill="${cIndigo}"/><circle cx="27" cy="17" r="13" fill="none" stroke="${cBlue}" stroke-width="3"/><path d="M 27 4 A 13 13 0 0 1 40 17" fill="none" stroke="${cAmber}" stroke-width="3"/></svg>`;
+                }
+            }
+
+            // 4. İBRE VARYANTLARI (gauge)
+            if (fam === 'gauge') {
+                if (val === 'progress') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><path d="M 14 26 A 14 14 0 1 1 40 26" fill="none" stroke="${cTrack}" stroke-width="4.5" stroke-linecap="round"/><path d="M 14 26 A 14 14 0 1 1 37 10" fill="none" stroke="${cBlue}" stroke-width="4.5" stroke-linecap="round"/><text x="27" y="21" font-size="7" font-weight="800" fill="#fff" text-anchor="middle">75%</text></svg>`;
+                }
+                if (val === 'classic') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><path d="M 13 25 A 15 15 0 1 1 41 25" fill="none" stroke="${cTrack}" stroke-width="2"/><line x1="27" y1="23" x2="36" y2="12" stroke="${cRose}" stroke-width="2" stroke-linecap="round"/><circle cx="27" cy="23" r="3" fill="#fff"/><circle cx="27" cy="23" r="1.5" fill="${cRose}"/></svg>`;
+                }
+                if (val === 'ring') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><circle cx="27" cy="17" r="12" fill="none" stroke="${cTrack}" stroke-width="3.5"/><path d="M 27 5 A 12 12 0 1 1 16 22" fill="none" stroke="${cEmerald}" stroke-width="3.5" stroke-linecap="round"/><text x="27" y="20" font-size="7.5" font-weight="900" fill="#fff" text-anchor="middle">68%</text></svg>`;
+                }
+                if (val === 'grade') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><path d="M 13 25 A 15 15 0 0 1 20 12" fill="none" stroke="${cEmerald}" stroke-width="4"/><path d="M 20 12 A 15 15 0 0 1 34 12" fill="none" stroke="${cAmber}" stroke-width="4"/><path d="M 34 12 A 15 15 0 0 1 41 25" fill="none" stroke="${cRose}" stroke-width="4"/><line x1="27" y1="23" x2="29" y2="10" stroke="#fff" stroke-width="2" stroke-linecap="round"/><circle cx="27" cy="23" r="2.5" fill="#fff"/></svg>`;
+                }
+            }
+
+            // 5. HİYERARŞİ & AKIŞ (hierarchy)
+            if (fam === 'hierarchy') {
+                if (val === 'treemap') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><rect x="6" y="4" width="23" height="26" rx="2" fill="${cBlue}"/><rect x="31" y="4" width="17" height="15" rx="2" fill="${cIndigo}"/><rect x="31" y="21" width="17" height="9" rx="2" fill="${cEmerald}"/></svg>`;
+                }
+                if (val === 'sunburst') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><circle cx="27" cy="17" r="5" fill="${cIndigo}"/><circle cx="27" cy="17" r="10" fill="none" stroke="${cBlue}" stroke-width="3" stroke-dasharray="8,2"/><circle cx="27" cy="17" r="14" fill="none" stroke="${cEmerald}" stroke-width="3" stroke-dasharray="5,2"/></svg>`;
+                }
+                if (val === 'sankey') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><rect x="6" y="5" width="4" height="10" rx="1" fill="${cBlue}"/><rect x="6" y="19" width="4" height="10" rx="1" fill="${cAmber}"/><rect x="44" y="4" width="4" height="7" rx="1" fill="${cIndigo}"/><rect x="44" y="14" width="4" height="9" rx="1" fill="${cEmerald}"/><rect x="44" y="25" width="4" height="5" rx="1" fill="${cRose}"/><path d="M 10 9 C 26 9, 24 7, 44 7 L 44 11 C 24 11, 26 13, 10 13 Z" fill="rgba(56,189,248,0.4)"/><path d="M 10 23 C 26 23, 24 18, 44 18 L 44 22 C 24 22, 26 27, 10 27 Z" fill="rgba(251,191,36,0.4)"/></svg>`;
+                }
+            }
+
+            // 6. HUNİ VARYANTLARI (funnel)
+            if (fam === 'funnel') {
+                if (val === 'descending') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><polygon points="8,5 46,5 40,12 14,12" fill="${cBlue}"/><polygon points="14,13 40,13 35,20 19,20" fill="${cIndigo}"/><polygon points="19,21 35,21 31,28 23,28" fill="${cEmerald}"/></svg>`;
+                }
+                if (val === 'ascending') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><polygon points="23,6 31,6 35,13 19,13" fill="${cBlue}"/><polygon points="19,14 35,14 40,21 14,21" fill="${cIndigo}"/><polygon points="14,22 40,22 46,29 8,29" fill="${cEmerald}"/></svg>`;
+                }
+                if (val === 'sharp') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><polygon points="8,4 46,4 27,30" fill="${cBlue}"/><polygon points="14,12 40,12 27,30" fill="${cIndigo}"/><polygon points="20,20 34,20 27,30" fill="${cEmerald}"/></svg>`;
+                }
+            }
+
+            // 7. RADAR VARYANTLARI (radar)
+            if (fam === 'radar') {
+                if (val === 'polygon') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><polygon points="27,4 42,11 36,28 18,28 12,11" fill="none" stroke="${cTrack}" stroke-width="1"/><polygon points="27,10 36,14 32,24 22,24 18,14" fill="none" stroke="${cTrack}" stroke-width="1"/><polygon points="27,7 39,12 30,26 21,20 16,13" fill="none" stroke="${cBlue}" stroke-width="2"/><circle cx="27" cy="7" r="2" fill="${cBlue}"/><circle cx="39" cy="12" r="2" fill="${cBlue}"/><circle cx="30" cy="26" r="2" fill="${cBlue}"/></svg>`;
+                }
+                if (val === 'circle') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><circle cx="27" cy="17" r="13" fill="none" stroke="${cTrack}"/><circle cx="27" cy="17" r="8" fill="none" stroke="${cTrack}"/><line x1="27" y1="4" x2="27" y2="30" stroke="${cTrack}"/><line x1="14" y1="17" x2="40" y2="17" stroke="${cTrack}"/><polygon points="27,8 37,13 31,25 18,20 17,11" fill="none" stroke="${cIndigo}" stroke-width="2"/></svg>`;
+                }
+                if (val === 'filled') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><polygon points="27,4 42,11 36,28 18,28 12,11" fill="none" stroke="${cTrack}"/><polygon points="27,7 38,13 32,26 20,22 16,13" fill="rgba(56,189,248,0.35)" stroke="${cBlue}" stroke-width="2"/></svg>`;
+                }
+            }
+
+            // 8. DAĞILIM VARYANTLARI (scatter)
+            if (fam === 'scatter') {
+                if (val === 'scatter') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><line x1="6" y1="4" x2="6" y2="30" stroke="${cTrack}"/><line x1="6" y1="30" x2="48" y2="30" stroke="${cTrack}"/><circle cx="14" cy="22" r="2" fill="${cBlue}"/><circle cx="20" cy="13" r="2" fill="${cBlue}"/><circle cx="28" cy="25" r="2" fill="${cBlue}"/><circle cx="34" cy="9" r="2" fill="${cBlue}"/><circle cx="42" cy="16" r="2" fill="${cBlue}"/><circle cx="46" cy="7" r="2" fill="${cBlue}"/></svg>`;
+                }
+                if (val === 'bubble') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><circle cx="14" cy="21" r="5" fill="rgba(56,189,248,0.4)" stroke="${cBlue}" stroke-width="1.5"/><circle cx="28" cy="12" r="7" fill="rgba(129,140,248,0.4)" stroke="${cIndigo}" stroke-width="1.5"/><circle cx="41" cy="22" r="4" fill="rgba(52,211,153,0.4)" stroke="${cEmerald}" stroke-width="1.5"/><circle cx="43" cy="8" r="3" fill="rgba(251,191,36,0.4)" stroke="${cAmber}" stroke-width="1.5"/></svg>`;
+                }
+                if (val === 'effect') {
+                    return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><circle cx="18" cy="18" r="7" fill="none" stroke="${cBlue}" stroke-width="1" stroke-dasharray="2,2"/><circle cx="18" cy="18" r="3" fill="${cBlue}"/><circle cx="36" cy="12" r="9" fill="none" stroke="${cRose}" stroke-width="1" stroke-dasharray="2,2"/><circle cx="36" cy="12" r="4" fill="${cRose}"/></svg>`;
+                }
+            }
+
+            return `<svg width="${w}" height="${h}" viewBox="0 0 54 34"><rect x="8" y="16" width="8" height="14" rx="2" fill="${cBlue}"/><rect x="22" y="8" width="8" height="22" rx="2" fill="${cIndigo}"/><rect x="36" y="12" width="8" height="18" rx="2" fill="${cEmerald}"/></svg>`;
+        }
+
+        function toggleSubTypeGallery(event) {
+            cancelGalleryClose();
+            if (event) {
+                event.stopPropagation();
+            }
+            const pop = document.getElementById('subTypeGalleryPopover');
+            if (pop && pop.style.display === 'flex') {
+                closeSubTypeGallery();
+            } else {
+                openSubTypeGallery(event);
+            }
+        }
+
+        function scheduleGalleryOpen(event) {
+            cancelGalleryClose();
+            const btn = event.currentTarget || document.getElementById('btnSubTypeGalleryTrigger');
+            galleryOpenTimer = setTimeout(() => {
+                openSubTypeGallery({ currentTarget: btn });
+            }, 180);
+        }
+
+        function scheduleGalleryClose() {
+            if (galleryOpenTimer) {
+                clearTimeout(galleryOpenTimer);
+                galleryOpenTimer = null;
+            }
+            galleryCloseTimer = setTimeout(() => {
+                closeSubTypeGallery();
+            }, 260);
+        }
+
+        function cancelGalleryClose() {
+            if (galleryCloseTimer) {
+                clearTimeout(galleryCloseTimer);
+                galleryCloseTimer = null;
+            }
+        }
+
+        function closeSubTypeGallery() {
+            if (galleryOpenTimer) {
+                clearTimeout(galleryOpenTimer);
+                galleryOpenTimer = null;
+            }
+            if (galleryCloseTimer) {
+                clearTimeout(galleryCloseTimer);
+                galleryCloseTimer = null;
+            }
+            const pop = document.getElementById('subTypeGalleryPopover');
+            if (pop) pop.style.display = 'none';
+        }
+
+        function openWidgetGalleryFromCard(event, widgetId) {
+            cancelGalleryClose();
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            }
+            selectWidget(widgetId);
+            const pop = document.getElementById('subTypeGalleryPopover');
+            if (pop && pop.style.display === 'flex' && pop.getAttribute('data-widget-id') === widgetId) {
+                closeSubTypeGallery();
+            } else {
+                openSubTypeGallery(event, widgetId);
+            }
+        }
+
+        function openSubTypeGallery(event, targetWidgetId) {
+            const w = targetWidgetId ? designerLayout.widgets.find(x => x.id === targetWidgetId) : getSelectedWidget();
+            if (!w) return;
+            const fam = getChartFamily(w);
+            if (!fam || !CHART_SUBTYPE_CATALOG[fam]) return;
+            const cat = CHART_SUBTYPE_CATALOG[fam];
+            const curSub = getEffectiveChartSubType(w);
+
+            const pop = document.getElementById('subTypeGalleryPopover');
+            const grid = document.getElementById('subTypeGalleryGrid');
+            const titleEl = document.getElementById('subTypeGalleryTitle');
+            if (!pop || !grid) return;
+
+            pop.setAttribute('data-widget-id', w.id);
+            if (titleEl) titleEl.textContent = `${w.title || 'Grafik'} — ${cat.title.replace(/^[^\w\sğüşöçıİĞÜŞÖÇ]+/, '').trim()} Galerisi`;
+
+            grid.innerHTML = cat.options.map(opt => {
+                const isAct = opt.value === curSub;
+                const svgHtml = getSubTypeThumbnailSvg(fam, opt.value);
+                return `
+                    <div class="subtype-gallery-card ${isAct ? 'active' : ''}"
+                         title="${escapeHtml(opt.label)}"
+                         onclick="selectSubTypeFromGallery('${opt.value}')">
+                        <div class="subtype-card-thumb">
+                            <img src="/img/charts/${fam}_${opt.value}.png"
+                                 class="subtype-custom-img"
+                                 onerror="this.style.display='none'; if(this.nextElementSibling) this.nextElementSibling.style.display='flex';"
+                                 onload="this.style.display='block'; if(this.nextElementSibling) this.nextElementSibling.style.display='none';"
+                                 style="display:none;width:100%;height:100%;object-fit:contain;" />
+                            <div class="subtype-svg-fallback" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;">
+                                ${svgHtml}
+                            </div>
+                        </div>
+                        <span class="subtype-card-label">${escapeHtml(opt.label)}</span>
+                    </div>`;
+            }).join('');
+
+            const trigger = event?.currentTarget || document.getElementById('btnSubTypeGalleryTrigger');
+            pop.style.display = 'flex';
+
+            if (trigger) {
+                const rect = trigger.getBoundingClientRect();
+                const popW = 390;
+                let left = rect.right + 10;
+                if (left + popW > window.innerWidth - 10) {
+                    left = Math.max(10, rect.left - popW - 10);
+                }
+                let top = Math.max(50, rect.top - 20);
+                if (top + 460 > window.innerHeight) {
+                    top = Math.max(50, window.innerHeight - 475);
+                }
+                pop.style.left = `${left}px`;
+                pop.style.top = `${top}px`;
+            } else {
+                pop.style.left = '280px';
+                pop.style.top = '100px';
+            }
+        }
+
+        function selectSubTypeFromGallery(val) {
+            const pop = document.getElementById('subTypeGalleryPopover');
+            const targetId = pop?.getAttribute('data-widget-id') || selectedWidgetId;
+            const w = designerLayout.widgets.find(x => x.id === targetId) || getSelectedWidget();
+            if (w) {
+                selectedWidgetId = w.id;
+                onChartSubTypeChange(val);
+                // Kalıcılık: LocalStorage'a kaydet
+                if (currentDashId) {
+                    localStorage.setItem(`sps_widget_subtype_${currentDashId}_${w.id}`, val);
+                }
+            }
+            const grid = document.getElementById('subTypeGalleryGrid');
+            if (grid) {
+                grid.querySelectorAll('.subtype-gallery-card').forEach(c => {
+                    c.classList.remove('active');
+                });
+                const selCard = grid.querySelector(`[onclick*="'${val}'"]`);
+                if (selCard) selCard.classList.add('active');
+            }
+            const selDropdown = document.getElementById('selChartSubTypeDropdown');
+            if (selDropdown) selDropdown.value = val;
+        }
+
         function renderChartSubTypeBox(w) {
             const fam = getChartFamily(w);
             if (!fam || !CHART_SUBTYPE_CATALOG[fam]) return '';
@@ -4152,7 +4670,7 @@
                             <span>${escapeHtml(cat.title)}</span>
                             <span style="font-size:0.61rem;color:#7dd3fc;">${escapeHtml(policy.ruleBadge || `${cat.options.length} STİL`)}</span>
                         </label>
-                        <select onchange="onChartSubTypeChange(this.value)" style="border-color:rgba(56,189,248,0.5);color:#f8fafc;font-weight:600;">
+                        <select id="selChartSubTypeDropdown" onchange="onChartSubTypeChange(this.value)" style="border-color:rgba(56,189,248,0.5);color:#f8fafc;font-weight:600;">
                             ${optsHtml}
                         </select>
                     </div>
@@ -4911,13 +5429,17 @@
                 const isTableType = w.type === 'table' || w.type === 'pivot';
                 const titleJustify = (!isTableType && w.align === 'center') ? 'center' : ((!isTableType && w.align === 'right') ? 'flex-end' : 'flex-start');
 
+                const fam = getChartFamily(w);
+                const hasSubType = !!(fam && CHART_SUBTYPE_CATALOG[fam]);
+
                 header.innerHTML = `
                     <div class="widget-title" style="flex:1;justify-content:${titleJustify};">
                         <span class="drag-grip" title="Basılı tutarak istediğiniz boşluğa (sola, sağa, alta) sürükleyin">⠿</span>
                         <span class="w-title-text">${escapeHtml(w.title || 'Bileşen')}</span>
                     </div>
-                    <div style="display:flex;align-items:center;gap:6px;">
+                    <div style="display:flex;align-items:center;gap:5px;">
                         ${hasDrillBack ? `<button type="button" class="pill-btn" style="color:#fbbf24;border:1px solid #f59e0b;" onclick="drillUpWidget(event, '${w.id}')">⬅ Üst Kırılım</button>` : ''}
+                        ${hasSubType ? `<button type="button" class="pill-btn" style="color:#7dd3fc;border:1px solid rgba(56,189,248,0.45);background:rgba(56,189,248,0.16);font-weight:700;padding:2px 7px;font-size:0.68rem;" title="Grafik Alt Stili Galerisini Aç" onclick="openWidgetGalleryFromCard(event, '${w.id}')">🎨 Galeri</button>` : ''}
                         <span class="size-badge" id="sizeBadge_${w.id}">${colSpan12}/12 × ${hUnits}</span>
                         <button type="button" class="pill-btn del" title="Bileşeni Sil" onclick="deleteWidgetByIndex(event, ${idx})">🗑️</button>
                     </div>`;

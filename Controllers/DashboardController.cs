@@ -30,12 +30,12 @@ namespace SpsWebBI.Controllers
     [Authorize]
     public class DashboardController : ControllerBase
     {
-        private readonly DbConnectionManager _connManager;
+        private readonly BiDbConnectionManager _biConnManager;
         private readonly AuthService _authService;
 
-        public DashboardController(DbConnectionManager connManager, AuthService authService)
+        public DashboardController(BiDbConnectionManager biConnManager, AuthService authService)
         {
-            _connManager = connManager;
+            _biConnManager = biConnManager;
             _authService = authService;
         }
 
@@ -53,7 +53,7 @@ namespace SpsWebBI.Controllers
         {
             if (CurrentUserId <= 0) return Unauthorized();
 
-            await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
             await conn.OpenAsync();
 
             var perm = await conn.QueryFirstOrDefaultAsync<SpsWebBI.Models.BiUserDashboard>(@"
@@ -102,7 +102,7 @@ namespace SpsWebBI.Controllers
         {
             if (CurrentUserId <= 0) return Unauthorized();
 
-            await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
             await conn.OpenAsync();
 
             await conn.ExecuteAsync(@"
@@ -136,7 +136,7 @@ namespace SpsWebBI.Controllers
                 return BadRequest(new { success = false, message = "Dashboard kodu ve başlığı zorunludur." });
             }
 
-            await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
             await conn.OpenAsync();
 
             int dashId = request.DashboardId ?? 0;
@@ -216,7 +216,7 @@ namespace SpsWebBI.Controllers
                 return BadRequest(new { success = false, message = "Geçersiz dashboard seçimi." });
             }
 
-            await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
             await conn.OpenAsync();
 
             int affected = await conn.ExecuteAsync(@"

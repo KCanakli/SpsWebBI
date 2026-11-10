@@ -26,6 +26,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddSingleton<DbConnectionManager>();
+builder.Services.AddSingleton<BiDbConnectionManager>();
 builder.Services.AddSingleton<DatabaseInitializer>();
 builder.Services.AddSingleton<AuthService>();
 builder.Services.AddSingleton<DynamicQueryService>();
@@ -88,6 +89,12 @@ app.MapGet("/db-settings", async context =>
 {
     context.Response.ContentType = "text/html; charset=utf-8";
     await context.Response.SendFileAsync(Path.Combine(app.Environment.WebRootPath, "db-settings.html"));
+});
+
+app.MapGet("/bi-settings", async context =>
+{
+    context.Response.ContentType = "text/html; charset=utf-8";
+    await context.Response.SendFileAsync(Path.Combine(app.Environment.WebRootPath, "bi-settings.html"));
 });
 
 app.MapControllers();

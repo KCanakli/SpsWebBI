@@ -47,11 +47,16 @@ namespace SpsWebBI.Controllers
     [Authorize]
     public class AdminController : ControllerBase
     {
+        private readonly BiDbConnectionManager _biConnManager;
         private readonly DbConnectionManager _connManager;
         private readonly AuthService _authService;
 
-        public AdminController(DbConnectionManager connManager, AuthService authService)
+        public AdminController(
+            BiDbConnectionManager biConnManager,
+            DbConnectionManager connManager,
+            AuthService authService)
         {
+            _biConnManager = biConnManager;
             _connManager = connManager;
             _authService = authService;
         }
@@ -78,7 +83,7 @@ namespace SpsWebBI.Controllers
         {
             if (!IsDesignerOrAdmin()) return Forbid();
 
-            await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
             await conn.OpenAsync();
 
             var sources = (await conn.QueryAsync<BiDataSource>("SELECT * FROM bi_datasources ORDER BY datasource_id ASC;")).ToList();
@@ -106,7 +111,7 @@ namespace SpsWebBI.Controllers
         {
             if (!IsDesignerOrAdmin()) return Forbid();
 
-            await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
             await conn.OpenAsync();
 
             var dashboards = await conn.QueryAsync<BiDashboard>("SELECT * FROM bi_dashboards ORDER BY dashboard_id ASC;");
@@ -118,7 +123,7 @@ namespace SpsWebBI.Controllers
         {
             if (!IsAdminOnly()) return Forbid();
 
-            await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
             await conn.OpenAsync();
 
             var users = await conn.QueryAsync<BiUser>("SELECT * FROM bi_users ORDER BY user_id ASC;");
@@ -155,7 +160,7 @@ namespace SpsWebBI.Controllers
                 return BadRequest(new { success = false, message = "Kullanıcı kodu ve ad soyad zorunludur." });
             }
 
-            await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
             await conn.OpenAsync();
 
             int userId = request.UserId ?? 0;
@@ -243,7 +248,7 @@ namespace SpsWebBI.Controllers
         {
             if (!IsAdminOnly()) return Forbid();
 
-            await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
             await conn.OpenAsync();
 
             const string sql = @"
@@ -275,7 +280,7 @@ namespace SpsWebBI.Controllers
         {
             if (!IsAdminOnly()) return Forbid();
 
-            await using var conn = new MySqlConnection(_connManager.GetActiveConnectionString());
+            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
             await conn.OpenAsync();
 
             foreach (var item in request.Permissions)

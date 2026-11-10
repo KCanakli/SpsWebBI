@@ -23,12 +23,10 @@ namespace SpsWebBI.Controllers
     public class DbSettingsController : ControllerBase
     {
         private readonly DbConnectionManager _connManager;
-        private readonly DatabaseInitializer _dbInitializer;
 
-        public DbSettingsController(DbConnectionManager connManager, DatabaseInitializer dbInitializer)
+        public DbSettingsController(DbConnectionManager connManager)
         {
             _connManager = connManager;
-            _dbInitializer = dbInitializer;
         }
 
         private bool IsAuthenticatedAdmin()
@@ -95,27 +93,34 @@ namespace SpsWebBI.Controllers
                 return BadRequest(new { success = false, message = saveResult.Message });
             }
 
-            // Bağlantı Aktif olarak kaydedildiyse ilgili veritabanında sistem tablolarını (bi_*) doğrula / oluştur
-            if (request.IsActive)
-            {
-                var initResult = await _dbInitializer.InitializeAsync();
-                return Ok(new
-                {
-                    success = initResult.Success,
-                    savedId = saveResult.SavedId,
-                    connections = _connManager.GetAllConnections(),
-                    message = initResult.Success
-                        ? $"{saveResult.Message} {initResult.Message}"
-                        : $"Bağlantı kaydedildi ancak şema kurulumunda uyarı: {initResult.Message}"
-                });
-            }
-
             return Ok(new
             {
                 success = true,
                 savedId = saveResult.SavedId,
                 connections = _connManager.GetAllConnections(),
                 message = saveResult.Message
+            });
+        }
+
+        [HttpPost("delete/{id}")]
+        public IActionResult DeleteConnection(string id)
+        {
+            if (!IsAuthenticatedAdmin())
+            {
+                return Unauthorized(new { success = false, message = "Bağlantı profilini silmek için Admin oturumu gereklidir." });
+            }
+
+            var result = _connManager.DeleteConnection(id);
+            if (!result.Success)
+            {
+                return BadRequest(new { success = false, message = result.Message });
+            }
+
+            return Ok(new
+            {
+                success = true,
+                message = result.Message,
+                connections = _connManager.GetAllConnections()
             });
         }
     }

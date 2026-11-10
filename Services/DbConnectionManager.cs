@@ -66,13 +66,6 @@ namespace SpsWebBI.Services
                         _configuration["ConnectionStrings:MariaDbConnection"] = raw;
                     }
                 }
-
-                var list = ReadConnectionsFromDisk();
-                if (list.Count == 0 && !string.IsNullOrWhiteSpace(raw))
-                {
-                    var initial = ParseConnectionNode("conn_default", "Canlı Ortam", "Varsayılan MariaDB Bağlantısı", true, raw);
-                    WriteConnectionToDisk(initial, raw, setAsActiveMariaDb: true);
-                }
             }
             catch
             {
@@ -145,13 +138,7 @@ namespace SpsWebBI.Services
 
         public List<DbConnectionInfoDto> GetAllConnections()
         {
-            var list = ReadConnectionsFromDisk().Select(x => x.Dto).ToList();
-            if (list.Count == 0)
-            {
-                string raw = _configuration.GetConnectionString("MariaDbConnection") ?? string.Empty;
-                list.Add(ParseConnectionNode("conn_default", "Canlı Ortam", "Varsayılan MariaDB Bağlantısı", true, raw));
-            }
-            return list;
+            return ReadConnectionsFromDisk().Select(x => x.Dto).ToList();
         }
 
         public bool IsActiveConnectionEnabled()
@@ -312,6 +299,102 @@ namespace SpsWebBI.Services
             catch (Exception ex)
             {
                 return (false, $"Ayarlar kaydedilirken hata oluştu: {ex.Message}", string.Empty);
+            }
+        }
+
+        public (bool Success, string Message) DeleteConnection(string connectionId)
+        {
+            if (string.IsNullOrWhiteSpace(connectionId))
+            {
+                return (false, "Silinecek bağlantı kimliği belirtilmedi.");
+            }
+
+            lock (_fileLock)
+            {
+                try
+                {
+                    string path = GetAppSettingsPath();
+                    if (!File.Exists(path))
+                    {
+                        return (false, "Yapılandırma dosyası bulunamadı.");
+                    }
+
+                    string json = File.ReadAllText(path);
+                    var rootNode = JsonNode.Parse(json);
+                    if (rootNode is not JsonObject rootObj)
+                    {
+                        return (false, "Yapılandırma verisi okunamadı.");
+                    }
+
+                    if (rootObj["DatabaseConnections"] is not JsonArray connArray)
+                    {
+                        return (false, "Kayıtlı bağlantı listesi bulunamadı.");
+                    }
+
+                    if (connArray.Count == 0)
+                    {
+                        return (false, "Kayıtlı bağlantı bulunamadı.");
+                    }
+
+                    int removeIndex = -1;
+                    string removedName = connectionId;
+                    for (int i = 0; i < connArray.Count; i++)
+                    {
+                        if (connArray[i] is JsonObject obj &&
+                            string.Equals(obj["Id"]?.GetValue<string>(), connectionId.Trim(), StringComparison.OrdinalIgnoreCase))
+                        {
+                            removeIndex = i;
+                            removedName = obj["EnvironmentName"]?.GetValue<string>() ?? connectionId;
+                            break;
+                        }
+                    }
+
+                    if (removeIndex < 0)
+                    {
+                        return (false, "Silinmek istenen bağlantı profili bulunamadı.");
+                    }
+
+                    connArray.RemoveAt(removeIndex);
+
+                    // Eğer silinen bağlantı ana MariaDbConnection ise kalan ilk aktif olanı ana bağlantı yap, hiç kalmadıysa boşalt
+                    if (rootObj["ConnectionStrings"] is JsonObject connStringsObj)
+                    {
+                        JsonObject? nextActive = null;
+                        foreach (var item in connArray)
+                        {
+                            if (item is JsonObject obj && obj["IsActive"]?.GetValue<bool>() == true)
+                            {
+                                nextActive = obj;
+                                break;
+                            }
+                        }
+                        nextActive ??= connArray.FirstOrDefault() as JsonObject;
+
+                        if (nextActive != null)
+                        {
+                            string? nextConnStr = nextActive["ConnectionString"]?.GetValue<string>();
+                            if (!string.IsNullOrWhiteSpace(nextConnStr))
+                            {
+                                connStringsObj["MariaDbConnection"] = nextConnStr;
+                                _configuration["ConnectionStrings:MariaDbConnection"] = nextConnStr;
+                            }
+                        }
+                        else
+                        {
+                            connStringsObj["MariaDbConnection"] = string.Empty;
+                            _configuration["ConnectionStrings:MariaDbConnection"] = string.Empty;
+                        }
+                    }
+
+                    var options = new JsonSerializerOptions { WriteIndented = true };
+                    File.WriteAllText(path, rootObj.ToJsonString(options));
+
+                    return (true, $"'{removedName}' bağlantı profili başarıyla silindi.");
+                }
+                catch (Exception ex)
+                {
+                    return (false, $"Bağlantı silinirken hata oluştu: {ex.Message}");
+                }
             }
         }
 

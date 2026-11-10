@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpsWebBI - BI Ayarları</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --border: #334155;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        body {
+            margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(circle at top right, #1e293b, #0f172a); color: var(--text); padding: 20px;
+        }
+        .layout-wrap {
+            display: grid;
+            grid-template-columns: 340px 540px;
+            gap: 20px;
+            max-width: 100%;
+            align-items: stretch;
+        }
+        @media (max-width: 920px) {
+            .layout-wrap { grid-template-columns: 1fr; width: 100%; max-width: 540px; }
+        }
+        .card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+            width: 100%; padding: 26px; box-shadow: 0 20px 40px rgba(0,0,0,0.45);
+            display: flex; flex-direction: column;
+        }
+        h1 { font-size: 1.3rem; margin: 0 0 6px 0; display: flex; align-items: center; gap: 10px; }
+        h2 { font-size: 1.08rem; margin: 0; color: var(--text); }
+        .list-header {
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+        }
+        .btn-new {
+            padding: 7px 12px; border-radius: 7px; border: 1px solid var(--primary);
+            background: rgba(59, 130, 246, 0.15); color: #93c5fd; font-weight: 600;
+            font-size: 0.82rem; cursor: pointer; white-space: nowrap; flex: 0 0 auto;
+        }
+        .btn-new:hover { background: var(--primary); color: #fff; }
+        .conn-list {
+            display: flex; flex-direction: column; gap: 10px; flex: 1; overflow-y: auto; max-height: 540px;
+        }
+        .conn-item {
+            padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border);
+            background: #0f172a; cursor: pointer; transition: all 0.15s;
+            display: flex; flex-direction: column; gap: 5px;
+        }
+        .conn-item:hover { border-color: #60a5fa; background: #131f38; }
+        .conn-item.selected {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 1px var(--primary);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        .conn-item-top {
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+        }
+        .conn-name { font-weight: 700; font-size: 0.94rem; color: var(--text); }
+        .conn-badge {
+            font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+        }
+        .badge-active { background: rgba(16,185,129,0.18); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.4); }
+        .badge-passive { background: rgba(148,163,184,0.15); color: #94a3b8; border: 1px solid rgba(148,163,184,0.3); }
+        .conn-meta { font-size: 0.8rem; color: #93c5fd; font-family: Consolas, monospace; }
+        .conn-desc { font-size: 0.78rem; color: var(--muted); }
+        .status-banner {
+            padding: 10px 14px; border-radius: 8px; font-size: 0.88rem; margin-bottom: 16px;
+            border: 1px solid var(--border); background: rgba(255,255,255,0.03);
+        }
+        .status-ok { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.1); color: #6ee7b7; }
+        .status-err { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.1); color: #fca5a5; }
+        .row { display: flex; gap: 12px; }
+        .field { margin-bottom: 13px; flex: 1; }
+        label { display: block; font-size: 0.83rem; color: var(--muted); margin-bottom: 5px; font-weight: 600; }
+        input[type="text"], input[type="number"], input[type="password"] {
+            width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border);
+            background: #0f172a; color: var(--text); font-size: 0.92rem; outline: none;
+        }
+        input:focus { border-color: var(--primary); }
+        .checkbox-row {
+            display: flex; align-items: center; gap: 9px; margin: 4px 0 14px 0;
+            padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: #0f172a;
+            cursor: pointer; user-select: none; font-size: 0.9rem; font-weight: 600; color: var(--text);
+        }
+        .checkbox-row input[type="checkbox"] {
+            width: 17px; height: 17px; accent-color: var(--success); cursor: pointer; margin: 0;
+        }
+        .actions { display: flex; gap: 10px; margin-top: 10px; }
+        .actions button {
+            flex: 1; padding: 11px 16px; border-radius: 8px; border: none; font-weight: 600;
+            font-size: 0.92rem; cursor: pointer; text-align: center;
+        }
+        .btn-test { background: #334155; color: var(--text); }
+        .btn-test:hover { background: #475569; }
+        .btn-save { background: var(--primary); color: #fff; }
+        .btn-save:hover { background: var(--primary-hover); }
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.18); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.45) !important;
+            flex: 0 0 110px !important;
+        }
+        .btn-delete:hover { background: var(--danger); color: #fff; }
+        .footer-links {
+            margin-top: 16px; display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.85rem; padding-top: 12px; border-top: 1px solid var(--border); gap: 10px; flex-wrap: wrap;
+        }
+        .footer-links a { color: #60a5fa; text-decoration: none; font-weight: 600; }
+        .footer-links a:hover { text-decoration: underline; }
+        body.light-theme {
+            --bg: #f1f5f9; --card: #ffffff; --border: #cbd5e1; --text: #0f172a; --muted: #475569;
+            background: radial-gradient(circle at top right, #e2e8f0, #f1f5f9);
+        }
+        body.light-theme .card { box-shadow: 0 12px 30px rgba(15,23,42,0.12); }
+        body.light-theme .conn-item,
+        body.light-theme input[type="text"],
+        body.light-theme input[type="number"],
+        body.light-theme input[type="password"],
+        body.light-theme .checkbox-row { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
+        body.light-theme .conn-meta { color: #1d4ed8; }
+        body.light-theme .btn-test { background: #e2e8f0; color: #0f172a; }
+        body.spsteks-theme {
+            --bg: #d9e7f5; --card: #edf4fc; --border: #94b8db; --text: #0c2340; --muted: #2b4c73;
+            --primary: #0f5ea8; --primary-hover: #0a4882;
+            background: radial-gradient(circle at top right, #c3daf2, #d9e7f5);
+        }
+        body.spsteks-theme .conn-item,
+        body.spsteks-theme input[type="text"],
+        body.spsteks-theme input[type="number"],
+        body.spsteks-theme input[type="password"],
+        body.spsteks-theme .checkbox-row { background: #ffffff; color: #0c2340; border-color: #94b8db; }
+        body.spsteks-theme .conn-meta { color: #0f5ea8; }
+        body.spsteks-theme .btn-test { background: #d0e3f7; color: #0c2340; }
+    </style>
+</head>
+<body>
+    <div class="layout-wrap">
+        <!-- SOL PANEL: KAYITLI BAĞLANTILAR LİSTESİ -->
+        <div class="card">
+            <div class="list-header">
+                <h2>BI Bağlantıları</h2>
+                <button type="button" class="btn-new" onclick="createNewConnectionForm()">+ Yeni Bağlantı</button>
+            </div>
+            <div id="connListContainer" class="conn-list"></div>
+        </div>
+
+        <!-- SAĞ PANEL: BAĞLANTI DETAYLARI GİRİŞ VE KAYIT EKRANI -->
+        <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;">
+                <h1 style="margin:0;">⚙️ BI Ayarları</h1>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <select id="selThemeMode" onchange="onThemeSelectChange(this.value)" title="Görünüm Teması Seçin"
+                            style="background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:7px;cursor:pointer;font-size:0.78rem;font-weight:700;outline:none;">
+                        <option value="dark">🌙 Koyu Tema</option>
+                        <option value="light">☀️ Açık Tema</option>
+                        <option value="spsteks">💎 SpsTeks Mavi</option>
+                    </select>
+                    <button type="button" onclick="closeScreen()"
+                            style="padding:6px 12px;border-radius:7px;border:1px solid var(--border);background:#334155;color:var(--text);font-weight:700;font-size:0.8rem;cursor:pointer;">
+                        Kapat
+                    </button>
+                    <button type="button" onclick="logout()"
+                            style="padding:6px 12px;border-radius:7px;border:1px solid rgba(239,68,68,0.45);background:rgba(239,68,68,0.16);color:#fca5a5;font-weight:700;font-size:0.8rem;cursor:pointer;">
+                        Çıkış
+                    </button>
+                </div>
+            </div>
+
+            <div id="statusBox" class="status-banner">BI bağlantı durumu kontrol ediliyor...</div>
+
+            <div class="row">
+                <div class="field" style="flex: 1.2;">
+                    <label for="envName">Ortam İsmi</label>
+                    <input type="text" id="envName" placeholder="Örn: BI Canlı, BI Test">
+                </div>
+                <div class="field" style="flex: 1.8;">
+                    <label for="description">Açıklama</label>
+                    <input type="text" id="description" placeholder="Bağlantı açıklaması">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="field" style="flex: 2.2;">
+                    <label for="server">Sunucu Adresi (IP / Host)</label>
+                    <input type="text" id="server" placeholder="127.0.0.1" value="127.0.0.1">
+                </div>
+                <div class="field" style="flex: 1;">
+                    <label for="port">Port</label>
+                    <input type="number" id="port" placeholder="3323" value="3323">
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="database">Veritabanı Adı (Şema)</label>
+                <input type="text" id="database" placeholder="spsteks" value="spsteks">
+            </div>
+
+            <div class="row">
+                <div class="field">
+                    <label for="userId">Kullanıcı Adı</label>
+                    <input type="text" id="userId" placeholder="root" value="root">
+                </div>
+                <div class="field">
+                    <label for="password">Veritabanı Şifresi <span id="pwdHint" style="font-weight:normal;font-size:0.78rem;color:#6ee7b7;"></span></label>
+                    <input type="password" id="password" placeholder="Değiştirmek için yeni şifre girin">
+                </div>
+            </div>
+
+            <label class="checkbox-row" for="isActive">
+                <input type="checkbox" id="isActive" checked>
+                <span>Bağlantı Aktif (BI sistem tabloları bu bağlantı üzerinde çalışır)</span>
+            </label>
+
+            <div class="field" id="adminAuthField" style="display:none;">
+                <label for="adminPassword" style="color:#f59e0b;">Sistem Admin Doğrulama Şifresi (Oturum açık değilse gereklidir)</label>
+                <input type="password" id="adminPassword" placeholder="Mevcut BI ayarlarını değiştirmek için Admin şifresi (Admin123!)">
+            </div>
+
+            <div class="actions">
+                <button type="button" class="btn-test" onclick="testConnection()">Bağlantıyı Test Et</button>
+                <button type="button" class="btn-save" onclick="saveConnection()">Kaydet ve Tabloları Doğrula</button>
+                <button type="button" class="btn-delete" id="btnDeleteConn" onclick="deleteConnection()" style="display:none;">🗑️ Sil</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allConnections = [];
+        let selectedConnId = null;
+
+        function escapeHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function renderConnectionsList() {
+            const wrap = document.getElementById('connListContainer');
+            if (!wrap) return;
+            if (!allConnections || allConnections.length === 0) {
+                wrap.innerHTML = '<div style="color:var(--muted);font-size:0.85rem;">Henüz kayıtlı BI bağlantısı yok.</div>';
+                return;
+            }
+
+            wrap.innerHTML = allConnections.map(c => {
+                const isSel = c.id === selectedConnId;
+                const isAct = !!c.isActive;
+                return `
+                    <div class="conn-item ${isSel ? 'selected' : ''}" onclick="selectConnection('${escapeHtml(c.id)}')">
+                        <div class="conn-item-top">
+                            <span class="conn-name">${escapeHtml(c.environmentName || 'BI Bağlantı')}</span>
+                            <span class="conn-badge ${isAct ? 'badge-active' : 'badge-passive'}">${isAct ? 'Aktif' : 'Pasif'}</span>
+                        </div>
+                        <div class="conn-meta">${escapeHtml(c.server || '127.0.0.1')}:${escapeHtml(c.port || 3323)} / ${escapeHtml(c.database || '')}</div>
+                        ${c.description ? `<div class="conn-desc">${escapeHtml(c.description)}</div>` : ''}
+                    </div>`;
+            }).join('');
+        }
+
+        function selectConnection(id) {
+            const c = allConnections.find(x => x.id === id);
+            if (!c) return;
+            selectedConnId = c.id;
+            document.getElementById('envName').value = c.environmentName || '';
+            document.getElementById('description').value = c.description || '';
+            document.getElementById('server').value = c.server || '127.0.0.1';
+            document.getElementById('port').value = c.port || 3323;
+            document.getElementById('database').value = c.database || 'spsteks';
+            document.getElementById('userId').value = c.userId || 'root';
+            document.getElementById('password').value = '';
+            document.getElementById('isActive').checked = !!c.isActive;
+            document.getElementById('pwdHint').textContent = c.hasSavedPassword ? '(Kayıtlı şifre var)' : '';
+            const btnDel = document.getElementById('btnDeleteConn');
+            if (btnDel) btnDel.style.display = selectedConnId ? 'inline-block' : 'none';
+            renderConnectionsList();
+        }
+
+        function createNewConnectionForm() {
+            selectedConnId = null;
+            document.getElementById('envName').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('server').value = '127.0.0.1';
+            document.getElementById('port').value = 3323;
+            document.getElementById('database').value = 'spsteks';
+            document.getElementById('userId').value = 'root';
+            document.getElementById('password').value = '';
+            document.getElementById('isActive').checked = false;
+            document.getElementById('pwdHint').textContent = '';
+            const btnDel = document.getElementById('btnDeleteConn');
+            if (btnDel) btnDel.style.display = 'none';
+            renderConnectionsList();
+            document.getElementById('envName').focus();
+        }
+
+        function applySavedTheme() {
+            const saved = localStorage.getItem('sps_bi_theme') || 'dark';
+            document.body.classList.toggle('light-theme', saved === 'light' || saved === 'spsteks');
+            document.body.classList.toggle('spsteks-theme', saved === 'spsteks');
+            const sel = document.getElementById('selThemeMode');
+            if (sel) sel.value = (saved === 'light' || saved === 'spsteks') ? saved : 'dark';
+        }
+
+        function onThemeSelectChange(mode) {
+            const next = (mode === 'light' || mode === 'spsteks') ? mode : 'dark';
+            localStorage.setItem('sps_bi_theme', next);
+            applySavedTheme();
+        }
+        applySavedTheme();
+
+        function closeScreen() {
+            if (document.referrer && window.history.length > 1) {
+                window.history.back();
+            } else {
+                window.location.href = '/designer';
+            }
+        }
+
+        async function logout() {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            window.location.href = '/login';
+        }
+
+        async function loadSettings() {
+            const box = document.getElementById('statusBox');
+            try {
+                const res = await fetch('/api/bi-settings');
+                const data = await res.json();
+                allConnections = data.connections || [];
+
+                const adminField = document.getElementById('adminAuthField');
+                if (adminField) {
+                    adminField.style.display = data.requiresAdminPassword ? 'block' : 'none';
+                }
+
+                box.className = 'status-banner ' + (data.isConnected ? 'status-ok' : 'status-err');
+                box.textContent = data.statusMessage || (data.isConnected ? 'Bağlantı başarılı.' : 'Bağlantı bekleniyor...');
+
+                if (selectedConnId && allConnections.some(x => x.id === selectedConnId)) {
+                    selectConnection(selectedConnId);
+                } else if (data.id && allConnections.some(x => x.id === data.id)) {
+                    selectConnection(data.id);
+                } else if (allConnections.length > 0) {
+                    selectConnection(allConnections[0].id);
+                } else {
+                    renderConnectionsList();
+                }
+            } catch (e) {
+                box.className = 'status-banner status-err';
+                box.textContent = 'Sunucuya ulaşılamadı: ' + e.message;
+            }
+        }
+
+        function getPayload() {
+            return {
+                id: selectedConnId,
+                environmentName: document.getElementById('envName').value.trim(),
+                description: document.getElementById('description').value.trim(),
+                isActive: document.getElementById('isActive').checked,
+                server: document.getElementById('server').value.trim(),
+                port: parseInt(document.getElementById('port').value || '3323', 10),
+                database: document.getElementById('database').value.trim(),
+                userId: document.getElementById('userId').value.trim(),
+                password: document.getElementById('password').value,
+                adminPassword: document.getElementById('adminPassword') ? document.getElementById('adminPassword').value : ''
+            };
+        }
+
+        async function testConnection() {
+            const box = document.getElementById('statusBox');
+            box.className = 'status-banner';
+            box.textContent = 'BI bağlantısı test ediliyor...';
+            try {
+                const res = await fetch('/api/bi-settings/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(getPayload())
+                });
+                const data = await res.json();
+                box.className = 'status-banner ' + (data.success ? 'status-ok' : 'status-err');
+                box.textContent = data.message;
+            } catch (err) {
+                box.className = 'status-banner status-err';
+                box.textContent = 'Test hatası: ' + err.message;
+            }
+        }
+
+        async function saveConnection() {
+            const box = document.getElementById('statusBox');
+            box.className = 'status-banner';
+            box.textContent = 'Kaydediliyor ve BI sistem tabloları doğrulanıyor...';
+            try {
+                const res = await fetch('/api/bi-settings/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(getPayload())
+                });
+                const data = await res.json();
+                box.className = 'status-banner ' + (data.success ? 'status-ok' : 'status-err');
+                box.textContent = data.message;
+                if (data.success) {
+                    if (data.savedId) selectedConnId = data.savedId;
+                    if (data.connections) allConnections = data.connections;
+                    document.getElementById('password').value = '';
+                    document.getElementById('pwdHint').textContent = '(Kayıtlı şifre var)';
+                    selectConnection(selectedConnId);
+                }
+            } catch (err) {
+                box.className = 'status-banner status-err';
+                box.textContent = 'Kayıt hatası: ' + err.message;
+            }
+        }
+
+        async function deleteConnection() {
+            if (!selectedConnId) return;
+            const current = allConnections.find(x => x.id === selectedConnId);
+            const name = current?.environmentName || selectedConnId;
+
+            if (!confirm(`'${name}' BI bağlantı profilini silmek istediğinizden emin misiniz?`)) {
+                return;
+            }
+
+            const box = document.getElementById('statusBox');
+            box.className = 'status-banner';
+            box.textContent = 'Bağlantı siliniyor...';
+
+            try {
+                const res = await fetch(`/api/bi-settings/delete/${encodeURIComponent(selectedConnId)}`, {
+                    method: 'POST'
+                });
+                const data = await res.json();
+                box.className = 'status-banner ' + (data.success ? 'status-ok' : 'status-err');
+                box.textContent = data.message;
+
+                if (data.success && data.connections) {
+                    allConnections = data.connections;
+                    selectedConnId = allConnections.length > 0 ? allConnections[0].id : null;
+                    if (selectedConnId) {
+                        selectConnection(selectedConnId);
+                    } else {
+                        createNewConnectionForm();
+                    }
+                }
+            } catch (err) {
+                box.className = 'status-banner status-err';
+                box.textContent = 'Silme işlemi sırasında hata: ' + err.message;
+            }
+        }
+
+        loadSettings();
+    </script>
+</body>
+</html>
