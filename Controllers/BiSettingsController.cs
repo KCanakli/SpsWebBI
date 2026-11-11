@@ -59,6 +59,8 @@ namespace SpsWebBI.Controllers
                 settings.Id,
                 settings.EnvironmentName,
                 settings.Description,
+                settings.DbType,
+                settings.SqliteFilePath,
                 settings.IsActive,
                 settings.Server,
                 settings.Port,

@@ -83,11 +83,16 @@
         .row { display: flex; gap: 12px; }
         .field { margin-bottom: 13px; flex: 1; }
         label { display: block; font-size: 0.83rem; color: var(--muted); margin-bottom: 5px; font-weight: 600; }
-        input[type="text"], input[type="number"], input[type="password"] {
+        input[type="text"], input[type="number"], input[type="password"], select.form-input {
             width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border);
             background: #0f172a; color: var(--text); font-size: 0.92rem; outline: none;
         }
-        input:focus { border-color: var(--primary); }
+        select.form-input { cursor: pointer; font-weight: 600; }
+        input:focus, select.form-input:focus { border-color: var(--primary); }
+        .sqlite-hint {
+            font-size: 0.78rem; color: var(--muted); padding: 8px 10px; border-radius: 7px;
+            border: 1px dashed var(--border); background: rgba(16, 185, 129, 0.06); margin-bottom: 12px;
+        }
         .checkbox-row {
             display: flex; align-items: center; gap: 9px; margin: 4px 0 14px 0;
             padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: #0f172a;
@@ -125,6 +130,7 @@
         body.light-theme input[type="text"],
         body.light-theme input[type="number"],
         body.light-theme input[type="password"],
+        body.light-theme select.form-input,
         body.light-theme .checkbox-row { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
         body.light-theme .conn-meta { color: #1d4ed8; }
         body.light-theme .btn-test { background: #e2e8f0; color: #0f172a; }
@@ -137,9 +143,147 @@
         body.spsteks-theme input[type="text"],
         body.spsteks-theme input[type="number"],
         body.spsteks-theme input[type="password"],
+        body.spsteks-theme select.form-input,
         body.spsteks-theme .checkbox-row { background: #ffffff; color: #0c2340; border-color: #94b8db; }
         body.spsteks-theme .conn-meta { color: #0f5ea8; }
         body.spsteks-theme .btn-test { background: #d0e3f7; color: #0c2340; }
+        .cache-label-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 6px;
+            min-height: 20px;
+        }
+        .cache-label-row label {
+            margin-bottom: 0 !important;
+            white-space: nowrap;
+            font-size: 0.78rem;
+        }
+        .cache-fields-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            align-items: end;
+        }
+        .cache-input-group {
+            display: flex;
+            align-items: stretch;
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.15s ease;
+        }
+        .cache-input-group:focus-within {
+            border-color: var(--primary);
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .cache-input-group input[type="number"] {
+            flex: 1;
+            min-width: 0;
+            border: none !important;
+            background: transparent !important;
+            border-radius: 0 !important;
+            padding: 9px 10px;
+        }
+        .cache-unit-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 0 9px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #94a3b8;
+            background: rgba(148, 163, 184, 0.08);
+            border-left: 1px solid var(--border);
+            user-select: none;
+            white-space: nowrap;
+        }
+        body.light-theme .cache-input-group { background: #f8fafc; border-color: #cbd5e1; }
+        body.spsteks-theme .cache-input-group { background: #ffffff; border-color: #94b8db; }
+        body.light-theme .cache-unit-tag,
+        body.spsteks-theme .cache-unit-tag {
+            color: #475569;
+            background: rgba(15, 23, 42, 0.04);
+        }
+        .cache-tip-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(250, 204, 21, 0.16);
+            border: 1px solid rgba(250, 204, 21, 0.45);
+            font-size: 0.72rem;
+            line-height: 1;
+            cursor: help;
+            flex-shrink: 0;
+            transition: transform 0.12s ease, background 0.12s ease;
+        }
+        .cache-tip-wrap:hover,
+        .cache-tip-wrap:focus {
+            transform: scale(1.1);
+            background: rgba(250, 204, 21, 0.3);
+            outline: none;
+        }
+        .cache-tip-box {
+            display: none;
+            position: absolute;
+            bottom: calc(100% + 9px);
+            width: 280px;
+            padding: 10px 12px;
+            border-radius: 9px;
+            background: #0f172a;
+            border: 1px solid #38bdf8;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.65);
+            color: #e2e8f0;
+            font-size: 0.75rem;
+            line-height: 1.45;
+            font-weight: 400;
+            text-align: left;
+            z-index: 500;
+            pointer-events: none;
+        }
+        .cache-tip-wrap.tip-left .cache-tip-box { left: 0; }
+        .cache-tip-wrap.tip-center .cache-tip-box { left: 50%; transform: translateX(-50%); }
+        .cache-tip-wrap.tip-right .cache-tip-box { right: 0; }
+        .cache-tip-wrap:hover .cache-tip-box,
+        .cache-tip-wrap:focus .cache-tip-box {
+            display: block;
+        }
+        .cache-tip-box strong {
+            display: block;
+            color: #38bdf8;
+            font-size: 0.78rem;
+            margin-bottom: 4px;
+        }
+        .cache-tip-box .tip-ex {
+            margin-top: 5px;
+            padding-top: 5px;
+            border-top: 1px solid rgba(148, 163, 184, 0.25);
+            color: #93c5fd;
+            font-size: 0.71rem;
+        }
+        body.light-theme .cache-tip-box,
+        body.spsteks-theme .cache-tip-box {
+            background: #ffffff;
+            color: #0f172a;
+            border-color: #0284c7;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.2);
+        }
+        body.light-theme .cache-tip-box strong,
+        body.spsteks-theme .cache-tip-box strong { color: #0369a1; }
+        body.light-theme .cache-tip-box .tip-ex,
+        body.spsteks-theme .cache-tip-box .tip-ex { color: #1d4ed8; border-top-color: #cbd5e1; }
     </style>
 </head>
 <body>
@@ -177,10 +321,21 @@
 
             <div id="statusBox" class="status-banner">Bağlantı durumu kontrol ediliyor...</div>
 
+            <div class="field">
+                <label for="dbType">Veritabanı Türü (Çoklu Veritabanı Bağlantısı Seçimi)</label>
+                <select id="dbType" class="form-input" onchange="setDbType(this.value, true)">
+                    <option value="MariaDB">🐬 MariaDB / MySQL — Sunucu Bağlantısı</option>
+                    <option value="SQLite">🪶 SQLite — Yerel Dosya Veritabanı (.db / .sqlite)</option>
+                    <option value="MSSQL">🗄️ Microsoft SQL Server (MSSQL)</option>
+                    <option value="PostgreSQL">🐘 PostgreSQL</option>
+                    <option value="Supabase">⚡ Supabase — PostgreSQL Bulut</option>
+                </select>
+            </div>
+
             <div class="row">
                 <div class="field" style="flex: 1.2;">
                     <label for="envName">Ortam İsmi</label>
-                    <input type="text" id="envName" placeholder="Örn: Canlı Ortam, Test Ortamı">
+                    <input type="text" id="envName" placeholder="Örn: Canlı Ortam, Muhasebe SQLite">
                 </div>
                 <div class="field" style="flex: 1.8;">
                     <label for="description">Açıklama</label>
@@ -188,30 +343,43 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="field" style="flex: 2.2;">
-                    <label for="server">Sunucu Adresi (IP / Host)</label>
-                    <input type="text" id="server" placeholder="127.0.0.1" value="127.0.0.1">
+            <div id="mariadbFieldsGroup">
+                <div class="row">
+                    <div class="field" style="flex: 2.2;">
+                        <label for="server">Sunucu Adresi (IP / Host)</label>
+                        <input type="text" id="server" placeholder="127.0.0.1" value="127.0.0.1">
+                    </div>
+                    <div class="field" style="flex: 1;">
+                        <label for="port">Port</label>
+                        <input type="number" id="port" placeholder="3323" value="3323">
+                    </div>
                 </div>
-                <div class="field" style="flex: 1;">
-                    <label for="port">Port</label>
-                    <input type="number" id="port" placeholder="3323" value="3323">
+
+                <div class="field">
+                    <label for="database">Veritabanı Adı (Şema)</label>
+                    <input type="text" id="database" placeholder="spsteks" value="spsteks">
                 </div>
+
+                <div class="row">
+                    <div class="field">
+                        <label for="userId">Kullanıcı Adı</label>
+                        <input type="text" id="userId" placeholder="root" value="root">
+                    </div>
+                    <div class="field">
+                        <label for="password">Veritabanı Şifresi <span id="pwdHint" style="font-weight:normal;font-size:0.78rem;color:#6ee7b7;"></span></label>
+                        <input type="password" id="password" placeholder="Değiştirmek için yeni şifre girin">
+                    </div>
+                </div>
+                <div id="serverTypeHint" class="sqlite-hint" style="display:none;"></div>
             </div>
 
-            <div class="field">
-                <label for="database">Veritabanı Adı (Şema)</label>
-                <input type="text" id="database" placeholder="spsteks" value="spsteks">
-            </div>
-
-            <div class="row">
+            <div id="sqliteFieldsGroup" style="display:none;">
                 <div class="field">
-                    <label for="userId">Kullanıcı Adı</label>
-                    <input type="text" id="userId" placeholder="root" value="root">
+                    <label for="sqliteFilePath">SQLite Veritabanı Dosya Yolu</label>
+                    <input type="text" id="sqliteFilePath" placeholder="App_Data/erp_data.db veya C:\Veriler\muhasebe.db" value="App_Data/erp_data.db">
                 </div>
-                <div class="field">
-                    <label for="password">Veritabanı Şifresi <span id="pwdHint" style="font-weight:normal;font-size:0.78rem;color:#6ee7b7;"></span></label>
-                    <input type="password" id="password" placeholder="Değiştirmek için yeni şifre girin">
+                <div class="sqlite-hint">
+                    ℹ️ <strong>Çoklu Veritabanı Desteği:</strong> Mevcut bir <code>.db</code> / <code>.sqlite</code> dosyasının tam yolunu verebilir veya göreli yol belirtebilirsiniz. Aynı anda birden fazla bağlantı <strong>Aktif</strong> kalabilir ve sorgu bazında seçilebilir.
                 </div>
             </div>
 
@@ -219,6 +387,78 @@
                 <input type="checkbox" id="isActive" checked>
                 <span>Bağlantı Aktif (SQL sorgularında bu bağlantı seçilebilir ve kullanılabilir)</span>
             </label>
+
+            <div style="margin: 12px 0; padding: 12px 14px; border: 1px solid rgba(56,189,248,0.28); border-radius: 10px; background: rgba(14,165,233,0.06);">
+                <div style="display:flex;align-items:center;gap:6px;font-size: 0.82rem; font-weight: 700; color: #38bdf8; margin-bottom: 8px;">
+                    <span>🧠 Bu Sunucu İçin Önbellek (IMemoryCache) Kuralları</span>
+                    <span class="cache-tip-wrap tip-center" tabindex="0" aria-label="IMemoryCache kuralları açıklaması">💡
+                        <span class="cache-tip-box" style="width:340px;">
+                            <strong>🧠 Neden IMemoryCache Kuralları Kullanılır?</strong>
+                            Bu alan, seçili veritabanı sunucusuna giden TTL önbellekli sorguların uygulama belleğini (RAM) nasıl kullanacağını kontrol eder:
+                            <br>• <strong>Performans & Yük Azaltma:</strong> Aynı sorgu/filtre tekrar istendiğinde SQL'i yeniden çalıştırmaz, sonucu RAM'den anında döner (Single-Flight kilidi paralel istekleri tek sorguda birleştirir).
+                            <br>• <strong>Sunucu Koruması:</strong> Büyük satırlı/boyutlu detay sorgularını veya kullanılmayan filtre kopyalarını sınırlayarak RAM şişmesini önler.
+                            <div class="tip-ex">Örn: Test sunucusunda önbelleği tamamen kapatabilir; Canlı ERP sunucusunda açık tutup satır/boyut/düşme limitlerini o sunucunun yoğunluğuna göre ayarlayabilirsiniz.</div>
+                        </span>
+                    </span>
+                </div>
+                <label class="checkbox-row" for="cacheEnabled" style="margin-bottom: 8px;">
+                    <input type="checkbox" id="cacheEnabled" checked>
+                    <span>Bu sunucu bağlantısı için TTL önbelleğini etkinleştir (kapatılırsa sorgular daima canlı çalışır)</span>
+                </label>
+                <div class="cache-fields-grid">
+                    <div class="field" style="margin-bottom: 0;">
+                        <div class="cache-label-row">
+                            <label for="maxCacheableRows">Maks. Önbellek Satırı</label>
+                            <span class="cache-tip-wrap tip-left" tabindex="0" aria-label="Maksimum önbellek satırı açıklaması">💡
+                                <span class="cache-tip-box">
+                                    <strong>📊 Maks. Önbellek Satırı</strong>
+                                    SQL sonucundaki toplam satır sayısı bu limiti aşarsa sorguda TTL tanımlı olsa bile RAM önbelleğine yazılmaz; veri doğrudan döndürülür.
+                                    <div class="tip-ex">Örn: Özet grafikler (500 satır) önbelleklenir, 80.000 satırlık ham hareket listesi RAM'i şişirmez.<br>0 = Global varsayılan (10.000 satır).</div>
+                                </span>
+                            </span>
+                        </div>
+                        <div class="cache-input-group">
+                            <input type="number" id="maxCacheableRows" min="0" value="0" placeholder="0">
+                            <span class="cache-unit-tag">Satır</span>
+                        </div>
+                    </div>
+                    <div class="field" style="margin-bottom: 0;">
+                        <div class="cache-label-row">
+                            <label for="maxEntrySizeKB">Maks. Kayıt Boyutu</label>
+                            <span class="cache-tip-wrap tip-center" tabindex="0" aria-label="Maksimum kayıt boyutu açıklaması">💡
+                                <span class="cache-tip-box">
+                                    <strong>📦 Maks. Kayıt Boyutu (KB)</strong>
+                                    Satır sayısı az olsa bile tek bir sorgu sonucunun RAM'de kaplayacağı tahmini bellek hacmi bu KB değerini geçerse önbelleğe alınmaz.
+                                    <div class="tip-ex">Örn: 500 satır ama 35 uzun metin kolonu 15 MB tutabilir; tek tablonun kotayı tüketmesini engeller.<br>0 = Global varsayılan (8192 KB ≈ 8 MB).</div>
+                                </span>
+                            </span>
+                        </div>
+                        <div class="cache-input-group">
+                            <input type="number" id="maxEntrySizeKB" min="0" value="0" placeholder="0">
+                            <span class="cache-unit-tag">(KB)</span>
+                        </div>
+                    </div>
+                    <div class="field" style="margin-bottom: 0;">
+                        <div class="cache-label-row">
+                            <label for="slidingExpirationSeconds">Pasif Düşme Süresi</label>
+                            <span class="cache-tip-wrap tip-right" tabindex="0" aria-label="Pasif düşme süresi açıklaması">💡
+                                <span class="cache-tip-box">
+                                    <strong>⏱️ Pasif Düşme Süresi (Sliding)</strong>
+                                    Sorgu sonucu TTL süresi boyunca RAM'de tutulurken, hiçbir kullanıcı tarafından okunmadan geçen boşta kalma süresidir. Süre dolmadan okunursa sayaç sıfırlanır; kimse bakmazsa erken temizlenir.
+                                    <div class="tip-ex">Örn: TTL=600s, Pasif=60s iken 60 sn hiç açılmazsa 10 dk beklenmeden bellekten düşer.<br>0 = Global varsayılan (60 sn).</div>
+                                </span>
+                            </span>
+                        </div>
+                        <div class="cache-input-group">
+                            <input type="number" id="slidingExpirationSeconds" min="0" value="0" placeholder="0">
+                            <span class="cache-unit-tag">(SN)</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 6px;">
+                    ℹ️ <code>0</code> girilen alanlarda sunucunun <code>appsettings.json → QueryCache</code> varsayılanı uygulanır.
+                </div>
+            </div>
 
             <div class="field" id="adminAuthField">
                 <label for="adminPassword">Sistem Admin Doğrulama Şifresi (Oturum açık değilse gereklidir)</label>
@@ -236,6 +476,85 @@
     <script>
         let allConnections = [];
         let selectedConnId = null;
+
+        function normalizeDbType(type) {
+            const val = String(type || '').trim().toLowerCase();
+            if (val === 'sqlite') return 'SQLite';
+            if (val === 'mssql' || val === 'sqlserver' || val === 'sql server') return 'MSSQL';
+            if (val === 'postgresql' || val === 'postgres') return 'PostgreSQL';
+            if (val === 'supabase') return 'Supabase';
+            return 'MariaDB';
+        }
+
+        function getDbTypeIconLabel(type) {
+            const norm = normalizeDbType(type);
+            if (norm === 'SQLite') return '🪶 SQLite';
+            if (norm === 'MSSQL') return '🗄️ MSSQL';
+            if (norm === 'PostgreSQL') return '🐘 PostgreSQL';
+            if (norm === 'Supabase') return '⚡ Supabase';
+            return '🐬 MariaDB';
+        }
+
+        function setDbType(type, applyDefaults = false) {
+            const normalized = normalizeDbType(type);
+            document.getElementById('dbType').value = normalized;
+            document.getElementById('mariadbFieldsGroup').style.display = normalized === 'SQLite' ? 'none' : 'block';
+            document.getElementById('sqliteFieldsGroup').style.display = normalized === 'SQLite' ? 'block' : 'none';
+
+            const serverEl = document.getElementById('server');
+            const portEl = document.getElementById('port');
+            const dbEl = document.getElementById('database');
+            const userEl = document.getElementById('userId');
+            const hintEl = document.getElementById('serverTypeHint');
+
+            const defaultPorts = { MariaDB: '3323', MSSQL: '1433', PostgreSQL: '5432', Supabase: '5432' };
+            const defaultDbs = { MariaDB: 'spsteks', MSSQL: 'master', PostgreSQL: 'postgres', Supabase: 'postgres' };
+            const defaultUsers = { MariaDB: 'root', MSSQL: 'sa', PostgreSQL: 'postgres', Supabase: 'postgres' };
+
+            if (normalized === 'MSSQL') {
+                serverEl.placeholder = '127.0.0.1 veya .\\SQLEXPRESS';
+                if (hintEl) {
+                    hintEl.style.display = 'block';
+                    hintEl.innerHTML = '🗄️ <strong>MSSQL:</strong> Yerel veya kurumsal sertifikalar için <code>TrustServerCertificate=True</code> otomatik uygulanır. Kullanıcı adı boş bırakılırsa Windows Authentication kullanılır.';
+                }
+            } else if (normalized === 'PostgreSQL') {
+                serverEl.placeholder = '127.0.0.1';
+                if (hintEl) {
+                    hintEl.style.display = 'block';
+                    hintEl.innerHTML = '🐘 <strong>PostgreSQL:</strong> Varsayılan port <code>5432</code> ve veritabanı <code>postgres</code> şeklindedir.';
+                }
+            } else if (normalized === 'Supabase') {
+                serverEl.placeholder = 'db.xxxx.supabase.co veya pooler adresi';
+                if (hintEl) {
+                    hintEl.style.display = 'block';
+                    hintEl.innerHTML = '⚡ <strong>Supabase:</strong> SSL bağlantısı otomatik zorunlu kılınır. Direct bağlantı için port <code>5432</code>, Transaction Pooler için port <code>6543</code> kullanabilirsiniz.';
+                }
+            } else {
+                serverEl.placeholder = '127.0.0.1';
+                if (hintEl) hintEl.style.display = 'none';
+            }
+
+            if (applyDefaults && normalized !== 'SQLite') {
+                const curPort = String(portEl.value || '').trim();
+                const curDb = String(dbEl.value || '').trim();
+                const curUser = String(userEl.value || '').trim();
+
+                if (!curPort || ['3323', '3306', '1433', '5432', '6543'].includes(curPort)) {
+                    portEl.value = defaultPorts[normalized];
+                }
+                if (!curDb || ['spsteks', 'master', 'postgres'].includes(curDb)) {
+                    dbEl.value = defaultDbs[normalized];
+                }
+                if (!curUser || ['root', 'sa', 'postgres'].includes(curUser)) {
+                    userEl.value = defaultUsers[normalized];
+                }
+                if (normalized === 'Supabase' && serverEl.value.trim() === '127.0.0.1') {
+                    serverEl.value = '';
+                } else if (normalized !== 'Supabase' && !serverEl.value.trim()) {
+                    serverEl.value = '127.0.0.1';
+                }
+            }
+        }
 
         function escapeHtml(str) {
             return String(str ?? '')
@@ -256,13 +575,18 @@
             wrap.innerHTML = allConnections.map(c => {
                 const isSel = c.id === selectedConnId;
                 const isAct = !!c.isActive;
+                const normType = normalizeDbType(c.dbType);
+                const badgeIcon = getDbTypeIconLabel(normType);
+                const metaText = normType === 'SQLite'
+                    ? `${badgeIcon} • ${escapeHtml(c.sqliteFilePath || 'App_Data/erp_data.db')}`
+                    : `${badgeIcon} • ${escapeHtml(c.server || '127.0.0.1')}:${escapeHtml(c.port || '')} / ${escapeHtml(c.database || '')}`;
                 return `
                     <div class="conn-item ${isSel ? 'selected' : ''}" onclick="selectConnection('${escapeHtml(c.id)}')">
                         <div class="conn-item-top">
                             <span class="conn-name">${escapeHtml(c.environmentName || 'Bağlantı')}</span>
                             <span class="conn-badge ${isAct ? 'badge-active' : 'badge-passive'}">${isAct ? 'Aktif' : 'Pasif'}</span>
                         </div>
-                        <div class="conn-meta">${escapeHtml(c.server || '127.0.0.1')}:${escapeHtml(c.port || 3323)} / ${escapeHtml(c.database || '')}</div>
+                        <div class="conn-meta">${metaText}</div>
                         ${c.description ? `<div class="conn-desc">${escapeHtml(c.description)}</div>` : ''}
                     </div>`;
             }).join('');
@@ -272,14 +596,20 @@
             const c = allConnections.find(x => x.id === id);
             if (!c) return;
             selectedConnId = c.id;
+            setDbType(c.dbType || 'MariaDB', false);
             document.getElementById('envName').value = c.environmentName || '';
             document.getElementById('description').value = c.description || '';
             document.getElementById('server').value = c.server || '127.0.0.1';
             document.getElementById('port').value = c.port || 3323;
-            document.getElementById('database').value = c.database || 'spsteks';
-            document.getElementById('userId').value = c.userId || 'root';
+            document.getElementById('database').value = c.database || '';
+            document.getElementById('userId').value = c.userId || '';
             document.getElementById('password').value = '';
+            document.getElementById('sqliteFilePath').value = c.sqliteFilePath || 'App_Data/erp_data.db';
             document.getElementById('isActive').checked = !!c.isActive;
+            document.getElementById('cacheEnabled').checked = c.cacheEnabled !== false;
+            document.getElementById('maxCacheableRows').value = Number(c.maxCacheableRows || 0);
+            document.getElementById('maxEntrySizeKB').value = Number(c.maxEntrySizeKB || 0);
+            document.getElementById('slidingExpirationSeconds').value = Number(c.slidingExpirationSeconds || 0);
             document.getElementById('pwdHint').textContent = c.hasSavedPassword ? '(Kayıtlı şifre var)' : '';
             const btnDel = document.getElementById('btnDeleteConn');
             if (btnDel) btnDel.style.display = selectedConnId ? 'inline-block' : 'none';
@@ -295,8 +625,14 @@
             document.getElementById('database').value = 'spsteks';
             document.getElementById('userId').value = 'root';
             document.getElementById('password').value = '';
-            document.getElementById('isActive').checked = false;
+            document.getElementById('sqliteFilePath').value = 'App_Data/erp_data.db';
+            document.getElementById('isActive').checked = true;
+            document.getElementById('cacheEnabled').checked = true;
+            document.getElementById('maxCacheableRows').value = '0';
+            document.getElementById('maxEntrySizeKB').value = '0';
+            document.getElementById('slidingExpirationSeconds').value = '0';
             document.getElementById('pwdHint').textContent = '';
+            setDbType('MariaDB', true);
             const btnDel = document.getElementById('btnDeleteConn');
             if (btnDel) btnDel.style.display = 'none';
             renderConnectionsList();
@@ -373,9 +709,15 @@
         function getPayload() {
             return {
                 id: selectedConnId,
+                dbType: document.getElementById('dbType').value || 'MariaDB',
+                sqliteFilePath: document.getElementById('sqliteFilePath').value.trim(),
                 environmentName: document.getElementById('envName').value.trim(),
                 description: document.getElementById('description').value.trim(),
                 isActive: document.getElementById('isActive').checked,
+                cacheEnabled: document.getElementById('cacheEnabled').checked,
+                maxCacheableRows: Math.max(0, parseInt(document.getElementById('maxCacheableRows').value || '0', 10) || 0),
+                maxEntrySizeKB: Math.max(0, parseInt(document.getElementById('maxEntrySizeKB').value || '0', 10) || 0),
+                slidingExpirationSeconds: Math.max(0, parseInt(document.getElementById('slidingExpirationSeconds').value || '0', 10) || 0),
                 server: document.getElementById('server').value.trim(),
                 port: parseInt(document.getElementById('port').value || '3323', 10),
                 database: document.getElementById('database').value.trim(),

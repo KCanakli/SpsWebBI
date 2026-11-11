@@ -1,10 +1,10 @@
 using System;
+using System.Data.Common;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MySqlConnector;
 using SpsWebBI.Services;
 
 namespace SpsWebBI.Controllers
@@ -53,8 +53,7 @@ namespace SpsWebBI.Controllers
         {
             if (CurrentUserId <= 0) return Unauthorized();
 
-            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
-            await conn.OpenAsync();
+            await using DbConnection conn = await _biConnManager.OpenBiConnectionAsync();
 
             var perm = await conn.QueryFirstOrDefaultAsync<SpsWebBI.Models.BiUserDashboard>(@"
                 SELECT user_dashboard_id, can_view, can_edit_layout
@@ -102,8 +101,7 @@ namespace SpsWebBI.Controllers
         {
             if (CurrentUserId <= 0) return Unauthorized();
 
-            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
-            await conn.OpenAsync();
+            await using DbConnection conn = await _biConnManager.OpenBiConnectionAsync();
 
             await conn.ExecuteAsync(@"
                 UPDATE bi_user_dashboards
@@ -136,8 +134,7 @@ namespace SpsWebBI.Controllers
                 return BadRequest(new { success = false, message = "Dashboard kodu ve başlığı zorunludur." });
             }
 
-            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
-            await conn.OpenAsync();
+            await using DbConnection conn = await _biConnManager.OpenBiConnectionAsync();
 
             int dashId = request.DashboardId ?? 0;
             int isActiveBit = request.IsActive ? 1 : 0;
@@ -151,7 +148,7 @@ namespace SpsWebBI.Controllers
                            primary_datasource_id = @DsId,
                            layout_json = @LayoutJson,
                            is_active = @IsActive,
-                           updated_at = NOW()
+                           updated_at = @UpdatedAt
                      WHERE dashboard_id = @Id;",
                     new
                     {
@@ -161,15 +158,16 @@ namespace SpsWebBI.Controllers
                         Description = request.Description,
                         DsId = request.PrimaryDataSourceId,
                         LayoutJson = request.LayoutJson,
-                        IsActive = isActiveBit
+                        IsActive = isActiveBit,
+                        UpdatedAt = DateTime.Now
                     });
             }
             else
             {
-                dashId = await conn.ExecuteScalarAsync<int>(@"
+                dashId = await conn.ExecuteScalarAsync<int>($@"
                     INSERT INTO bi_dashboards (code, title, description, primary_datasource_id, layout_json, is_active)
                     VALUES (@Code, @Title, @Description, @DsId, @LayoutJson, @IsActive);
-                    SELECT LAST_INSERT_ID();",
+                    {_biConnManager.LastInsertIdSql}",
                     new
                     {
                         Code = request.Code.Trim(),
@@ -181,8 +179,9 @@ namespace SpsWebBI.Controllers
                     });
 
                 // Oluşturan kullanıcıya otomatik yetki ver
-                await conn.ExecuteAsync(@"
-                    INSERT IGNORE INTO bi_user_dashboards (user_id, dashboard_id, can_view, can_edit_layout, display_order, refresh_seconds, slide_duration_seconds)
+                string insertIgnoreVerb = _biConnManager.IsSqlite ? "INSERT OR IGNORE" : "INSERT IGNORE";
+                await conn.ExecuteAsync($@"
+                    {insertIgnoreVerb} INTO bi_user_dashboards (user_id, dashboard_id, can_view, can_edit_layout, display_order, refresh_seconds, slide_duration_seconds)
                     VALUES (@Uid, @DashId, 1, 1, 10, 60, 30);",
                     new { Uid = CurrentUserId, DashId = dashId });
             }
@@ -194,7 +193,7 @@ namespace SpsWebBI.Controllers
             {
                 success = true,
                 dashboardId = dashId,
-                message = "Ana dashboard tasarımı MariaDB'ye kaydedildi."
+                message = $"Ana dashboard tasarımı ({_biConnManager.GetActiveDbType()}) kaydedildi."
             });
         }
 
@@ -216,15 +215,14 @@ namespace SpsWebBI.Controllers
                 return BadRequest(new { success = false, message = "Geçersiz dashboard seçimi." });
             }
 
-            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
-            await conn.OpenAsync();
+            await using DbConnection conn = await _biConnManager.OpenBiConnectionAsync();
 
             int affected = await conn.ExecuteAsync(@"
                 UPDATE bi_dashboards
                    SET is_active = 0,
-                       updated_at = NOW()
+                       updated_at = @UpdatedAt
                  WHERE dashboard_id = @Id;",
-                new { Id = dashboardId });
+                new { Id = dashboardId, UpdatedAt = DateTime.Now });
 
             if (affected <= 0)
             {

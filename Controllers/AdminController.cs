@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MySqlConnector;
 using SpsWebBI.Models;
 using SpsWebBI.Security;
 using SpsWebBI.Services;
@@ -83,8 +83,7 @@ namespace SpsWebBI.Controllers
         {
             if (!IsDesignerOrAdmin()) return Forbid();
 
-            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
-            await conn.OpenAsync();
+            await using DbConnection conn = await _biConnManager.OpenBiConnectionAsync();
 
             var sources = (await conn.QueryAsync<BiDataSource>("SELECT * FROM bi_datasources ORDER BY datasource_id ASC;")).ToList();
             var allParams = (await conn.QueryAsync<BiDataSourceParam>("SELECT * FROM bi_datasource_params ORDER BY display_order ASC;")).ToList();
@@ -99,6 +98,8 @@ namespace SpsWebBI.Controllers
                 ds.connection_id,
                 ds.sql_query,
                 ds.columns_schema_json,
+                ds.cache_ttl_seconds,
+                ds.command_timeout_seconds,
                 ds.is_active,
                 parameters = allParams.Where(p => p.datasource_id == ds.datasource_id).ToList()
             });
@@ -111,8 +112,7 @@ namespace SpsWebBI.Controllers
         {
             if (!IsDesignerOrAdmin()) return Forbid();
 
-            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
-            await conn.OpenAsync();
+            await using DbConnection conn = await _biConnManager.OpenBiConnectionAsync();
 
             var dashboards = await conn.QueryAsync<BiDashboard>("SELECT * FROM bi_dashboards ORDER BY dashboard_id ASC;");
             return Ok(new { success = true, dashboards });
@@ -123,8 +123,7 @@ namespace SpsWebBI.Controllers
         {
             if (!IsAdminOnly()) return Forbid();
 
-            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
-            await conn.OpenAsync();
+            await using DbConnection conn = await _biConnManager.OpenBiConnectionAsync();
 
             var users = await conn.QueryAsync<BiUser>("SELECT * FROM bi_users ORDER BY user_id ASC;");
             var list = users.Select(u =>
@@ -160,8 +159,7 @@ namespace SpsWebBI.Controllers
                 return BadRequest(new { success = false, message = "Kullanıcı kodu ve ad soyad zorunludur." });
             }
 
-            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
-            await conn.OpenAsync();
+            await using DbConnection conn = await _biConnManager.OpenBiConnectionAsync();
 
             int userId = request.UserId ?? 0;
             if (userId > 0)
@@ -222,10 +220,10 @@ namespace SpsWebBI.Controllers
                 }
 
                 string hash = PasswordHasher.HashPassword(request.Password);
-                userId = await conn.ExecuteScalarAsync<int>(@"
+                userId = await conn.ExecuteScalarAsync<int>($@"
                     INSERT INTO bi_users (user_code, full_name, password_hash, role, allow_passwordless, is_active)
                     VALUES (@Code, @FullName, @Hash, @Role, @AllowPwdless, @IsActive);
-                    SELECT LAST_INSERT_ID();",
+                    {_biConnManager.LastInsertIdSql}",
                     new
                     {
                         Code = request.UserCode.Trim(),
@@ -248,8 +246,7 @@ namespace SpsWebBI.Controllers
         {
             if (!IsAdminOnly()) return Forbid();
 
-            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
-            await conn.OpenAsync();
+            await using DbConnection conn = await _biConnManager.OpenBiConnectionAsync();
 
             const string sql = @"
                 SELECT d.dashboard_id AS DashboardId,
@@ -280,15 +277,18 @@ namespace SpsWebBI.Controllers
         {
             if (!IsAdminOnly()) return Forbid();
 
-            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
-            await conn.OpenAsync();
+            await using DbConnection conn = await _biConnManager.OpenBiConnectionAsync();
+
+            string upsertClause = _biConnManager.IsSqlite
+                ? "ON CONFLICT(user_id, dashboard_id) DO UPDATE SET"
+                : "ON DUPLICATE KEY UPDATE";
 
             foreach (var item in request.Permissions)
             {
-                await conn.ExecuteAsync(@"
+                await conn.ExecuteAsync($@"
                     INSERT INTO bi_user_dashboards (user_id, dashboard_id, can_view, can_edit_layout, display_order, refresh_seconds, slide_duration_seconds)
                     VALUES (@UserId, @DashId, @CanView, @CanEdit, @Order, @RefreshSec, @SlideSec)
-                    ON DUPLICATE KEY UPDATE
+                    {upsertClause}
                         can_view = @CanView,
                         can_edit_layout = @CanEdit,
                         display_order = @Order,

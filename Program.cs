@@ -3,12 +3,18 @@ using System.IO;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SpsWebBI.Data;
 using SpsWebBI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var cacheSection = builder.Configuration.GetSection("QueryCache");
+builder.Services.Configure<QueryCacheOptions>(cacheSection);
+int cacheSizeLimitMb = Math.Clamp(cacheSection.GetValue<int?>("SizeLimitMB") ?? 128, 16, 16384);
+double cacheCompaction = Math.Clamp(cacheSection.GetValue<double?>("CompactionPercentage") ?? 0.25, 0.05, 0.80);
 
 // Güvenli Cookie Oturum Yönetimi (HttpOnly, SameSite=Strict)
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -24,6 +30,11 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddMemoryCache(options =>
+{
+    options.SizeLimit = (long)cacheSizeLimitMb * 1024L * 1024L;
+    options.CompactionPercentage = cacheCompaction;
+});
 builder.Services.AddControllers();
 builder.Services.AddSingleton<DbConnectionManager>();
 builder.Services.AddSingleton<BiDbConnectionManager>();

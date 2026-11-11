@@ -23,10 +23,12 @@ namespace SpsWebBI.Controllers
     public class DbSettingsController : ControllerBase
     {
         private readonly DbConnectionManager _connManager;
+        private readonly DynamicQueryService _queryService;
 
-        public DbSettingsController(DbConnectionManager connManager)
+        public DbSettingsController(DbConnectionManager connManager, DynamicQueryService queryService)
         {
             _connManager = connManager;
+            _queryService = queryService;
         }
 
         private bool IsAuthenticatedAdmin()
@@ -55,12 +57,18 @@ namespace SpsWebBI.Controllers
                 settings.Id,
                 settings.EnvironmentName,
                 settings.Description,
+                settings.DbType,
+                settings.SqliteFilePath,
                 settings.IsActive,
                 settings.Server,
                 settings.Port,
                 settings.Database,
                 settings.UserId,
                 settings.HasSavedPassword,
+                settings.CacheEnabled,
+                settings.MaxCacheableRows,
+                settings.MaxEntrySizeKB,
+                settings.SlidingExpirationSeconds,
                 IsConnected = test.Success,
                 StatusMessage = test.Message,
                 Connections = connections
@@ -93,6 +101,8 @@ namespace SpsWebBI.Controllers
                 return BadRequest(new { success = false, message = saveResult.Message });
             }
 
+            _queryService.InvalidateAllDataSourceCaches();
+
             return Ok(new
             {
                 success = true,
@@ -115,6 +125,8 @@ namespace SpsWebBI.Controllers
             {
                 return BadRequest(new { success = false, message = result.Message });
             }
+
+            _queryService.InvalidateAllDataSourceCaches();
 
             return Ok(new
             {

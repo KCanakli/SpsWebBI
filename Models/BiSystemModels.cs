@@ -25,6 +25,8 @@ namespace SpsWebBI.Models
         public string? connection_id { get; set; }
         public string sql_query { get; set; } = string.Empty;
         public string? columns_schema_json { get; set; }
+        public int cache_ttl_seconds { get; set; } = 0;
+        public int command_timeout_seconds { get; set; } = 30;
         public bool is_active { get; set; } = true;
         public DateTime created_at { get; set; }
         public DateTime? updated_at { get; set; }

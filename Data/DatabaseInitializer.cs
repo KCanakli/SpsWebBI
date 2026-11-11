@@ -1,8 +1,8 @@
 using System;
+using System.Data.Common;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Extensions.Logging;
-using MySqlConnector;
 using SpsWebBI.Security;
 using SpsWebBI.Services;
 
@@ -25,111 +25,23 @@ namespace SpsWebBI.Data
         {
             string connStr = GetConnectionString();
             if (string.IsNullOrWhiteSpace(connStr))
-                return (false, "MariaDB bağlantı dizesi tanımlı değil.");
+                return (false, "BI veritabanı bağlantı dizesi tanımlı değil.");
+
+            bool isSqlite = _biConnManager.IsSqlite;
+            string dbLabel = isSqlite ? "SQLite" : "MariaDB";
 
             try
             {
-                await using var connection = new MySqlConnection(connStr);
-                await connection.OpenAsync();
+                await using DbConnection connection = await _biConnManager.OpenBiConnectionAsync();
 
-                // 1. Kullanıcılar Tablosu
-                await connection.ExecuteAsync(@"
-                    CREATE TABLE IF NOT EXISTS bi_users (
-                        user_id INT AUTO_INCREMENT PRIMARY KEY,
-                        user_code VARCHAR(50) NOT NULL UNIQUE,
-                        full_name VARCHAR(100) NOT NULL,
-                        password_hash VARCHAR(255) NOT NULL,
-                        role VARCHAR(20) NOT NULL DEFAULT 'viewer',
-                        allow_passwordless TINYINT(1) NOT NULL DEFAULT 0,
-                        is_active TINYINT(1) NOT NULL DEFAULT 1,
-                        failed_login_count INT NOT NULL DEFAULT 0,
-                        locked_until DATETIME NULL,
-                        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-                // 2. Veri Kaynakları (SQL Sorguları) Tablosu
-                await connection.ExecuteAsync(@"
-                    CREATE TABLE IF NOT EXISTS bi_datasources (
-                        datasource_id INT AUTO_INCREMENT PRIMARY KEY,
-                        code VARCHAR(50) NOT NULL UNIQUE,
-                        name VARCHAR(120) NOT NULL,
-                        category VARCHAR(50) NULL,
-                        connection_id VARCHAR(64) NULL,
-                        sql_query LONGTEXT NOT NULL,
-                        columns_schema_json LONGTEXT NULL,
-                        is_active TINYINT(1) NOT NULL DEFAULT 1,
-                        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        updated_at DATETIME NULL
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-                // Mevcut bi_datasources tablosunda connection_id kolonu yoksa ekle
-                int hasConnCol = await connection.ExecuteScalarAsync<int>(@"
-                    SELECT COUNT(*) FROM information_schema.COLUMNS
-                     WHERE TABLE_SCHEMA = DATABASE()
-                       AND TABLE_NAME = 'bi_datasources'
-                       AND COLUMN_NAME = 'connection_id';");
-                if (hasConnCol == 0)
+                if (isSqlite)
                 {
-                    await connection.ExecuteAsync("ALTER TABLE bi_datasources ADD COLUMN connection_id VARCHAR(64) NULL AFTER category;");
+                    await InitializeSqliteSchemaAsync(connection);
                 }
-
-                // 3. Veri Kaynağı Filtre Parametreleri Tablosu (Madde 5)
-                await connection.ExecuteAsync(@"
-                    CREATE TABLE IF NOT EXISTS bi_datasource_params (
-                        param_id INT AUTO_INCREMENT PRIMARY KEY,
-                        datasource_id INT NOT NULL,
-                        param_name VARCHAR(60) NOT NULL,
-                        label VARCHAR(100) NOT NULL,
-                        param_type VARCHAR(30) NOT NULL DEFAULT 'text',
-                        default_value VARCHAR(255) NULL,
-                        lookup_sql TEXT NULL,
-                        display_order INT NOT NULL DEFAULT 1,
-                        UNIQUE KEY uk_ds_param (datasource_id, param_name),
-                        CONSTRAINT fk_param_ds FOREIGN KEY (datasource_id) REFERENCES bi_datasources(datasource_id) ON DELETE CASCADE
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-                // 4. Dashboard Tanım ve Ana Layout Tablosu (Madde 9)
-                await connection.ExecuteAsync(@"
-                    CREATE TABLE IF NOT EXISTS bi_dashboards (
-                        dashboard_id INT AUTO_INCREMENT PRIMARY KEY,
-                        code VARCHAR(50) NOT NULL UNIQUE,
-                        title VARCHAR(150) NOT NULL,
-                        description VARCHAR(300) NULL,
-                        primary_datasource_id INT NOT NULL,
-                        layout_json LONGTEXT NOT NULL,
-                        is_active TINYINT(1) NOT NULL DEFAULT 1,
-                        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                        updated_at DATETIME NULL,
-                        CONSTRAINT fk_dash_ds FOREIGN KEY (primary_datasource_id) REFERENCES bi_datasources(datasource_id) ON DELETE RESTRICT
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-                // 5. Kullanıcı Yetkileri, Öncelik, Süreler ve Kişisel Layout Tablosu (Madde 6 & 10)
-                await connection.ExecuteAsync(@"
-                    CREATE TABLE IF NOT EXISTS bi_user_dashboards (
-                        user_dashboard_id INT AUTO_INCREMENT PRIMARY KEY,
-                        user_id INT NOT NULL,
-                        dashboard_id INT NOT NULL,
-                        can_view TINYINT(1) NOT NULL DEFAULT 1,
-                        can_edit_layout TINYINT(1) NOT NULL DEFAULT 1,
-                        display_order INT NOT NULL DEFAULT 1,
-                        refresh_seconds INT NOT NULL DEFAULT 60,
-                        slide_duration_seconds INT NOT NULL DEFAULT 30,
-                        custom_layout_json LONGTEXT NULL,
-                        UNIQUE KEY uk_user_dash (user_id, dashboard_id),
-                        CONSTRAINT fk_ud_user FOREIGN KEY (user_id) REFERENCES bi_users(user_id) ON DELETE CASCADE,
-                        CONSTRAINT fk_ud_dash FOREIGN KEY (dashboard_id) REFERENCES bi_dashboards(dashboard_id) ON DELETE CASCADE
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-
-                // 6. Siber Güvenlik Denetim (Audit) Tablosu
-                await connection.ExecuteAsync(@"
-                    CREATE TABLE IF NOT EXISTS bi_audit_logs (
-                        log_id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                        user_code VARCHAR(50) NULL,
-                        action_type VARCHAR(50) NOT NULL,
-                        ip_address VARCHAR(60) NULL,
-                        details TEXT NULL,
-                        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+                else
+                {
+                    await InitializeMariaDbSchemaAsync(connection);
+                }
 
                 // Varsayılan kullanıcıları (admin ve A kullanıcısı) yoksa oluştur
                 int userCount = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM bi_users;");
@@ -147,20 +59,233 @@ namespace SpsWebBI.Data
                         });
                 }
 
-                // Otomatik örnek veri tohumlama (Auto-Seed) kullanıcı isteğiyle devre dışı bırakıldı.
-                // Kullanıcı kendi veri kaynaklarını ve dashboard tasarımlarını /designer ekranından sıfırdan oluşturacaktır.
-
-                _logger.LogInformation("MariaDB SpsWebBI tabloları başarıyla doğrulandı/oluşturuldu.");
-                return (true, "MariaDB bağlantısı ve BI tabloları hazır.");
+                _logger.LogInformation("{DbLabel} SpsWebBI tabloları başarıyla doğrulandı/oluşturuldu.", dbLabel);
+                return (true, $"{dbLabel} bağlantısı ve BI tabloları hazır.");
             }
             catch (Exception ex)
             {
-                _logger.LogWarning("MariaDB başlatma uyarısı: {Message}", ex.Message);
+                _logger.LogWarning("{DbLabel} başlatma uyarısı: {Message}", dbLabel, ex.Message);
                 return (false, ex.Message);
             }
         }
 
-        private static async Task SeedInitialDataSourcesAndDashboardsAsync(MySqlConnection connection)
+        private static async Task InitializeSqliteSchemaAsync(DbConnection connection)
+        {
+            // 1. Kullanıcılar Tablosu
+            await connection.ExecuteAsync(@"
+                CREATE TABLE IF NOT EXISTS bi_users (
+                    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_code TEXT NOT NULL UNIQUE,
+                    full_name TEXT NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    role TEXT NOT NULL DEFAULT 'viewer',
+                    allow_passwordless INTEGER NOT NULL DEFAULT 0,
+                    is_active INTEGER NOT NULL DEFAULT 1,
+                    failed_login_count INTEGER NOT NULL DEFAULT 0,
+                    locked_until DATETIME NULL,
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );");
+
+            // 2. Veri Kaynakları (SQL Sorguları) Tablosu
+            await connection.ExecuteAsync(@"
+                CREATE TABLE IF NOT EXISTS bi_datasources (
+                    datasource_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    code TEXT NOT NULL UNIQUE,
+                    name TEXT NOT NULL,
+                    category TEXT NULL,
+                    connection_id TEXT NULL,
+                    sql_query TEXT NOT NULL,
+                    columns_schema_json TEXT NULL,
+                    cache_ttl_seconds INTEGER NOT NULL DEFAULT 0,
+                    command_timeout_seconds INTEGER NOT NULL DEFAULT 30,
+                    is_active INTEGER NOT NULL DEFAULT 1,
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME NULL
+                );");
+
+            await EnsureSqliteColumnAsync(connection, "bi_datasources", "cache_ttl_seconds", "INTEGER NOT NULL DEFAULT 0");
+            await EnsureSqliteColumnAsync(connection, "bi_datasources", "command_timeout_seconds", "INTEGER NOT NULL DEFAULT 30");
+
+            // 3. Veri Kaynağı Filtre Parametreleri Tablosu
+            await connection.ExecuteAsync(@"
+                CREATE TABLE IF NOT EXISTS bi_datasource_params (
+                    param_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    datasource_id INTEGER NOT NULL,
+                    param_name TEXT NOT NULL,
+                    label TEXT NOT NULL,
+                    param_type TEXT NOT NULL DEFAULT 'text',
+                    default_value TEXT NULL,
+                    lookup_sql TEXT NULL,
+                    display_order INTEGER NOT NULL DEFAULT 1,
+                    UNIQUE (datasource_id, param_name),
+                    FOREIGN KEY (datasource_id) REFERENCES bi_datasources(datasource_id) ON DELETE CASCADE
+                );");
+
+            // 4. Dashboard Tanım ve Ana Layout Tablosu
+            await connection.ExecuteAsync(@"
+                CREATE TABLE IF NOT EXISTS bi_dashboards (
+                    dashboard_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    code TEXT NOT NULL UNIQUE,
+                    title TEXT NOT NULL,
+                    description TEXT NULL,
+                    primary_datasource_id INTEGER NOT NULL,
+                    layout_json TEXT NOT NULL,
+                    is_active INTEGER NOT NULL DEFAULT 1,
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME NULL,
+                    FOREIGN KEY (primary_datasource_id) REFERENCES bi_datasources(datasource_id) ON DELETE RESTRICT
+                );");
+
+            // 5. Kullanıcı Yetkileri, Öncelik, Süreler ve Kişisel Layout Tablosu
+            await connection.ExecuteAsync(@"
+                CREATE TABLE IF NOT EXISTS bi_user_dashboards (
+                    user_dashboard_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    dashboard_id INTEGER NOT NULL,
+                    can_view INTEGER NOT NULL DEFAULT 1,
+                    can_edit_layout INTEGER NOT NULL DEFAULT 1,
+                    display_order INTEGER NOT NULL DEFAULT 1,
+                    refresh_seconds INTEGER NOT NULL DEFAULT 60,
+                    slide_duration_seconds INTEGER NOT NULL DEFAULT 30,
+                    custom_layout_json TEXT NULL,
+                    UNIQUE (user_id, dashboard_id),
+                    FOREIGN KEY (user_id) REFERENCES bi_users(user_id) ON DELETE CASCADE,
+                    FOREIGN KEY (dashboard_id) REFERENCES bi_dashboards(dashboard_id) ON DELETE CASCADE
+                );");
+
+            // 6. Siber Güvenlik Denetim (Audit) Tablosu
+            await connection.ExecuteAsync(@"
+                CREATE TABLE IF NOT EXISTS bi_audit_logs (
+                    log_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_code TEXT NULL,
+                    action_type TEXT NOT NULL,
+                    ip_address TEXT NULL,
+                    details TEXT NULL,
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                );");
+        }
+
+        private static async Task InitializeMariaDbSchemaAsync(DbConnection connection)
+        {
+            // 1. Kullanıcılar Tablosu
+            await connection.ExecuteAsync(@"
+                CREATE TABLE IF NOT EXISTS bi_users (
+                    user_id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_code VARCHAR(50) NOT NULL UNIQUE,
+                    full_name VARCHAR(100) NOT NULL,
+                    password_hash VARCHAR(255) NOT NULL,
+                    role VARCHAR(20) NOT NULL DEFAULT 'viewer',
+                    allow_passwordless TINYINT(1) NOT NULL DEFAULT 0,
+                    is_active TINYINT(1) NOT NULL DEFAULT 1,
+                    failed_login_count INT NOT NULL DEFAULT 0,
+                    locked_until DATETIME NULL,
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+            // 2. Veri Kaynakları (SQL Sorguları) Tablosu
+            await connection.ExecuteAsync(@"
+                CREATE TABLE IF NOT EXISTS bi_datasources (
+                    datasource_id INT AUTO_INCREMENT PRIMARY KEY,
+                    code VARCHAR(50) NOT NULL UNIQUE,
+                    name VARCHAR(120) NOT NULL,
+                    category VARCHAR(50) NULL,
+                    connection_id VARCHAR(64) NULL,
+                    sql_query LONGTEXT NOT NULL,
+                    columns_schema_json LONGTEXT NULL,
+                    cache_ttl_seconds INT NOT NULL DEFAULT 0,
+                    command_timeout_seconds INT NOT NULL DEFAULT 30,
+                    is_active TINYINT(1) NOT NULL DEFAULT 1,
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME NULL
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+            await EnsureMariaDbColumnAsync(connection, "bi_datasources", "connection_id", "VARCHAR(64) NULL AFTER category");
+            await EnsureMariaDbColumnAsync(connection, "bi_datasources", "cache_ttl_seconds", "INT NOT NULL DEFAULT 0 AFTER columns_schema_json");
+            await EnsureMariaDbColumnAsync(connection, "bi_datasources", "command_timeout_seconds", "INT NOT NULL DEFAULT 30 AFTER cache_ttl_seconds");
+
+            // 3. Veri Kaynağı Filtre Parametreleri Tablosu (Madde 5)
+            await connection.ExecuteAsync(@"
+                CREATE TABLE IF NOT EXISTS bi_datasource_params (
+                    param_id INT AUTO_INCREMENT PRIMARY KEY,
+                    datasource_id INT NOT NULL,
+                    param_name VARCHAR(60) NOT NULL,
+                    label VARCHAR(100) NOT NULL,
+                    param_type VARCHAR(30) NOT NULL DEFAULT 'text',
+                    default_value VARCHAR(255) NULL,
+                    lookup_sql TEXT NULL,
+                    display_order INT NOT NULL DEFAULT 1,
+                    UNIQUE KEY uk_ds_param (datasource_id, param_name),
+                    CONSTRAINT fk_param_ds FOREIGN KEY (datasource_id) REFERENCES bi_datasources(datasource_id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+            // 4. Dashboard Tanım ve Ana Layout Tablosu (Madde 9)
+            await connection.ExecuteAsync(@"
+                CREATE TABLE IF NOT EXISTS bi_dashboards (
+                    dashboard_id INT AUTO_INCREMENT PRIMARY KEY,
+                    code VARCHAR(50) NOT NULL UNIQUE,
+                    title VARCHAR(150) NOT NULL,
+                    description VARCHAR(300) NULL,
+                    primary_datasource_id INT NOT NULL,
+                    layout_json LONGTEXT NOT NULL,
+                    is_active TINYINT(1) NOT NULL DEFAULT 1,
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME NULL,
+                    CONSTRAINT fk_dash_ds FOREIGN KEY (primary_datasource_id) REFERENCES bi_datasources(datasource_id) ON DELETE RESTRICT
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+            // 5. Kullanıcı Yetkileri, Öncelik, Süreler ve Kişisel Layout Tablosu (Madde 6 & 10)
+            await connection.ExecuteAsync(@"
+                CREATE TABLE IF NOT EXISTS bi_user_dashboards (
+                    user_dashboard_id INT AUTO_INCREMENT PRIMARY KEY,
+                    user_id INT NOT NULL,
+                    dashboard_id INT NOT NULL,
+                    can_view TINYINT(1) NOT NULL DEFAULT 1,
+                    can_edit_layout TINYINT(1) NOT NULL DEFAULT 1,
+                    display_order INT NOT NULL DEFAULT 1,
+                    refresh_seconds INT NOT NULL DEFAULT 60,
+                    slide_duration_seconds INT NOT NULL DEFAULT 30,
+                    custom_layout_json LONGTEXT NULL,
+                    UNIQUE KEY uk_user_dash (user_id, dashboard_id),
+                    CONSTRAINT fk_ud_user FOREIGN KEY (user_id) REFERENCES bi_users(user_id) ON DELETE CASCADE,
+                    CONSTRAINT fk_ud_dash FOREIGN KEY (dashboard_id) REFERENCES bi_dashboards(dashboard_id) ON DELETE CASCADE
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+            // 6. Siber Güvenlik Denetim (Audit) Tablosu
+            await connection.ExecuteAsync(@"
+                CREATE TABLE IF NOT EXISTS bi_audit_logs (
+                    log_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                    user_code VARCHAR(50) NULL,
+                    action_type VARCHAR(50) NOT NULL,
+                    ip_address VARCHAR(60) NULL,
+                    details TEXT NULL,
+                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+        }
+
+        private static async Task EnsureSqliteColumnAsync(DbConnection connection, string tableName, string columnName, string columnDef)
+        {
+            var cols = await connection.QueryAsync<string>($"SELECT name FROM pragma_table_info('{tableName}');");
+            if (!cols.Any(c => string.Equals(c, columnName, StringComparison.OrdinalIgnoreCase)))
+            {
+                await connection.ExecuteAsync($"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnDef};");
+            }
+        }
+
+        private static async Task EnsureMariaDbColumnAsync(DbConnection connection, string tableName, string columnName, string columnDef)
+        {
+            int exists = await connection.ExecuteScalarAsync<int>(@"
+                SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE()
+                   AND TABLE_NAME = @TableName
+                   AND COLUMN_NAME = @ColumnName;",
+                new { TableName = tableName, ColumnName = columnName });
+            if (exists == 0)
+            {
+                await connection.ExecuteAsync($"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnDef};");
+            }
+        }
+
+        private async Task SeedInitialDataSourcesAndDashboardsAsync(DbConnection connection)
         {
             const string siparisSql = @"SELECT s.Siparis_ID, s.Siparis_Turu, s.siparis_tarihi,
        YEAR(s.siparis_tarihi) AS siparis_yil, MONTH(s.siparis_tarihi) AS siparis_ay,
@@ -195,15 +320,16 @@ namespace SpsWebBI.Data
  WHERE (@Depo IS NULL OR d.Depo = @Depo)
    AND (@KumasTuru IS NULL OR sd.Kumas_Turu = @KumasTuru)";
 
-            int dsSiparisId = await connection.ExecuteScalarAsync<int>(@"
+            string lastIdSql = _biConnManager.LastInsertIdSql;
+            int dsSiparisId = await connection.ExecuteScalarAsync<int>($@"
                 INSERT INTO bi_datasources (code, name, category, sql_query, is_active)
                 VALUES ('DS_SIPARIS', 'Satış & Sipariş Verileri', 'Satış', @Sql, 1);
-                SELECT LAST_INSERT_ID();", new { Sql = siparisSql });
+                {lastIdSql}", new { Sql = siparisSql });
 
-            int dsStokId = await connection.ExecuteScalarAsync<int>(@"
+            int dsStokId = await connection.ExecuteScalarAsync<int>($@"
                 INSERT INTO bi_datasources (code, name, category, sql_query, is_active)
                 VALUES ('DS_STOK', 'Depo & Stok Durum Verileri', 'Stok', @Sql, 1);
-                SELECT LAST_INSERT_ID();", new { Sql = stokSql });
+                {lastIdSql}", new { Sql = stokSql });
 
             // Sipariş Filtre Parametreleri (Madde 5)
             await connection.ExecuteAsync(@"
@@ -242,22 +368,23 @@ namespace SpsWebBI.Data
   ]
 }";
 
-            int dashSiparisId = await connection.ExecuteScalarAsync<int>(@"
+            int dashSiparisId = await connection.ExecuteScalarAsync<int>($@"
                 INSERT INTO bi_dashboards (code, title, description, primary_datasource_id, layout_json, is_active)
                 VALUES ('DASH_SIPARIS', 'Satış & Sipariş Analiz Dashboard', 'Sipariş, müşteri, ülke ve kumaş kırılımlı satış analizi', @DsId, @Layout, 1);
-                SELECT LAST_INSERT_ID();", new { DsId = dsSiparisId, Layout = siparisLayoutJson });
+                {lastIdSql}", new { DsId = dsSiparisId, Layout = siparisLayoutJson });
 
-            int dashStokId = await connection.ExecuteScalarAsync<int>(@"
+            int dashStokId = await connection.ExecuteScalarAsync<int>($@"
                 INSERT INTO bi_dashboards (code, title, description, primary_datasource_id, layout_json, is_active)
                 VALUES ('DASH_STOK', 'Depo & Stok Durum Dashboard', 'Depo, kumaş türü, top durumu ve varyant bazlı stok analizi', @DsId, @Layout, 1);
-                SELECT LAST_INSERT_ID();", new { DsId = dsStokId, Layout = stokLayoutJson });
+                {lastIdSql}", new { DsId = dsStokId, Layout = stokLayoutJson });
 
             // Kullanıcı yetkileri (Madde 6: Gösterim önceliği, refresh süresi ve ekranda kalma süresi)
+            string insertIgnoreVerb = _biConnManager.IsSqlite ? "INSERT OR IGNORE" : "INSERT IGNORE";
             var users = await connection.QueryAsync<int>("SELECT user_id FROM bi_users;");
             foreach (int uid in users)
             {
-                await connection.ExecuteAsync(@"
-                    INSERT IGNORE INTO bi_user_dashboards (user_id, dashboard_id, can_view, can_edit_layout, display_order, refresh_seconds, slide_duration_seconds)
+                await connection.ExecuteAsync($@"
+                    {insertIgnoreVerb} INTO bi_user_dashboards (user_id, dashboard_id, can_view, can_edit_layout, display_order, refresh_seconds, slide_duration_seconds)
                     VALUES 
                     (@Uid, @Dash1, 1, 1, 1, 60, 20),
                     (@Uid, @Dash2, 1, 1, 2, 60, 20);",

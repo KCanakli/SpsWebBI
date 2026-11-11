@@ -262,7 +262,7 @@
             min-height: 0;
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
+            overflow: auto;
         }
 
         /* Slayt ve Otomatik Yenileme İlerleme Çubuğu */
@@ -308,7 +308,7 @@
         .widget-card {
             background: var(--card); border: 1px solid var(--border); border-radius: 12px;
             display: flex; flex-direction: column; overflow: hidden; position: relative;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.25); height: 100%;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25); height: 100%; min-width: 0; min-height: 0;
         }
         .widget-header {
             padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.06);
@@ -318,8 +318,8 @@
         .widget-breadcrumb {
             font-size: 0.78rem; color: #60a5fa; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
         }
-        .widget-body { flex: 1; padding: 12px; position: relative; min-height: 0; overflow: auto; }
-        .widget-body.table-scroll { padding: 0; overflow: auto; }
+        .widget-body { display: flex; flex-direction: column; flex: 1; padding: 12px; position: relative; min-width: 0; min-height: 0; overflow: hidden; }
+        .widget-body.table-scroll { display: block; padding: 0; overflow: auto; }
 
         /* Kullanıcı Tasarım Modunda Sürükle-Bırak ve Köşeden Boyutlandırma */
         .widget-card.card-drop-target {
@@ -350,16 +350,17 @@
         /* KPI Kartı Stili */
         .kpi-box {
             display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
-            height: 100%; padding: 2px 6px;
+            flex: 1; width: 100%; height: 100%; min-width: 0; min-height: 0; overflow: hidden; padding: 2px 6px;
         }
         .kpi-meta {
             font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase;
             letter-spacing: 0.4px; margin-bottom: 2px;
+            max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
         .kpi-val {
             font-size: clamp(1.45rem, 1.9vw, 1.95rem); font-weight: 800; color: #38bdf8;
             line-height: 1.15; letter-spacing: -0.5px; font-variant-numeric: tabular-nums;
-            white-space: nowrap;
+            white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
         }
 
         /* Veri Tablosu ve Pivot Stili */
@@ -692,9 +693,70 @@
         body.spsteks-theme .subtype-card-label {
             color: #0c2340;
         }
+        /* SAĞ TUŞ BAĞLAM MENÜSÜ (İZLEME EKRANI) */
+        .widget-context-menu {
+            position: fixed;
+            z-index: 9997;
+            min-width: 235px;
+            max-width: 290px;
+            background: var(--card);
+            border: 1px solid rgba(56, 189, 248, 0.5);
+            border-radius: 9px;
+            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.6);
+            padding: 5px;
+            display: none;
+            flex-direction: column;
+            gap: 2px;
+            user-select: none;
+        }
+        .widget-context-menu.open { display: flex; }
+        .ctx-menu-header {
+            padding: 5px 8px 6px 8px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .ctx-menu-item {
+            width: 100%;
+            text-align: left;
+            padding: 7px 9px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text);
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.12s, color 0.12s;
+        }
+        .ctx-menu-item:hover { background: rgba(59, 130, 246, 0.18); color: #38bdf8; }
+        .ctx-menu-item.danger { color: #f87171; }
+        .ctx-menu-item.danger:hover { background: rgba(239, 68, 68, 0.16); color: #ef4444; }
+        .ctx-menu-sep { height: 1px; background: var(--border); margin: 3px 4px; }
+        body.light-theme .widget-context-menu {
+            background: #ffffff;
+            border-color: #cbd5e1;
+            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18);
+        }
+        body.light-theme .ctx-menu-item:hover { background: #e0f2fe; color: #0284c7; }
+        body.spsteks-theme .widget-context-menu {
+            background: #eef5fc;
+            border-color: #7da2ce;
+            box-shadow: 0 16px 36px rgba(16, 42, 76, 0.22);
+        }
     </style>
 </head>
 <body>
+    <!-- SAĞ TUŞ BAĞLAM MENÜSÜ (İZLEME EKRANI) -->
+    <div id="viewerWidgetCtxMenu" class="widget-context-menu" onclick="event.stopPropagation()"></div>
     <!-- ALT GRAFİK STİLLERİ GÖRSEL SEÇİM PANELİ (POPOVER) -->
     <div id="subTypeGalleryPopover" class="subtype-gallery-popover" style="display:none;" onmouseleave="scheduleGalleryClose()" onmouseenter="cancelGalleryClose()">
         <div class="subtype-gallery-header">
@@ -859,6 +921,11 @@
             <div id="crossFilterBadges" style="display:flex;gap:6px;align-items:center;"></div>
         </div>
         <span class="status-sep"></span>
+        <div class="status-sec" title="Sorgu veri kaynağı yenileme durumu (Canlı veya Sunucu TTL Önbellek)">
+            <span class="status-label">Sorgu:</span>
+            <span id="statusCacheInfo">-</span>
+        </div>
+        <span class="status-sep"></span>
         <div class="status-sec" title="Grafik filtresinden sonra kalan kayıt / toplam kayıt (ana veri kaynağı)">
             <span class="status-label">Kayıt:</span>
             <span id="statusRowCount">-</span>
@@ -885,12 +952,72 @@
         let currentColumns = [];
         let rawRows = [];
         let appDataSourceCache = {}; // { [dsId]: { columns, rows, isPassive, message } }
+        let activeFetchAbortController = null;
         let activeCrossFilters = {}; // { KolonAdi: Deger }
         let widgetDrillState = {};   // { widgetId: { levelIndex: 0, path: [{dim, val}] } }
         let widgetSortState = {};    // { widgetId: { column: 'Siparis_ID', dir: 'asc' | 'desc' } }
         let isUserEditMode = false;
         let userDraggedWidgetIndex = null;
         let chartInstances = [];
+        let widgetChartMap = {};
+        let chartResizeObserver = null;
+
+        function disposeAllCharts() {
+            if (chartResizeObserver) {
+                try { chartResizeObserver.disconnect(); } catch (_) {}
+            }
+            chartInstances.forEach(c => { try { c.dispose(); } catch (_) {} });
+            chartInstances = [];
+            widgetChartMap = {};
+        }
+
+        function ensureChartResizeObserver() {
+            if (chartResizeObserver || typeof ResizeObserver === 'undefined') return chartResizeObserver;
+            let rafPending = false;
+            const queuedCharts = new Set();
+            chartResizeObserver = new ResizeObserver(entries => {
+                entries.forEach(entry => {
+                    const chart = entry.target && entry.target.__echartsInstance;
+                    if (chart) queuedCharts.add(chart);
+                });
+                if (rafPending || queuedCharts.size === 0) return;
+                rafPending = true;
+                requestAnimationFrame(() => {
+                    rafPending = false;
+                    queuedCharts.forEach(c => {
+                        try {
+                            if (typeof c.isDisposed !== 'function' || !c.isDisposed()) c.resize();
+                        } catch (_) {}
+                    });
+                    queuedCharts.clear();
+                });
+            });
+            return chartResizeObserver;
+        }
+
+        function createManagedChart(container) {
+            const chartDiv = document.createElement('div');
+            chartDiv.style.flex = '1';
+            chartDiv.style.width = '100%';
+            chartDiv.style.height = '100%';
+            chartDiv.style.minWidth = '0';
+            chartDiv.style.minHeight = '0';
+            chartDiv.style.overflow = 'hidden';
+            container.appendChild(chartDiv);
+
+            const chart = echarts.init(chartDiv, isLightTheme() ? null : 'dark');
+            chartDiv.__echartsInstance = chart;
+            chartInstances.push(chart);
+
+            const obs = ensureChartResizeObserver();
+            if (obs) obs.observe(chartDiv);
+            requestAnimationFrame(() => {
+                try {
+                    if (typeof chart.isDisposed !== 'function' || !chart.isDisposed()) chart.resize();
+                } catch (_) {}
+            });
+            return chart;
+        }
 
         // Zamanlayıcılar (Standalone Refresh & Slayt Modu)
         let activeTimer = null;
@@ -927,6 +1054,7 @@
         applySavedTheme();
 
         window.addEventListener('resize', () => {
+            if (typeof applyAppCanvasDimensions === 'function') applyAppCanvasDimensions();
             chartInstances.forEach(c => { try { c.resize(); } catch (_) {} });
         });
 
@@ -1017,10 +1145,14 @@
             if (wrap && !wrap.contains(e.target)) {
                 closeViewerHamburgerMenu();
             }
+            const ctxMenu = document.getElementById('viewerWidgetCtxMenu');
+            if (ctxMenu && ctxMenu.classList.contains('open') && !ctxMenu.contains(e.target)) {
+                closeViewerWidgetCtxMenu();
+            }
             const pop = document.getElementById('subTypeGalleryPopover');
             if (pop && pop.style.display === 'flex') {
                 const btn = e.target.closest('.btn-widget-gallery');
-                if (!pop.contains(e.target) && !btn) {
+                if (!pop.contains(e.target) && !btn && !e.target.closest('.widget-context-menu')) {
                     closeSubTypeGallery();
                 }
             }
@@ -1029,6 +1161,7 @@
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
                 closeViewerHamburgerMenu();
+                closeViewerWidgetCtxMenu();
                 closeSubTypeGallery();
             }
         });
@@ -1249,13 +1382,14 @@
             return primaryDsId;
         }
 
-        async function fetchAndCacheAppDataSource(dsId, filters) {
+        async function fetchAndCacheAppDataSource(dsId, filters, forceRefresh = false, signal = undefined) {
             if (!dsId || dsId <= 0) return { columns: [], rows: [], isPassive: true, message: 'Veri kaynağı seçilmedi.' };
             try {
                 const res = await fetch(`/api/datasources/${dsId}/execute`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ filters })
+                    body: JSON.stringify({ filters, forceRefresh: !!forceRefresh }),
+                    signal
                 });
                 const data = await res.json();
                 if (!res.ok || !data.success) {
@@ -1271,12 +1405,19 @@
                 const entry = {
                     columns: data.columns || [],
                     rows: data.rows || [],
+                    fromCache: !!data.fromCache,
+                    cachedAtUtc: data.cachedAtUtc || null,
+                    cacheTtlSeconds: Number(data.cacheTtlSeconds || 0),
+                    elapsedMs: Number(data.elapsedMs || 0),
                     isPassive: false,
                     message: ''
                 };
                 appDataSourceCache[dsId] = entry;
                 return entry;
-            } catch (_) {
+            } catch (err) {
+                if (err && err.name === 'AbortError') {
+                    return { aborted: true, columns: [], rows: [] };
+                }
                 const entry = {
                     columns: [],
                     rows: [],
@@ -1288,9 +1429,31 @@
             }
         }
 
-        async function refreshActiveDashboardData() {
+        function updateStatusCacheBadge(entry) {
+            const el = document.getElementById('statusCacheInfo');
+            if (!el) return;
+            if (!entry || entry.isPassive) {
+                el.textContent = '-';
+                return;
+            }
+            if (entry.fromCache) {
+                el.textContent = `🧠 Önbellek (TTL ${entry.cacheTtlSeconds}s)`;
+            } else if (entry.cacheTtlSeconds > 0) {
+                el.textContent = `⚡ Canlı (${entry.elapsedMs} ms, TTL ${entry.cacheTtlSeconds}s)`;
+            } else {
+                el.textContent = `⚡ Canlı (${entry.elapsedMs} ms)`;
+            }
+        }
+
+        async function refreshActiveDashboardData(forceRefresh = false) {
             const dash = authorizedDashboards[activeDashboardIndex];
             if (!dash) return;
+
+            if (activeFetchAbortController) {
+                activeFetchAbortController.abort();
+            }
+            const ctrl = new AbortController();
+            activeFetchAbortController = ctrl;
 
             const filters = collectFilterValues();
             appDataSourceCache = {};
@@ -1303,16 +1466,21 @@
                 }
             });
 
-            await Promise.all(Array.from(neededDsIds).map(id => fetchAndCacheAppDataSource(id, filters)));
+            const results = await Promise.all(
+                Array.from(neededDsIds).map(id => fetchAndCacheAppDataSource(id, filters, forceRefresh, ctrl.signal))
+            );
+            if (ctrl.signal.aborted || results.some(r => r && r.aborted)) {
+                return;
+            }
 
             const primaryEntry = appDataSourceCache[Number(dash.primary_datasource_id)] || { columns: [], rows: [], isPassive: true, message: 'Veri kaynağı pasif veya veri çekilemedi.' };
+            updateStatusCacheBadge(primaryEntry);
             currentColumns = primaryEntry.columns || [];
             rawRows = primaryEntry.rows || [];
 
             const allWidgetsUsePrimary = (currentLayout.widgets || []).every(w => !w.dataSourceId || Number(w.dataSourceId) === Number(dash.primary_datasource_id));
             if (primaryEntry.isPassive && allWidgetsUsePrimary) {
-                chartInstances.forEach(c => { try { c.dispose(); } catch (_) {} });
-                chartInstances = [];
+                disposeAllCharts();
                 document.getElementById('dashboardCanvas').innerHTML =
                     `<div style="grid-column:span 120;grid-row:span 10;padding:28px;border:1px dashed rgba(239,68,68,0.45);border-radius:12px;color:#fca5a5;text-align:center;">${escapeHtml(primaryEntry.message || 'Veri kaynağı pasif veya veri çekilemedi.')}</div>`;
                 renderCrossFilterBadges();
@@ -1408,9 +1576,52 @@
                 : fmt(total);
         }
 
+        function getAppCanvasMode() {
+            return currentLayout?.canvasMode === 'expandable' ? 'expandable' : 'fixed';
+        }
+
+        function getAppViewport12ColWidth() {
+            const mainCol = document.querySelector('.viewer-main-col');
+            if (!mainCol) return 1200;
+            return Math.max(360, mainCol.clientWidth - 32);
+        }
+
+        function getAppEffectiveCanvasCols() {
+            if (getAppCanvasMode() !== 'expandable') return 12;
+            let maxRightMicro = 120;
+            (currentLayout?.widgets || []).forEach(w => {
+                const { gridSpan120 } = calcAppWidgetGridMetrics(w);
+                const c = typeof w.col === 'number' ? w.col : 0;
+                maxRightMicro = Math.max(maxRightMicro, c + gridSpan120);
+            });
+            return Math.max(12, Math.min(48, Math.ceil(maxRightMicro / 10)));
+        }
+
+        function applyAppCanvasDimensions(liveMicroColsOverride = null) {
+            const canvas = document.getElementById('dashboardCanvas');
+            if (!canvas) return;
+            const mode = getAppCanvasMode();
+            let microCols = getAppEffectiveCanvasCols() * 10;
+            if (mode === 'expandable' && typeof liveMicroColsOverride === 'number') {
+                microCols = Math.max(120, Math.min(480, Math.ceil(liveMicroColsOverride / 10) * 10));
+            }
+            if (mode !== 'expandable') microCols = 120;
+            canvas.style.gridTemplateColumns = `repeat(${microCols}, 1fr)`;
+            if (mode === 'expandable' && microCols > 120) {
+                const baseW = getAppViewport12ColWidth();
+                canvas.style.width = `${Math.round(baseW * (microCols / 120))}px`;
+                canvas.style.minWidth = '100%';
+            } else {
+                canvas.style.width = '100%';
+                canvas.style.minWidth = '';
+            }
+        }
+
         function calcAppWidgetGridMetrics(w) {
-            const colSpan12 = Math.min(12, Math.max(1.0, Math.round((Number(w.w) || (w.type === 'kpi' ? 3 : 4)) * 10) / 10));
-            const gridSpan120 = Math.min(120, Math.max(10, Math.round(colSpan12 * 10)));
+            const maxSpan12 = getAppCanvasMode() === 'expandable' ? 24 : 12;
+            const maxSpanMicro = maxSpan12 * 10;
+            const colSpan12 = Math.min(maxSpan12, Math.max(1.0, Math.round((Number(w.w) || (w.type === 'kpi' ? 3 : 4)) * 10) / 10));
+            const gridSpan120 = Math.min(maxSpanMicro, Math.max(10, Math.round(colSpan12 * 10)));
             const hUnits = Math.min(16, Math.max(1.2, Math.round((Number(w.h) || (w.type === 'kpi' ? 2 : 4)) * 20) / 20));
             const rowHeight = w.type === 'kpi'
                 ? Math.max(82, Math.round(hUnits * 58))
@@ -1420,11 +1631,11 @@
         }
 
         function renderAllWidgets() {
-            chartInstances.forEach(c => { try { c.dispose(); } catch (_) {} });
-            chartInstances = [];
+            disposeAllCharts();
 
             const canvas = document.getElementById('dashboardCanvas');
             canvas.innerHTML = '';
+            applyAppCanvasDimensions();
 
             if (isUserEditMode) {
                 canvas.ondragover = e => {
@@ -1469,6 +1680,16 @@
                     card.style.gridRow = `span ${rowSpan}`;
                 }
 
+                card.addEventListener('mousedown', e => {
+                    if (e.button === 0) closeViewerWidgetCtxMenu();
+                });
+
+                card.addEventListener('contextmenu', e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openViewerWidgetCtxMenu(e, w.id, idx);
+                });
+
                 const header = document.createElement('div');
                 header.className = 'widget-header';
 
@@ -1486,6 +1707,7 @@
                 const hTitle = document.createElement('h3');
                 hTitle.className = 'widget-title';
                 hTitle.textContent = w.title || 'Bileşen';
+                hTitle.title = 'İşlemler için sağ tıklayın';
                 titleWrap.appendChild(hTitle);
 
                 // Drill-Down Breadcrumb (Madde 2.3)
@@ -1501,24 +1723,7 @@
 
                 header.appendChild(titleWrap);
 
-                const headerRight = document.createElement('div');
-                headerRight.style.display = 'flex';
-                headerRight.style.alignItems = 'center';
-                headerRight.style.gap = '6px';
-
-                const fam = getChartFamily(w);
-                if (fam && CHART_SUBTYPE_CATALOG[fam]) {
-                    const btnGal = document.createElement('button');
-                    btnGal.type = 'button';
-                    btnGal.className = 'btn-widget-gallery';
-                    btnGal.style.cssText = 'height:22px;padding:0 7px;border-radius:5px;border:1px solid rgba(56,189,248,0.45);background:rgba(56,189,248,0.15);color:#7dd3fc;cursor:pointer;display:inline-flex;align-items:center;gap:3px;font-size:0.69rem;font-weight:700;transition:all 0.15s;';
-                    btnGal.title = 'Grafik Alt Stili Galerisini Aç';
-                    btnGal.innerHTML = '🎨 Galeri';
-                    btnGal.onclick = (e) => toggleViewerWidgetGallery(e, w.id);
-                    headerRight.appendChild(btnGal);
-                }
-
-                // Kişisel Tasarım Modunda Sürükle-Bırak, Köşeden Boyutlandırma ve Düzenle/Sil Butonları (Madde 10)
+                // Kişisel Tasarım Modunda Sürükle-Bırak ve Köşeden Boyutlandırma (Düzenle/Sil sağ tuş menüsünde)
                 if (isUserEditMode) {
                     header.style.cursor = 'move';
                     header.draggable = true;
@@ -1545,36 +1750,7 @@
                             renderAllWidgets();
                         }
                     });
-
-                    const sizeBadge = document.createElement('span');
-                    sizeBadge.id = `uSize_${w.id}`;
-                    sizeBadge.style.fontSize = '0.7rem';
-                    sizeBadge.style.color = '#93c5fd';
-                    sizeBadge.textContent = `${colSpan12}/12 × ${hUnits}`;
-
-                    const btnEdit = document.createElement('button');
-                    btnEdit.className = 'btn';
-                    btnEdit.style.padding = '3px 8px';
-                    btnEdit.style.fontSize = '0.75rem';
-                    btnEdit.textContent = 'Düzenle';
-                    btnEdit.onclick = () => openEditWidgetModal(idx);
-
-                    const btnDel = document.createElement('button');
-                    btnDel.className = 'btn';
-                    btnDel.style.padding = '3px 8px';
-                    btnDel.style.fontSize = '0.75rem';
-                    btnDel.style.color = '#fca5a5';
-                    btnDel.textContent = 'Sil';
-                    btnDel.onclick = () => {
-                        currentLayout.widgets.splice(idx, 1);
-                        renderAllWidgets();
-                    };
-                    headerRight.appendChild(sizeBadge);
-                    headerRight.appendChild(btnEdit);
-                    headerRight.appendChild(btnDel);
                 }
-
-                header.appendChild(headerRight);
 
                 const body = document.createElement('div');
                 body.className = (w.type === 'table' || w.type === 'pivot')
@@ -1611,9 +1787,10 @@
             handleEl.addEventListener('mousedown', e => {
                 e.preventDefault();
                 e.stopPropagation();
-                const canvasEl = document.getElementById('dashboardCanvas');
-                const microColPx = (canvasEl.clientWidth || 1200) / 120;
+                const microColPx = getAppViewport12ColWidth() / 120;
                 const microRowPx = 2.9;
+                const maxSingleWidget12 = getAppCanvasMode() === 'expandable' ? 24 : 12;
+                const maxMicroCols = getAppCanvasMode() === 'expandable' ? 480 : 120;
                 const startX = e.clientX, startY = e.clientY;
                 const startW = Number(widgetObj.w) || (widgetObj.type === 'kpi' ? 3 : 4);
                 const startH = Number(widgetObj.h) || (widgetObj.type === 'kpi' ? 2 : 5);
@@ -1621,10 +1798,21 @@
                 function onMove(ev) {
                     if (allowW) {
                         const deltaMicroCols = Math.round((ev.clientX - startX) / microColPx);
-                        const newW = Math.min(12, Math.max(1.0, Math.round((startW + deltaMicroCols * 0.1) * 10) / 10));
+                        const maxCols12 = typeof widgetObj.col === 'number'
+                            ? Math.min(maxSingleWidget12, (maxMicroCols - widgetObj.col) / 10)
+                            : maxSingleWidget12;
+                        const newW = Math.min(maxCols12, Math.max(1.0, Math.round((startW + deltaMicroCols * 0.1) * 10) / 10));
                         widgetObj.w = newW;
-                        const span120 = Math.min(120, Math.max(10, Math.round(newW * 10)));
-                        cardEl.style.gridColumn = `span ${span120}`;
+                        const { gridSpan120 } = calcAppWidgetGridMetrics(widgetObj);
+                        if (typeof widgetObj.col === 'number') {
+                            cardEl.style.gridColumn = `${widgetObj.col + 1} / span ${gridSpan120}`;
+                        } else {
+                            cardEl.style.gridColumn = `span ${gridSpan120}`;
+                        }
+                        if (getAppCanvasMode() === 'expandable') {
+                            const neededMicro = Math.max(getAppEffectiveCanvasCols() * 10, (widgetObj.col || 0) + gridSpan120);
+                            applyAppCanvasDimensions(neededMicro);
+                        }
                     }
                     if (allowH) {
                         const deltaMicroRows = Math.round((ev.clientY - startY) / microRowPx);
@@ -1908,10 +2096,17 @@
 
             const trigger = event?.currentTarget || event?.target;
             pop.style.display = 'flex';
+            const popW = 390;
 
-            if (trigger) {
+            if (event && typeof event.clientX === 'number' && typeof event.clientY === 'number' && !trigger) {
+                let left = event.clientX + 8;
+                if (left + popW > window.innerWidth - 10) left = Math.max(10, event.clientX - popW - 8);
+                let top = Math.max(50, event.clientY - 20);
+                if (top + 460 > window.innerHeight) top = Math.max(50, window.innerHeight - 475);
+                pop.style.left = `${left}px`;
+                pop.style.top = `${top}px`;
+            } else if (trigger) {
                 const rect = trigger.getBoundingClientRect();
-                const popW = 390;
                 let left = rect.right + 10;
                 if (left + popW > window.innerWidth - 10) {
                     left = Math.max(10, rect.left - popW - 10);
@@ -1926,6 +2121,119 @@
                 pop.style.left = '280px';
                 pop.style.top = '100px';
             }
+        }
+
+        function closeViewerWidgetCtxMenu() {
+            const menu = document.getElementById('viewerWidgetCtxMenu');
+            if (menu) menu.classList.remove('open');
+        }
+
+        function openViewerWidgetCtxMenu(e, widgetId, idx) {
+            const menu = document.getElementById('viewerWidgetCtxMenu');
+            const w = currentLayout?.widgets ? currentLayout.widgets.find(x => x.id === widgetId) : null;
+            if (!menu || !w) return;
+
+            const fam = getChartFamily(w);
+            const hasSubType = !!(fam && CHART_SUBTYPE_CATALOG[fam]);
+            const hasChartImg = !!widgetChartMap[w.id];
+            const dState = widgetDrillState[w.id];
+            const hasDrillBack = !!(dState && dState.path && dState.path.length > 0);
+            const hasCrossFilters = Object.keys(activeCrossFilters || {}).length > 0;
+            const clickX = e.clientX;
+            const clickY = e.clientY;
+
+            menu.innerHTML = `
+                <div class="ctx-menu-header" title="${escapeHtml(w.title || 'Bileşen')}">${escapeHtml(w.title || 'Bileşen')}</div>
+                ${hasSubType ? `
+                <button type="button" class="ctx-menu-item" onclick="closeViewerWidgetCtxMenu(); openViewerSubTypeGallery({ clientX: ${clickX}, clientY: ${clickY} }, '${w.id}');">
+                    <span>🎨</span><span>Grafik Alt Stili Değiştir</span>
+                </button>` : ''}
+                ${hasDrillBack ? `
+                <button type="button" class="ctx-menu-item" onclick="closeViewerWidgetCtxMenu(); stepUpDrillDown('${w.id}');">
+                    <span>⬅</span><span>Üst Kırılıma Dön</span>
+                </button>` : ''}
+                <button type="button" class="ctx-menu-item" onclick="closeViewerWidgetCtxMenu(); refreshActiveDashboardData(true);">
+                    <span>🔄</span><span>Veriyi Canlı Yenile</span>
+                </button>
+                ${hasChartImg ? `
+                <button type="button" class="ctx-menu-item" onclick="closeViewerWidgetCtxMenu(); downloadWidgetChartPng('${w.id}');">
+                    <span>🖼️</span><span>Grafik Görselini İndir (PNG)</span>
+                </button>` : ''}
+                <button type="button" class="ctx-menu-item" onclick="closeViewerWidgetCtxMenu(); exportWidgetDataCsv('${w.id}');">
+                    <span>📥</span><span>Veriyi Excel (CSV) İndir</span>
+                </button>
+                ${hasCrossFilters ? `
+                <button type="button" class="ctx-menu-item" onclick="closeViewerWidgetCtxMenu(); clearAllCrossFilters();">
+                    <span>🧹</span><span>Aktif Filtreleri Temizle</span>
+                </button>` : ''}
+                ${isUserEditMode ? `
+                <div class="ctx-menu-sep"></div>
+                <button type="button" class="ctx-menu-item" onclick="closeViewerWidgetCtxMenu(); openEditWidgetModal(${idx});">
+                    <span>✏️</span><span>Kişisel Görünümü Düzenle</span>
+                </button>
+                <button type="button" class="ctx-menu-item danger" onclick="closeViewerWidgetCtxMenu(); currentLayout.widgets.splice(${idx}, 1); renderAllWidgets();">
+                    <span>🗑️</span><span>Görünümden Kaldır</span>
+                </button>` : ''}
+            `;
+
+            menu.classList.add('open');
+            const rect = menu.getBoundingClientRect();
+            const mw = rect.width || 240;
+            const mh = rect.height || 220;
+            const left = (clickX + mw > window.innerWidth - 8) ? Math.max(8, clickX - mw) : clickX;
+            const top = (clickY + mh > window.innerHeight - 8) ? Math.max(8, window.innerHeight - mh - 8) : clickY;
+            menu.style.left = `${left}px`;
+            menu.style.top = `${top}px`;
+        }
+
+        function downloadWidgetChartPng(widgetId) {
+            const chart = widgetChartMap[widgetId];
+            const w = currentLayout?.widgets ? currentLayout.widgets.find(x => x.id === widgetId) : null;
+            if (!chart) return;
+            const bg = isLightTheme() ? '#ffffff' : '#0f172a';
+            const url = chart.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: bg });
+            const a = document.createElement('a');
+            const safeName = (w?.title || 'grafik').replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ_-]+/g, '_');
+            a.href = url;
+            a.download = `${safeName}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function exportWidgetDataCsv(widgetId) {
+            const w = currentLayout?.widgets ? currentLayout.widgets.find(x => x.id === widgetId) : null;
+            if (!w) return;
+            const rows = getFilteredRows(null, w) || [];
+            if (rows.length === 0) {
+                alert('Dışa aktarılacak kayıt bulunamadı.');
+                return;
+            }
+            const effDsId = getEffectiveAppWidgetDataSourceId(w);
+            const dsEntry = appDataSourceCache[effDsId] || { columns: currentColumns };
+            const allCols = (dsEntry.columns || []).map(c => c.name);
+            const cols = (w.type === 'table' && Array.isArray(w.columns) && w.columns.length > 0)
+                ? w.columns
+                : (allCols.length > 0 ? allCols : Object.keys(rows[0]));
+
+            const escapeCsv = v => {
+                const s = String(v ?? '').replace(/"/g, '""');
+                return `"${s}"`;
+            };
+            const lines = [cols.map(escapeCsv).join(';')];
+            rows.forEach(r => {
+                lines.push(cols.map(c => escapeCsv(getRowValue(r, c))).join(';'));
+            });
+            const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const safeName = (w.title || 'veri').replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ_-]+/g, '_');
+            a.href = url;
+            a.download = `${safeName}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
 
         function selectViewerSubType(val) {
@@ -2182,13 +2490,8 @@
                 : (w.dimension ? [w.dimension] : []);
             const mode = w.multiDimMode || (hierarchy.length > 1 ? 'drill' : 'combined');
 
-            const chartDiv = document.createElement('div');
-            chartDiv.style.width = '100%';
-            chartDiv.style.height = '100%';
-            container.appendChild(chartDiv);
-
-            const chart = echarts.init(chartDiv, isLightTheme() ? null : 'dark');
-            chartInstances.push(chart);
+            const chart = createManagedChart(container);
+            widgetChartMap[w.id] = chart;
 
             const isLight = isLightTheme();
             const axisTextColor = isLight ? '#334155' : '#94a3b8';

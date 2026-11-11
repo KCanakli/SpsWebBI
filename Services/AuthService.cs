@@ -1,8 +1,8 @@
 using System;
+using System.Data.Common;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Extensions.Configuration;
-using MySqlConnector;
 using SpsWebBI.Models;
 using SpsWebBI.Security;
 
@@ -40,8 +40,7 @@ namespace SpsWebBI.Services
 
             try
             {
-                await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
-                await conn.OpenAsync();
+                await using DbConnection conn = await _biConnManager.OpenBiConnectionAsync();
 
                 var user = await conn.QueryFirstOrDefaultAsync<BiUser>(
                     "SELECT * FROM bi_users WHERE user_code = @UserCode LIMIT 1;",
@@ -121,8 +120,7 @@ namespace SpsWebBI.Services
 
             try
             {
-                await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
-                await conn.OpenAsync();
+                await using DbConnection conn = await _biConnManager.OpenBiConnectionAsync();
 
                 var user = await conn.QueryFirstOrDefaultAsync<BiUser>(
                     "SELECT * FROM bi_users WHERE user_code = @UserCode LIMIT 1;",
@@ -160,7 +158,7 @@ namespace SpsWebBI.Services
             }
         }
 
-        public async Task WriteAuditLogAsync(MySqlConnection conn, string? userCode, string actionType, string? ipAddress, string? details)
+        public async Task WriteAuditLogAsync(DbConnection conn, string? userCode, string actionType, string? ipAddress, string? details)
         {
             try
             {

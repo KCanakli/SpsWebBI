@@ -1,15 +1,31 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data.Common;
+using System.Diagnostics;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 using MySqlConnector;
 using SpsWebBI.Models;
 using SpsWebBI.Security;
 
 namespace SpsWebBI.Services
 {
+    public class QueryCacheOptions
+    {
+        public int SizeLimitMB { get; set; } = 128;
+        public int MaxCacheableRows { get; set; } = 10000;
+        public int MaxEntrySizeKB { get; set; } = 8192;
+        public int DefaultSlidingExpirationSeconds { get; set; } = 60;
+        public double CompactionPercentage { get; set; } = 0.25;
+    }
     public class ColumnSchemaInfo
     {
         public string Name { get; set; } = string.Empty;
@@ -23,6 +39,10 @@ namespace SpsWebBI.Services
         public List<ColumnSchemaInfo> Columns { get; set; } = new();
         public List<Dictionary<string, object?>> Rows { get; set; } = new();
         public int TotalRowCount => Rows.Count;
+        public bool FromCache { get; set; }
+        public DateTime? CachedAtUtc { get; set; }
+        public int CacheTtlSeconds { get; set; }
+        public long ElapsedMs { get; set; }
     }
 
     public class ParameterWithOptionsDto
@@ -50,13 +70,47 @@ namespace SpsWebBI.Services
     /// </summary>
     public class DynamicQueryService
     {
+        private sealed class RefCountedGate
+        {
+            public SemaphoreSlim Semaphore { get; } = new(1, 1);
+            public int RefCount;
+        }
+
         private readonly DbConnectionManager _connManager;
         private readonly BiDbConnectionManager _biConnManager;
+        private readonly IMemoryCache _cache;
+        private readonly QueryCacheOptions _cacheOptions;
+        private readonly ConcurrentDictionary<int, long> _dataSourceVersions = new();
+        private readonly ConcurrentDictionary<string, RefCountedGate> _inFlightLocks = new();
+        private long _globalCacheVersion;
 
-        public DynamicQueryService(DbConnectionManager connManager, BiDbConnectionManager biConnManager)
+        public DynamicQueryService(
+            DbConnectionManager connManager,
+            BiDbConnectionManager biConnManager,
+            IMemoryCache cache,
+            IOptions<QueryCacheOptions> cacheOptions)
         {
             _connManager = connManager;
             _biConnManager = biConnManager;
+            _cache = cache;
+            _cacheOptions = cacheOptions?.Value ?? new QueryCacheOptions();
+        }
+
+        /// <summary>
+        /// Bir veri kaynağı düzenlendiğinde veya pasife alındığında ilgili önbellek sürümünü artırarak eski önbelleği geçersiz kılar.
+        /// </summary>
+        public void InvalidateDataSourceCache(int datasourceId)
+        {
+            if (datasourceId <= 0) return;
+            _dataSourceVersions.AddOrUpdate(datasourceId, 1, (_, ver) => ver + 1);
+        }
+
+        /// <summary>
+        /// Bir veritabanı sunucusu bağlantı profilinin önbellek ayarları değiştiğinde tüm önbellek sürümünü geçersiz kılar.
+        /// </summary>
+        public void InvalidateAllDataSourceCaches()
+        {
+            Interlocked.Increment(ref _globalCacheVersion);
         }
 
         /// <summary>
@@ -65,8 +119,7 @@ namespace SpsWebBI.Services
         /// </summary>
         public async Task<List<AuthorizedDashboardView>> GetAuthorizedDashboardsAsync(int userId)
         {
-            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
-            await conn.OpenAsync();
+            await using DbConnection conn = await _biConnManager.OpenBiConnectionAsync();
 
             const string sql = @"
                 SELECT d.dashboard_id,
@@ -106,8 +159,7 @@ namespace SpsWebBI.Services
                 return true;
             }
 
-            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
-            await conn.OpenAsync();
+            await using DbConnection conn = await _biConnManager.OpenBiConnectionAsync();
 
             const string sql = @"
                 SELECT COUNT(1)
@@ -135,8 +187,7 @@ namespace SpsWebBI.Services
         /// </summary>
         public async Task<List<ParameterWithOptionsDto>> GetDataSourceParametersAsync(int datasourceId)
         {
-            await using var sysConn = new MySqlConnection(_biConnManager.GetBiConnectionString());
-            await sysConn.OpenAsync();
+            await using DbConnection sysConn = await _biConnManager.OpenBiConnectionAsync();
 
             var ds = await sysConn.QueryFirstOrDefaultAsync<BiDataSource>(
                 "SELECT * FROM bi_datasources WHERE datasource_id = @DataSourceId AND is_active = 1 LIMIT 1;",
@@ -160,8 +211,7 @@ namespace SpsWebBI.Services
 
             var result = new List<ParameterWithOptionsDto>();
 
-            await using var targetConn = new MySqlConnection(targetConnInfo.ConnectionString);
-            await targetConn.OpenAsync();
+            await using DbConnection targetConn = await _connManager.OpenTargetConnectionAsync(targetConnInfo.DbType, targetConnInfo.ConnectionString);
 
             foreach (var p in parameters)
             {
@@ -211,21 +261,47 @@ namespace SpsWebBI.Services
 
         /// <summary>
         /// Kayıtlı bir veri kaynağını (bi_datasources) kendi seçili veritabanı bağlantısı (connection_id) üzerinde çalıştırır.
+        /// cache_ttl_seconds &gt; 0 ise IMemoryCache + Single-Flight kilidi ile paralel isteklerde tek SQL çalıştırır.
         /// </summary>
         public async Task<DynamicQueryResult> ExecuteDataSourceAsync(
             int datasourceId,
-            Dictionary<string, string?>? filterValues)
+            Dictionary<string, string?>? filterValues,
+            bool forceRefresh = false,
+            CancellationToken cancellationToken = default)
         {
-            await using var sysConn = new MySqlConnection(_biConnManager.GetBiConnectionString());
-            await sysConn.OpenAsync();
+            await using DbConnection sysConn = await _biConnManager.OpenBiConnectionAsync();
 
             var ds = await sysConn.QueryFirstOrDefaultAsync<BiDataSource>(
-                "SELECT * FROM bi_datasources WHERE datasource_id = @Id AND is_active = 1 LIMIT 1;",
-                new { Id = datasourceId });
+                new CommandDefinition(
+                    "SELECT * FROM bi_datasources WHERE datasource_id = @Id AND is_active = 1 LIMIT 1;",
+                    new { Id = datasourceId },
+                    cancellationToken: cancellationToken));
 
             if (ds == null)
             {
                 return new DynamicQueryResult { Success = false, Message = "SQL sorgusu bulunamadı veya pasif." };
+            }
+
+            var connPolicy = _connManager.ResolveConnectionCachePolicy(ds.connection_id);
+            int ttlSeconds = connPolicy.CacheEnabled ? Math.Clamp(ds.cache_ttl_seconds, 0, 86400) : 0;
+            int timeoutSeconds = Math.Clamp(ds.command_timeout_seconds > 0 ? ds.command_timeout_seconds : 30, 5, 300);
+            long ver = _dataSourceVersions.GetOrAdd(datasourceId, 0);
+            long gVer = Interlocked.Read(ref _globalCacheVersion);
+            string cacheKey = BuildDataSourceCacheKey(datasourceId, gVer, ver, filterValues);
+
+            if (ttlSeconds > 0 && !forceRefresh && _cache.TryGetValue(cacheKey, out DynamicQueryResult? cached) && cached != null)
+            {
+                return new DynamicQueryResult
+                {
+                    Success = cached.Success,
+                    Message = cached.Message,
+                    Columns = cached.Columns,
+                    Rows = cached.Rows,
+                    FromCache = true,
+                    CachedAtUtc = cached.CachedAtUtc,
+                    CacheTtlSeconds = ttlSeconds,
+                    ElapsedMs = 0
+                };
             }
 
             var targetConnInfo = _connManager.ResolveConnectionForQuery(ds.connection_id);
@@ -234,10 +310,158 @@ namespace SpsWebBI.Services
                 return new DynamicQueryResult { Success = false, Message = targetConnInfo.ErrorMessage };
             }
 
-            await using var targetConn = new MySqlConnection(targetConnInfo.ConnectionString);
-            await targetConn.OpenAsync();
+            RefCountedGate gate = AcquireGate(cacheKey);
+            bool acquired = false;
+            try
+            {
+                await gate.Semaphore.WaitAsync(cancellationToken);
+                acquired = true;
 
-            return await ExecuteRawSelectQueryAsync(targetConn, ds.sql_query, filterValues);
+                if (ttlSeconds > 0 && !forceRefresh && _cache.TryGetValue(cacheKey, out DynamicQueryResult? cachedAfterWait) && cachedAfterWait != null)
+                {
+                    return new DynamicQueryResult
+                    {
+                        Success = cachedAfterWait.Success,
+                        Message = cachedAfterWait.Message,
+                        Columns = cachedAfterWait.Columns,
+                        Rows = cachedAfterWait.Rows,
+                        FromCache = true,
+                        CachedAtUtc = cachedAfterWait.CachedAtUtc,
+                        CacheTtlSeconds = ttlSeconds,
+                        ElapsedMs = 0
+                    };
+                }
+
+                var sw = Stopwatch.StartNew();
+                await using DbConnection targetConn = await _connManager.OpenTargetConnectionAsync(targetConnInfo.DbType, targetConnInfo.ConnectionString);
+                var result = await ExecuteRawSelectQueryAsync(targetConn, ds.sql_query, filterValues, maxRows: null, commandTimeout: timeoutSeconds, cancellationToken: cancellationToken);
+                sw.Stop();
+
+                result.ElapsedMs = sw.ElapsedMilliseconds;
+                result.CacheTtlSeconds = ttlSeconds;
+                result.FromCache = false;
+
+                if (result.Success && ttlSeconds > 0)
+                {
+                    int effectiveMaxRows = connPolicy.MaxCacheableRows > 0
+                        ? connPolicy.MaxCacheableRows
+                        : Math.Max(0, _cacheOptions.MaxCacheableRows);
+                    long effectiveMaxEntryBytes = (connPolicy.MaxEntrySizeKB > 0
+                        ? (long)connPolicy.MaxEntrySizeKB
+                        : (long)Math.Max(0, _cacheOptions.MaxEntrySizeKB)) * 1024L;
+
+                    long estimatedBytes = EstimateResultSizeBytes(result);
+                    bool withinRowLimit = effectiveMaxRows == 0 || result.Rows.Count <= effectiveMaxRows;
+                    bool withinByteLimit = effectiveMaxEntryBytes == 0 || estimatedBytes <= effectiveMaxEntryBytes;
+
+                    if (withinRowLimit && withinByteLimit)
+                    {
+                        result.CachedAtUtc = DateTime.UtcNow;
+                        var entryOpts = new MemoryCacheEntryOptions
+                        {
+                            Size = estimatedBytes,
+                            AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(ttlSeconds)
+                        };
+                        int slidingSec = connPolicy.SlidingExpirationSeconds > 0
+                            ? connPolicy.SlidingExpirationSeconds
+                            : Math.Max(0, _cacheOptions.DefaultSlidingExpirationSeconds);
+                        if (slidingSec > 0 && slidingSec < ttlSeconds)
+                        {
+                            entryOpts.SlidingExpiration = TimeSpan.FromSeconds(slidingSec);
+                        }
+                        _cache.Set(cacheKey, result, entryOpts);
+                    }
+                }
+
+                return result;
+            }
+            finally
+            {
+                if (acquired) gate.Semaphore.Release();
+                ReleaseGate(cacheKey, gate);
+            }
+        }
+
+        private RefCountedGate AcquireGate(string key)
+        {
+            while (true)
+            {
+                var g = _inFlightLocks.GetOrAdd(key, _ => new RefCountedGate());
+                lock (g)
+                {
+                    if (g.RefCount >= 0)
+                    {
+                        g.RefCount++;
+                        return g;
+                    }
+                }
+                Thread.Yield();
+            }
+        }
+
+        private void ReleaseGate(string key, RefCountedGate g)
+        {
+            lock (g)
+            {
+                g.RefCount--;
+                if (g.RefCount == 0)
+                {
+                    g.RefCount = -1;
+                    _inFlightLocks.TryRemove(new KeyValuePair<string, RefCountedGate>(key, g));
+                }
+            }
+        }
+
+        private static long EstimateResultSizeBytes(DynamicQueryResult result)
+        {
+            long bytes = 1024 + (result.Columns.Count * 64L);
+            foreach (var row in result.Rows)
+            {
+                bytes += 64 + (row.Count * 40L);
+                foreach (var kv in row)
+                {
+                    if (kv.Value is string s)
+                    {
+                        bytes += 24 + (s.Length * 2L);
+                    }
+                    else if (kv.Value != null)
+                    {
+                        bytes += 16;
+                    }
+                }
+            }
+            return Math.Max(1024L, bytes);
+        }
+
+        private static string BuildDataSourceCacheKey(int datasourceId, long globalVersion, long version, Dictionary<string, string?>? filterValues)
+        {
+            if (filterValues == null || filterValues.Count == 0)
+            {
+                return $"ds:{datasourceId}:g{globalVersion}:v{version}:no_filters";
+            }
+
+            var normalized = filterValues
+                .Where(kv => !string.IsNullOrWhiteSpace(kv.Key))
+                .Select(kv => new KeyValuePair<string, string>(
+                    kv.Key.Trim().TrimStart('@').ToLowerInvariant(),
+                    NormalizeFilterCacheValue(kv.Value)))
+                .Where(kv => kv.Value.Length > 0)
+                .OrderBy(kv => kv.Key, StringComparer.Ordinal)
+                .Select(kv => $"{kv.Key}={kv.Value}");
+
+            string raw = string.Join("&", normalized);
+            if (raw.Length == 0) return $"ds:{datasourceId}:g{globalVersion}:v{version}:no_filters";
+
+            byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(raw));
+            return $"ds:{datasourceId}:g{globalVersion}:v{version}:{Convert.ToHexString(hash)[..16]}";
+        }
+
+        private static string NormalizeFilterCacheValue(string? val)
+        {
+            if (string.IsNullOrWhiteSpace(val)) return string.Empty;
+            string t = val.Trim();
+            if (t == "ALL" || t == "Tümü") return string.Empty;
+            return t;
         }
 
         /// <summary>
@@ -245,10 +469,12 @@ namespace SpsWebBI.Services
         /// ve C# DTO sınıfına ihtiyaç duymadan dinamik satır + kolon şeması döner.
         /// </summary>
         public async Task<DynamicQueryResult> ExecuteRawSelectQueryAsync(
-            MySqlConnection conn,
+            DbConnection conn,
             string sqlQuery,
             Dictionary<string, string?>? filterValues,
-            int? maxRows = null)
+            int? maxRows = null,
+            int commandTimeout = 30,
+            CancellationToken cancellationToken = default)
         {
             var validation = SqlSecurityValidator.ValidateSelectQuery(sqlQuery);
             if (!validation.IsValid)
@@ -302,7 +528,9 @@ namespace SpsWebBI.Services
                     }
                 }
 
-                await using var reader = await conn.ExecuteReaderAsync(effectiveSql, dynamicParams, commandTimeout: 30);
+                int safeTimeout = Math.Clamp(commandTimeout, 5, 300);
+                var cmd = new CommandDefinition(effectiveSql, dynamicParams, commandTimeout: safeTimeout, cancellationToken: cancellationToken);
+                await using var reader = await conn.ExecuteReaderAsync(cmd);
                 var rowsList = new List<Dictionary<string, object?>>();
                 var columns = new List<ColumnSchemaInfo>();
                 var seenCols = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -322,7 +550,7 @@ namespace SpsWebBI.Services
                 }
 
                 int count = 0;
-                while (await reader.ReadAsync())
+                while (await reader.ReadAsync(cancellationToken))
                 {
                     var dict = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
                     for (int i = 0; i < reader.FieldCount; i++)
@@ -343,6 +571,14 @@ namespace SpsWebBI.Services
                     Message = "Sorgu başarıyla çalıştırıldı.",
                     Columns = columns,
                     Rows = rowsList
+                };
+            }
+            catch (OperationCanceledException)
+            {
+                return new DynamicQueryResult
+                {
+                    Success = false,
+                    Message = "Sorgu isteği iptal edildi."
                 };
             }
             catch (Exception ex)

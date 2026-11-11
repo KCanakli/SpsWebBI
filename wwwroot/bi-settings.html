@@ -82,11 +82,16 @@
         .row { display: flex; gap: 12px; }
         .field { margin-bottom: 13px; flex: 1; }
         label { display: block; font-size: 0.83rem; color: var(--muted); margin-bottom: 5px; font-weight: 600; }
-        input[type="text"], input[type="number"], input[type="password"] {
+        input[type="text"], input[type="number"], input[type="password"], select.form-input {
             width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border);
             background: #0f172a; color: var(--text); font-size: 0.92rem; outline: none;
         }
-        input:focus { border-color: var(--primary); }
+        select.form-input { cursor: pointer; font-weight: 600; }
+        input:focus, select.form-input:focus { border-color: var(--primary); }
+        .sqlite-hint {
+            font-size: 0.78rem; color: var(--muted); padding: 8px 10px; border-radius: 7px;
+            border: 1px dashed var(--border); background: rgba(16, 185, 129, 0.06); margin-bottom: 12px;
+        }
         .checkbox-row {
             display: flex; align-items: center; gap: 9px; margin: 4px 0 14px 0;
             padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border); background: #0f172a;
@@ -124,6 +129,7 @@
         body.light-theme input[type="text"],
         body.light-theme input[type="number"],
         body.light-theme input[type="password"],
+        body.light-theme select.form-input,
         body.light-theme .checkbox-row { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
         body.light-theme .conn-meta { color: #1d4ed8; }
         body.light-theme .btn-test { background: #e2e8f0; color: #0f172a; }
@@ -136,6 +142,7 @@
         body.spsteks-theme input[type="text"],
         body.spsteks-theme input[type="number"],
         body.spsteks-theme input[type="password"],
+        body.spsteks-theme select.form-input,
         body.spsteks-theme .checkbox-row { background: #ffffff; color: #0c2340; border-color: #94b8db; }
         body.spsteks-theme .conn-meta { color: #0f5ea8; }
         body.spsteks-theme .btn-test { background: #d0e3f7; color: #0c2340; }
@@ -176,10 +183,21 @@
 
             <div id="statusBox" class="status-banner">BI bağlantı durumu kontrol ediliyor...</div>
 
+            <div class="field">
+                <label for="dbType">BI Sistem Veritabanı Türü (İlk Kurulumda / Aktif Çalışma Motoru Seçimi)</label>
+                <select id="dbType" class="form-input" onchange="setDbType(this.value)">
+                    <option value="MariaDB">🐬 MariaDB / MySQL — Merkezi Sunucu (Çoklu Sunucu Uyumlu)</option>
+                    <option value="SQLite">🪶 SQLite — Kurulumsuz Yerel Tek Dosya Veritabanı</option>
+                    <option value="MSSQL" disabled>🗄️ Microsoft SQL Server (Yakında Eklenecek)</option>
+                    <option value="PostgreSQL" disabled>🐘 PostgreSQL (Yakında Eklenecek)</option>
+                    <option value="Supabase" disabled>⚡ Supabase — PostgreSQL Bulut (Yakında Eklenecek)</option>
+                </select>
+            </div>
+
             <div class="row">
                 <div class="field" style="flex: 1.2;">
                     <label for="envName">Ortam İsmi</label>
-                    <input type="text" id="envName" placeholder="Örn: BI Canlı, BI Test">
+                    <input type="text" id="envName" placeholder="Örn: BI Canlı, BI Yerel">
                 </div>
                 <div class="field" style="flex: 1.8;">
                     <label for="description">Açıklama</label>
@@ -187,36 +205,48 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="field" style="flex: 2.2;">
-                    <label for="server">Sunucu Adresi (IP / Host)</label>
-                    <input type="text" id="server" placeholder="127.0.0.1" value="127.0.0.1">
+            <div id="mariadbFieldsGroup">
+                <div class="row">
+                    <div class="field" style="flex: 2.2;">
+                        <label for="server">Sunucu Adresi (IP / Host)</label>
+                        <input type="text" id="server" placeholder="127.0.0.1" value="127.0.0.1">
+                    </div>
+                    <div class="field" style="flex: 1;">
+                        <label for="port">Port</label>
+                        <input type="number" id="port" placeholder="3323" value="3323">
+                    </div>
                 </div>
-                <div class="field" style="flex: 1;">
-                    <label for="port">Port</label>
-                    <input type="number" id="port" placeholder="3323" value="3323">
+
+                <div class="field">
+                    <label for="database">Veritabanı Adı (Şema)</label>
+                    <input type="text" id="database" placeholder="bi_db" value="bi_db">
+                </div>
+
+                <div class="row">
+                    <div class="field">
+                        <label for="userId">Kullanıcı Adı</label>
+                        <input type="text" id="userId" placeholder="root" value="root">
+                    </div>
+                    <div class="field">
+                        <label for="password">Veritabanı Şifresi <span id="pwdHint" style="font-weight:normal;font-size:0.78rem;color:#6ee7b7;"></span></label>
+                        <input type="password" id="password" placeholder="Değiştirmek için yeni şifre girin">
+                    </div>
                 </div>
             </div>
 
-            <div class="field">
-                <label for="database">Veritabanı Adı (Şema)</label>
-                <input type="text" id="database" placeholder="spsteks" value="spsteks">
-            </div>
-
-            <div class="row">
+            <div id="sqliteFieldsGroup" style="display:none;">
                 <div class="field">
-                    <label for="userId">Kullanıcı Adı</label>
-                    <input type="text" id="userId" placeholder="root" value="root">
+                    <label for="sqliteFilePath">SQLite Veritabanı Dosya Yolu</label>
+                    <input type="text" id="sqliteFilePath" placeholder="App_Data/sps_bi.db" value="App_Data/sps_bi.db">
                 </div>
-                <div class="field">
-                    <label for="password">Veritabanı Şifresi <span id="pwdHint" style="font-weight:normal;font-size:0.78rem;color:#6ee7b7;"></span></label>
-                    <input type="password" id="password" placeholder="Değiştirmek için yeni şifre girin">
+                <div class="sqlite-hint">
+                    ℹ️ <strong>Kurulumsuz Çalışma:</strong> Dosya mevcut değilse kaydettiğiniz anda otomatik oluşturulur ve tüm <code>bi_*</code> tabloları WAL (eşzamanlı hızlı) modda kurulur. Varsayılan giriş: <code>admin / Admin123!</code>
                 </div>
             </div>
 
             <label class="checkbox-row" for="isActive">
                 <input type="checkbox" id="isActive" checked>
-                <span>Bağlantı Aktif (BI sistem tabloları bu bağlantı üzerinde çalışır)</span>
+                <span>Bağlantı Aktif (BI sistem tabloları bundan sonra seçilen bu motor üzerinden çalışır)</span>
             </label>
 
             <div class="field" id="adminAuthField" style="display:none;">
@@ -236,6 +266,13 @@
         let allConnections = [];
         let selectedConnId = null;
 
+        function setDbType(type) {
+            const normalized = (String(type || '').toLowerCase() === 'sqlite') ? 'SQLite' : 'MariaDB';
+            document.getElementById('dbType').value = normalized;
+            document.getElementById('mariadbFieldsGroup').style.display = normalized === 'MariaDB' ? 'block' : 'none';
+            document.getElementById('sqliteFieldsGroup').style.display = normalized === 'SQLite' ? 'block' : 'none';
+        }
+
         function escapeHtml(str) {
             return String(str ?? '')
                 .replace(/&/g, '&amp;')
@@ -248,20 +285,24 @@
             const wrap = document.getElementById('connListContainer');
             if (!wrap) return;
             if (!allConnections || allConnections.length === 0) {
-                wrap.innerHTML = '<div style="color:var(--muted);font-size:0.85rem;">Henüz kayıtlı BI bağlantısı yok.</div>';
+                wrap.innerHTML = '<div style="color:var(--muted);font-size:0.85rem;">Henüz kayıtlı BI bağlantısı yok. Sağ taraftan <strong>MariaDB</strong> veya <strong>SQLite</strong> seçerek ilk kurulumu yapabilirsiniz.</div>';
                 return;
             }
 
             wrap.innerHTML = allConnections.map(c => {
                 const isSel = c.id === selectedConnId;
                 const isAct = !!c.isActive;
+                const isSqlite = (c.dbType || '').toLowerCase() === 'sqlite';
+                const metaText = isSqlite
+                    ? `🪶 SQLite • ${escapeHtml(c.sqliteFilePath || 'App_Data/sps_bi.db')}`
+                    : `🐬 MariaDB • ${escapeHtml(c.server || '127.0.0.1')}:${escapeHtml(c.port || 3323)} / ${escapeHtml(c.database || '')}`;
                 return `
                     <div class="conn-item ${isSel ? 'selected' : ''}" onclick="selectConnection('${escapeHtml(c.id)}')">
                         <div class="conn-item-top">
                             <span class="conn-name">${escapeHtml(c.environmentName || 'BI Bağlantı')}</span>
                             <span class="conn-badge ${isAct ? 'badge-active' : 'badge-passive'}">${isAct ? 'Aktif' : 'Pasif'}</span>
                         </div>
-                        <div class="conn-meta">${escapeHtml(c.server || '127.0.0.1')}:${escapeHtml(c.port || 3323)} / ${escapeHtml(c.database || '')}</div>
+                        <div class="conn-meta">${metaText}</div>
                         ${c.description ? `<div class="conn-desc">${escapeHtml(c.description)}</div>` : ''}
                     </div>`;
             }).join('');
@@ -271,13 +312,15 @@
             const c = allConnections.find(x => x.id === id);
             if (!c) return;
             selectedConnId = c.id;
+            setDbType(c.dbType || 'MariaDB');
             document.getElementById('envName').value = c.environmentName || '';
             document.getElementById('description').value = c.description || '';
             document.getElementById('server').value = c.server || '127.0.0.1';
             document.getElementById('port').value = c.port || 3323;
-            document.getElementById('database').value = c.database || 'spsteks';
+            document.getElementById('database').value = c.database || 'bi_db';
             document.getElementById('userId').value = c.userId || 'root';
             document.getElementById('password').value = '';
+            document.getElementById('sqliteFilePath').value = c.sqliteFilePath || 'App_Data/sps_bi.db';
             document.getElementById('isActive').checked = !!c.isActive;
             document.getElementById('pwdHint').textContent = c.hasSavedPassword ? '(Kayıtlı şifre var)' : '';
             const btnDel = document.getElementById('btnDeleteConn');
@@ -287,14 +330,16 @@
 
         function createNewConnectionForm() {
             selectedConnId = null;
+            setDbType('MariaDB');
             document.getElementById('envName').value = '';
             document.getElementById('description').value = '';
             document.getElementById('server').value = '127.0.0.1';
             document.getElementById('port').value = 3323;
-            document.getElementById('database').value = 'spsteks';
+            document.getElementById('database').value = 'bi_db';
             document.getElementById('userId').value = 'root';
             document.getElementById('password').value = '';
-            document.getElementById('isActive').checked = false;
+            document.getElementById('sqliteFilePath').value = 'App_Data/sps_bi.db';
+            document.getElementById('isActive').checked = (allConnections.length === 0);
             document.getElementById('pwdHint').textContent = '';
             const btnDel = document.getElementById('btnDeleteConn');
             if (btnDel) btnDel.style.display = 'none';
@@ -352,7 +397,7 @@
                 } else if (allConnections.length > 0) {
                     selectConnection(allConnections[0].id);
                 } else {
-                    renderConnectionsList();
+                    createNewConnectionForm();
                 }
             } catch (e) {
                 box.className = 'status-banner status-err';
@@ -361,8 +406,11 @@
         }
 
         function getPayload() {
+            const dbType = document.getElementById('dbType').value || 'MariaDB';
             return {
                 id: selectedConnId,
+                dbType: dbType,
+                sqliteFilePath: document.getElementById('sqliteFilePath').value.trim(),
                 environmentName: document.getElementById('envName').value.trim(),
                 description: document.getElementById('description').value.trim(),
                 isActive: document.getElementById('isActive').checked,
@@ -411,7 +459,6 @@
                     if (data.savedId) selectedConnId = data.savedId;
                     if (data.connections) allConnections = data.connections;
                     document.getElementById('password').value = '';
-                    document.getElementById('pwdHint').textContent = '(Kayıtlı şifre var)';
                     selectConnection(selectedConnId);
                 }
             } catch (err) {
@@ -434,8 +481,11 @@
             box.textContent = 'Bağlantı siliniyor...';
 
             try {
+                const adminPwd = document.getElementById('adminPassword') ? document.getElementById('adminPassword').value : '';
                 const res = await fetch(`/api/bi-settings/delete/${encodeURIComponent(selectedConnId)}`, {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ adminPassword: adminPwd })
                 });
                 const data = await res.json();
                 box.className = 'status-banner ' + (data.success ? 'status-ok' : 'status-err');

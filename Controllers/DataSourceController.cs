@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Security.Claims;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
@@ -16,6 +18,7 @@ namespace SpsWebBI.Controllers
     public class ExecuteQueryRequest
     {
         public Dictionary<string, string?>? Filters { get; set; }
+        public bool ForceRefresh { get; set; } = false;
     }
 
     public class PreviewSqlRequest
@@ -33,6 +36,8 @@ namespace SpsWebBI.Controllers
         public string Name { get; set; } = string.Empty;
         public string? Category { get; set; }
         public string SqlQuery { get; set; } = string.Empty;
+        public int CacheTtlSeconds { get; set; } = 0;
+        public int CommandTimeoutSeconds { get; set; } = 30;
         public bool IsActive { get; set; } = true;
         public List<BiDataSourceParam>? Parameters { get; set; }
     }
@@ -99,14 +104,21 @@ namespace SpsWebBI.Controllers
         /// Seçilen datasource'un SQL sorgusunu kullanıcının girdiği filtre parametreleriyle çalıştırır.
         /// </summary>
         [HttpPost("{datasourceId:int}/execute")]
-        public async Task<IActionResult> ExecuteDataSource(int datasourceId, [FromBody] ExecuteQueryRequest? request)
+        public async Task<IActionResult> ExecuteDataSource(
+            int datasourceId,
+            [FromBody] ExecuteQueryRequest? request,
+            CancellationToken cancellationToken)
         {
             if (!await _queryService.IsUserAuthorizedForDataSourceAsync(CurrentUserId, CurrentUserRole, datasourceId))
             {
                 return Forbid();
             }
 
-            var result = await _queryService.ExecuteDataSourceAsync(datasourceId, request?.Filters);
+            var result = await _queryService.ExecuteDataSourceAsync(
+                datasourceId,
+                request?.Filters,
+                request?.ForceRefresh == true,
+                cancellationToken);
             if (!result.Success)
             {
                 return BadRequest(new { success = false, message = result.Message });
@@ -117,7 +129,11 @@ namespace SpsWebBI.Controllers
                 success = true,
                 columns = result.Columns,
                 rows = result.Rows,
-                totalRowCount = result.TotalRowCount
+                totalRowCount = result.TotalRowCount,
+                fromCache = result.FromCache,
+                cachedAtUtc = result.CachedAtUtc,
+                cacheTtlSeconds = result.CacheTtlSeconds,
+                elapsedMs = result.ElapsedMs
             });
         }
 
@@ -147,8 +163,7 @@ namespace SpsWebBI.Controllers
                 return BadRequest(new { success = false, message = targetConnInfo.ErrorMessage, extractedParameters = extractedParams });
             }
 
-            await using var targetConn = new MySqlConnection(targetConnInfo.ConnectionString);
-            await targetConn.OpenAsync();
+            await using DbConnection targetConn = await _connManager.OpenTargetConnectionAsync(targetConnInfo.DbType, targetConnInfo.ConnectionString);
 
             var result = await _queryService.ExecuteRawSelectQueryAsync(targetConn, request.SqlQuery, request.SampleFilters, maxRows: 100);
             if (!result.Success)
@@ -192,8 +207,7 @@ namespace SpsWebBI.Controllers
 
             if (targetConnInfo.IsUsable)
             {
-                await using var targetConn = new MySqlConnection(targetConnInfo.ConnectionString);
-                await targetConn.OpenAsync();
+                await using DbConnection targetConn = await _connManager.OpenTargetConnectionAsync(targetConnInfo.DbType, targetConnInfo.ConnectionString);
 
                 // Şemayı seçili hedef veritabanı bağlantısı üzerinden otomatik çıkar
                 var testExec = await _queryService.ExecuteRawSelectQueryAsync(targetConn, request.SqlQuery, null, maxRows: 5);
@@ -211,8 +225,7 @@ namespace SpsWebBI.Controllers
                 return BadRequest(new { success = false, message = targetConnInfo.ErrorMessage });
             }
 
-            await using var sysConn = new MySqlConnection(_biConnManager.GetBiConnectionString());
-            await sysConn.OpenAsync();
+            await using DbConnection sysConn = await _biConnManager.OpenBiConnectionAsync();
 
             int dsId = request.DataSourceId ?? 0;
             string schemaJson = JsonSerializer.Serialize(detectedCols);
@@ -225,6 +238,9 @@ namespace SpsWebBI.Controllers
                 }
             }
 
+            int cacheTtl = Math.Clamp(request.CacheTtlSeconds, 0, 86400);
+            int cmdTimeout = Math.Clamp(request.CommandTimeoutSeconds > 0 ? request.CommandTimeoutSeconds : 30, 5, 300);
+
             if (dsId > 0)
             {
                 await sysConn.ExecuteAsync(@"
@@ -235,8 +251,10 @@ namespace SpsWebBI.Controllers
                            connection_id = @ConnectionId,
                            sql_query = @SqlQuery,
                            columns_schema_json = @SchemaJson,
+                           cache_ttl_seconds = @CacheTtlSeconds,
+                           command_timeout_seconds = @CommandTimeoutSeconds,
                            is_active = @IsActive,
-                           updated_at = NOW()
+                           updated_at = @UpdatedAt
                      WHERE datasource_id = @Id;",
                     new
                     {
@@ -247,15 +265,18 @@ namespace SpsWebBI.Controllers
                         ConnectionId = string.IsNullOrWhiteSpace(request.ConnectionId) ? null : request.ConnectionId.Trim(),
                         SqlQuery = request.SqlQuery,
                         SchemaJson = schemaJson,
-                        IsActive = request.IsActive
+                        CacheTtlSeconds = cacheTtl,
+                        CommandTimeoutSeconds = cmdTimeout,
+                        IsActive = request.IsActive ? 1 : 0,
+                        UpdatedAt = DateTime.Now
                     });
             }
             else
             {
-                dsId = await sysConn.ExecuteScalarAsync<int>(@"
-                    INSERT INTO bi_datasources (code, name, category, connection_id, sql_query, columns_schema_json, is_active)
-                    VALUES (@Code, @Name, @Category, @ConnectionId, @SqlQuery, @SchemaJson, @IsActive);
-                    SELECT LAST_INSERT_ID();",
+                dsId = await sysConn.ExecuteScalarAsync<int>($@"
+                    INSERT INTO bi_datasources (code, name, category, connection_id, sql_query, columns_schema_json, cache_ttl_seconds, command_timeout_seconds, is_active)
+                    VALUES (@Code, @Name, @Category, @ConnectionId, @SqlQuery, @SchemaJson, @CacheTtlSeconds, @CommandTimeoutSeconds, @IsActive);
+                    {_biConnManager.LastInsertIdSql}",
                     new
                     {
                         Code = request.Code.Trim(),
@@ -264,7 +285,9 @@ namespace SpsWebBI.Controllers
                         ConnectionId = string.IsNullOrWhiteSpace(request.ConnectionId) ? null : request.ConnectionId.Trim(),
                         SqlQuery = request.SqlQuery,
                         SchemaJson = schemaJson,
-                        IsActive = request.IsActive
+                        CacheTtlSeconds = cacheTtl,
+                        CommandTimeoutSeconds = cmdTimeout,
+                        IsActive = request.IsActive ? 1 : 0
                     });
             }
 
@@ -291,6 +314,8 @@ namespace SpsWebBI.Controllers
                 }
             }
 
+            _queryService.InvalidateDataSourceCache(dsId);
+
             return Ok(new
             {
                 success = true,
@@ -316,20 +341,21 @@ namespace SpsWebBI.Controllers
                 return BadRequest(new { success = false, message = "Geçersiz veri kaynağı seçimi." });
             }
 
-            await using var conn = new MySqlConnection(_biConnManager.GetBiConnectionString());
-            await conn.OpenAsync();
+            await using DbConnection conn = await _biConnManager.OpenBiConnectionAsync();
 
             int affected = await conn.ExecuteAsync(@"
                 UPDATE bi_datasources
                    SET is_active = 0,
-                       updated_at = NOW()
+                       updated_at = @UpdatedAt
                  WHERE datasource_id = @Id;",
-                new { Id = datasourceId });
+                new { Id = datasourceId, UpdatedAt = DateTime.Now });
 
             if (affected <= 0)
             {
                 return NotFound(new { success = false, message = "Veri kaynağı bulunamadı." });
             }
+
+            _queryService.InvalidateDataSourceCache(datasourceId);
 
             return Ok(new
             {

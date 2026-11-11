@@ -1,6 +1,6 @@
 # SpsWebBI - Geliştirme Durumu ve Mimari Hafıza
 
-**Son Güncelleme:** 2026-11-10
+**Son Güncelleme:** 2026-11-11
 **Proje Yolu:** `c:\Projeler\SpsWebBI`
 
 ---
@@ -206,6 +206,47 @@
 - Tüm yeni dosyalar (`BiSettingsController.cs`, `BiDbConnectionManager.cs`, `appsettings.bi.json`, `bi-settings.html`, `img/charts/` ve güncellenen frontend/backend dosyaları) sahnelendi.
 - `c669c6b` commit hash'i ile `feat: BI ve Veri Kaynagi ayarlarinin ayrilmasi, 39 alt grafik gorsel galeri paneli ve kalici hafiza entegrasyonu` başlığıyla kaydedildi.
 - `https://github.com/KCanakli/SpsWebBI.git` deposundaki `master` dalına başarıyla push edildi.
+
+---
+
+### [x] Adım 20: Çoklu Veritabanı Motoru Desteği (`MariaDB`, `SQLite`, `MSSQL`, `PostgreSQL`, `Supabase`) (2026-11-11)
+- **Sürücü ve Paket Entegrasyonu (`SpsWebBI.csproj`):**
+  - `Microsoft.Data.SqlClient`, `Microsoft.Data.Sqlite` ve `Npgsql` paketleri projeye eklendi.
+- **BI ve İşletme Bağlantı Yöneticileri (`Services/BiDbConnectionManager.cs`, `Services/DbConnectionManager.cs`, `Security/ConnectionProtector.cs`):**
+  - Hem BI meta veritabanı (`appsettings.bi.json`, varsayılan `App_Data/sps_bi.db` SQLite destekli) hem de işletme veri kaynakları (`appsettings.json`) için `MariaDB`, `SQLite`, `MSSQL`, `PostgreSQL` ve `Supabase` bağlantı profilleri, şifreleme (`ENC:...`) ve bağlantı testi desteği eklendi.
+- **Çoklu Motor Şema & Sorgu Uyumu (`Data/DatabaseInitializer.cs`, `Services/DynamicQueryService.cs`, `Services/AuthService.cs`):**
+  - `bi_*` sistem tabloları ve şema göçleri SQLite ve MariaDB uyumlu hale getirildi; dinamik sorgulama katmanı bağlantı tipine göre uygun `DbConnection` nesnesini üretecek şekilde güncellendi.
+  - `/bi-settings` (`wwwroot/bi-settings.html`) ve `/db-settings` (`wwwroot/db-settings.html`) ekranlarına veritabanı tipi seçimi ve SQLite dosya yolu alanları eklendi.
+
+---
+
+### [x] Adım 21: Genişletilebilir Yatay Tuval Modu (`dashCanvasMode`) ve Sağ Tık `Kopyala` İyileştirmesi (2026-11-11)
+- **Sabit vs Genişletilebilir Tuval (`wwwroot/designer.html`, `wwwroot/app.html`):**
+  - Dashboard düzeni için `Sabit 12 Kolon` (`fixed`) ve `Genişletilebilir` (`expandable`, 48 kolona kadar dinamik yatay büyüme) modu eklendi; tasarım tuvali ile Viewer ekranı arasında tam senkronize edildi.
+- **Sağ Tık `📋 Kopyala` Yerleşimi (`wwwroot/designer.html`):**
+  - Tasarım Stüdyosu'nda bir bileşen sağ tıklanıp `📋 Kopyala` seçildiğinde, kopyalanan bileşenin doğrudan aynı satırda kaynak bileşenin sağındaki ilk uygun alana yerleşmesi (`findRightAdjacentSlot`) sağlandı.
+
+---
+
+### [x] Adım 22: Parametrik `IMemoryCache`, `Single-Flight` Koruması ve Sunucu Bazlı RAM Limitleri (2026-11-11)
+- **Sorgu TTL ve Zaman Aşımı (`Models/BiSystemModels.cs`, `Data/DatabaseInitializer.cs`, `wwwroot/designer.html`):**
+  - `bi_datasources` tablosuna `cache_ttl_seconds` ve `command_timeout_seconds` alanları (SQLite + MariaDB otomatik migrasyonu ve `#dsFormSection` / veri kaynağı grid kolonları) eklendi.
+- **Global RAM Koruması ve `Single-Flight` (`appsettings.json`, `Program.cs`, `Services/DynamicQueryService.cs`, `Controllers/DataSourceController.cs`, `Controllers/AdminController.cs`):**
+  - `appsettings.json` içindeki `QueryCache` (`SizeLimitMB`, `MaxCacheableRows`, `MaxEntrySizeKB`, `DefaultSlidingExpirationSeconds`, `CompactionPercentage`) değerleriyle `IMemoryCache` bellek üst sınırı parametrik hale getirildi.
+  - Aynı parametrelerle eşzamanlı gelen isteklerde veritabanını tek sorguya düşüren referans sayımlı `Single-Flight` kilitleme, `forceRefresh` ile canlı yenileme ve sorgu iptal/zaman aşımı (`CancellationToken` + `AbortController`) eklendi.
+- **Sunucu Bazlı Önbellek Kuralları ve Arayüz İyileştirmesi (`wwwroot/db-settings.html`, `Services/DbConnectionManager.cs`, `Controllers/DbSettingsController.cs`):**
+  - Her bağlantı profili için bağımsız `CacheEnabled`, `MaxCacheableRows`, `MaxEntrySizeKB` ve `SlidingExpirationSeconds` ayarları eklendi (`0` girilen alanlarda `appsettings.json` varsayılanı uygulanır).
+  - İlgili başlık ve etiketlere 💡 ampul açıklamaları (hover tooltip) eklendi; `(KB)` ve `(sn)` birimleri giriş kutularının yanına hizalanıp sayısal artırma/azaltma okları (`spin button`) kaldırıldı.
+
+---
+
+### [x] Adım 23: Grafik ve KPI Panellerinde İç Kaydırma Çubuğu Düzeltmesi (`ResizeObserver`) (2026-11-11)
+- **CSS Taşma ve Grid Sınırlandırması (`wwwroot/designer.html`, `wwwroot/app.html`):**
+  - `.widget-card` elemanlarına `min-width: 0; min-height: 0;` eklendi; `.widget-body` varsayılan olarak `display: flex; flex-direction: column; overflow: hidden;` durumuna getirildi (tablo ve pivot için `.widget-body.table-scroll` korundu).
+  - `.kpi-box`, `.kpi-meta` ve `.kpi-val` sınıflarında taşma `overflow: hidden; text-overflow: ellipsis;` ile kontrol altına alındı.
+- **Otomatik Boyut Senkronizasyonu (`createManagedChart`, `ensureChartResizeObserver`, `disposeAllCharts`):**
+  - Tüm ECharts konteynerleri paylaşılan `ResizeObserver` ve çizim sonrası `requestAnimationFrame` üzerinden `chart.resize()` ile senkronize edildi; yeniden çizimlerde `disconnect()` ile bellek sızıntısı önlendi.
+
 
 
 
