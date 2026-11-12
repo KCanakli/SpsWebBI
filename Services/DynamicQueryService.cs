@@ -135,7 +135,8 @@ namespace SpsWebBI.Services
                        ud.slide_duration_seconds,
                        ud.can_edit_layout,
                        COALESCE(NULLIF(ud.custom_layout_json, ''), d.layout_json) AS effective_layout_json,
-                       CASE WHEN ud.custom_layout_json IS NOT NULL AND ud.custom_layout_json <> '' THEN 1 ELSE 0 END AS has_custom_layout
+                       CASE WHEN ud.custom_layout_json IS NOT NULL AND ud.custom_layout_json <> '' THEN 1 ELSE 0 END AS has_custom_layout,
+                       ud.last_params_json
                   FROM bi_user_dashboards ud
                   INNER JOIN bi_dashboards d ON d.dashboard_id = ud.dashboard_id AND d.is_active = 1
                   LEFT JOIN bi_datasources ds ON ds.datasource_id = d.primary_datasource_id
@@ -185,6 +186,14 @@ namespace SpsWebBI.Services
         /// <summary>
         /// Seçilen veri kaynağına ait filtre parametrelerini ve (varsa) açılır kutu seçeneklerini (lookup_sql) getirir.
         /// </summary>
+        public async Task<string?> GetDataSourceNameAsync(int datasourceId)
+        {
+            await using DbConnection sysConn = await _biConnManager.OpenBiConnectionAsync();
+            return await sysConn.ExecuteScalarAsync<string?>(
+                "SELECT name FROM bi_datasources WHERE datasource_id = @DataSourceId LIMIT 1;",
+                new { DataSourceId = datasourceId });
+        }
+
         public async Task<List<ParameterWithOptionsDto>> GetDataSourceParametersAsync(int datasourceId)
         {
             await using DbConnection sysConn = await _biConnManager.OpenBiConnectionAsync();

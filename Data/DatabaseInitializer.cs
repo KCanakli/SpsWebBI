@@ -148,10 +148,13 @@ namespace SpsWebBI.Data
                     refresh_seconds INTEGER NOT NULL DEFAULT 60,
                     slide_duration_seconds INTEGER NOT NULL DEFAULT 30,
                     custom_layout_json TEXT NULL,
+                    last_params_json TEXT NULL,
                     UNIQUE (user_id, dashboard_id),
                     FOREIGN KEY (user_id) REFERENCES bi_users(user_id) ON DELETE CASCADE,
                     FOREIGN KEY (dashboard_id) REFERENCES bi_dashboards(dashboard_id) ON DELETE CASCADE
                 );");
+
+            await EnsureSqliteColumnAsync(connection, "bi_user_dashboards", "last_params_json", "TEXT NULL");
 
             // 6. Siber Güvenlik Denetim (Audit) Tablosu
             await connection.ExecuteAsync(@"
@@ -245,10 +248,13 @@ namespace SpsWebBI.Data
                     refresh_seconds INT NOT NULL DEFAULT 60,
                     slide_duration_seconds INT NOT NULL DEFAULT 30,
                     custom_layout_json LONGTEXT NULL,
+                    last_params_json LONGTEXT NULL,
                     UNIQUE KEY uk_user_dash (user_id, dashboard_id),
                     CONSTRAINT fk_ud_user FOREIGN KEY (user_id) REFERENCES bi_users(user_id) ON DELETE CASCADE,
                     CONSTRAINT fk_ud_dash FOREIGN KEY (dashboard_id) REFERENCES bi_dashboards(dashboard_id) ON DELETE CASCADE
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+
+            await EnsureMariaDbColumnAsync(connection, "bi_user_dashboards", "last_params_json", "LONGTEXT NULL AFTER custom_layout_json");
 
             // 6. Siber Güvenlik Denetim (Audit) Tablosu
             await connection.ExecuteAsync(@"

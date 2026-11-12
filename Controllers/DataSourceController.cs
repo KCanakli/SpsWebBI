@@ -93,9 +93,11 @@ namespace SpsWebBI.Controllers
             }
 
             var parameters = await _queryService.GetDataSourceParametersAsync(datasourceId);
+            var datasourceName = await _queryService.GetDataSourceNameAsync(datasourceId);
             return Ok(new
             {
                 success = true,
+                datasourceName = datasourceName ?? $"Veri Kaynağı #{datasourceId}",
                 parameters
             });
         }

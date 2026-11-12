@@ -239,5 +239,44 @@ namespace SpsWebBI.Controllers
                 message = "Dashboard pasif hale getirildi."
             });
         }
+
+        /// <summary>
+        /// Kullanıcının ilgili dashboard için en son uyguladığı parametre değerlerini bi_user_dashboards.last_params_json alanına kaydeder.
+        /// </summary>
+        [HttpPost("{dashboardId:int}/user-params")]
+        public async Task<IActionResult> SaveUserLastParams(int dashboardId, [FromBody] SaveParamsRequest request)
+        {
+            if (CurrentUserId <= 0) return Unauthorized();
+
+            await using DbConnection conn = await _biConnManager.OpenBiConnectionAsync();
+            var canView = await conn.ExecuteScalarAsync<int?>(@"
+                SELECT can_view
+                  FROM bi_user_dashboards
+                 WHERE user_id = @UserId AND dashboard_id = @DashId LIMIT 1;",
+                new { UserId = CurrentUserId, DashId = dashboardId });
+
+            if (canView != 1)
+            {
+                return Forbid();
+            }
+
+            await conn.ExecuteAsync(@"
+                UPDATE bi_user_dashboards
+                   SET last_params_json = @ParamsJson
+                 WHERE user_id = @UserId AND dashboard_id = @DashId;",
+                new
+                {
+                    ParamsJson = request?.ParamsJson,
+                    UserId = CurrentUserId,
+                    DashId = dashboardId
+                });
+
+            return Ok(new { success = true });
+        }
+    }
+
+    public class SaveParamsRequest
+    {
+        public string? ParamsJson { get; set; }
     }
 }

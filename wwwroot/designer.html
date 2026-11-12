@@ -517,19 +517,45 @@
         }
 
         .ctx-menu-header {
-            padding: 5px 8px 6px 8px;
-            font-size: 0.68rem;
+            padding: 6px 8px 7px 8px;
+            font-size: 0.7rem;
             font-weight: 800;
-            color: var(--muted);
+            color: var(--text);
             border-bottom: 1px solid var(--border);
             margin-bottom: 3px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .ctx-menu-header-top {
+            display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 6px;
+        }
+
+        .ctx-menu-sub {
+            font-size: 0.63rem;
+            font-weight: 500;
+            color: var(--muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .widget-card.ctx-active-card {
+            border-color: #38bdf8 !important;
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.65), 0 0 26px rgba(56, 189, 248, 0.25) !important;
+            z-index: 25;
+        }
+
+        .widget-card.ctx-active-card .widget-header {
+            background: rgba(14, 165, 233, 0.18) !important;
+            border-bottom-color: rgba(56, 189, 248, 0.35) !important;
         }
 
         .ctx-menu-item {
@@ -3206,7 +3232,7 @@
         }
 
         // 2 BOYUTLU (X, Y) KOORDİNAT VE ÇAKIŞMA ÇÖZÜM MOTORU
-        function ensureAndCompactLayout(widgets, pinnedWidgetId = null) {
+        function ensureAndCompactLayout(widgets, pinnedWidgetId = null, preferShiftRight = false) {
             if (!Array.isArray(widgets) || widgets.length === 0) return;
 
             const maxMicroCols = getMaxMicroCols();
@@ -3224,7 +3250,7 @@
                 }
             }
 
-            // 2. Koordinatı olan diğer bileşenleri yukarıdan aşağıya sırala
+            // 2. Koordinatı olan diğer bileşenleri yukarıdan aşağıya, soldan sağa sırala
             const withCoords = widgets
                 .filter(w => w.id !== pinnedWidgetId && typeof w.col === 'number' && typeof w.row === 'number')
                 .sort((a, b) => (a.row - b.row) || (a.col - b.col));
@@ -3232,10 +3258,18 @@
             withCoords.forEach(w => {
                 const { gridSpan120, rowSpan } = calcWidgetGridMetrics(w);
                 const c = Math.max(0, Math.min(maxMicroCols - gridSpan120, Math.round(w.col)));
-                let r = Math.max(0, Math.round(w.row));
+                const r = Math.max(0, Math.round(w.row));
                 const box = { id: w.id, ref: w, col: c, row: r, wSpan: gridSpan120, hSpan: rowSpan };
-                while (placed.some(p => boxesOverlap(box, p))) {
-                    box.row++;
+                let blocker = placed.find(p => boxesOverlap(box, p));
+                while (blocker) {
+                    const nextRightCol = blocker.col + blocker.wSpan;
+                    if (preferShiftRight && nextRightCol + box.wSpan <= maxMicroCols) {
+                        box.col = nextRightCol;
+                    } else {
+                        box.col = c;
+                        box.row++;
+                    }
+                    blocker = placed.find(p => boxesOverlap(box, p));
                 }
                 w.col = box.col;
                 w.row = box.row;
@@ -3257,25 +3291,27 @@
                 placed.push({ id: w.id, ref: w, col: w.col, row: w.row, wSpan: gridSpan120, hSpan: rowSpan });
             });
 
-            // 4. Dikey Yerçekimi (Her bileşeni kendi X sütun şeridinde üstteki bileşenin altına yasla)
-            placed.sort((a, b) => (a.row - b.row) || (a.col - b.col));
-            placed.forEach(box => {
-                let targetRow = 0;
-                for (const other of placed) {
-                    if (other.id === box.id) continue;
-                    const horizOverlap = box.col < other.col + other.wSpan && box.col + box.wSpan > other.col;
-                    if (horizOverlap && other.row + other.hSpan <= box.row) {
-                        if (other.row + other.hSpan > targetRow) {
-                            targetRow = other.row + other.hSpan;
+            // 4. Dikey Yerçekimi (Sürükle-bırak sağa kaydırma sırasında üst satıra zıplamayı önlemek için atlanır)
+            if (!preferShiftRight) {
+                placed.sort((a, b) => (a.row - b.row) || (a.col - b.col));
+                placed.forEach(box => {
+                    let targetRow = 0;
+                    for (const other of placed) {
+                        if (other.id === box.id) continue;
+                        const horizOverlap = box.col < other.col + other.wSpan && box.col + box.wSpan > other.col;
+                        if (horizOverlap && other.row + other.hSpan <= box.row) {
+                            if (other.row + other.hSpan > targetRow) {
+                                targetRow = other.row + other.hSpan;
+                            }
                         }
                     }
-                }
-                const testBox = { ...box, row: targetRow };
-                if (!placed.some(p => p.id !== box.id && boxesOverlap(testBox, p))) {
-                    box.row = targetRow;
-                    box.ref.row = targetRow;
-                }
-            });
+                    const testBox = { ...box, row: targetRow };
+                    if (!placed.some(p => p.id !== box.id && boxesOverlap(testBox, p))) {
+                        box.row = targetRow;
+                        box.ref.row = targetRow;
+                    }
+                });
+            }
         }
 
         function isLightTheme() {
@@ -6175,6 +6211,8 @@
             headerEl.addEventListener('mousedown', e => {
                 if (e.button !== 0 || e.target.closest('button')) return;
                 e.preventDefault();
+                clearCtxWidgetHighlight();
+                cardEl.classList.add('ctx-active-card');
                 selectWidget(widgetObj.id);
 
                 const canvasEl = document.getElementById('designerCanvas');
@@ -6275,12 +6313,13 @@
                 function onMouseUp() {
                     window.removeEventListener('mousemove', onMouseMove);
                     window.removeEventListener('mouseup', onMouseUp);
+                    cardEl.classList.remove('ctx-active-card');
                     if (isDragging) {
                         cardEl.classList.remove('dragging-card');
                         if (previewEl) previewEl.remove();
                         widgetObj.col = targetCol;
                         widgetObj.row = targetRow;
-                        ensureAndCompactLayout(designerLayout.widgets, widgetObj.id);
+                        ensureAndCompactLayout(designerLayout.widgets, widgetObj.id, true);
                         renderDesignerCanvas();
                         updateStatusBar();
                     }
@@ -6301,15 +6340,47 @@
             renderDesignerCanvas();
         }
 
+        function getWidgetTypeDisplay(type) {
+            const map = {
+                bar: '📊 Sütun', stackedBar: '📚 Yığılmış Sütun', horizontalBar: '📉 Yatay Sütun',
+                line: '📈 Çizgi', area: '⛰️ Alan', pie: '🥧 Pasta', donut: '🍩 Halka',
+                gauge: '🎯 İbre', treemap: '🟩 Treemap', sunburst: '☀️ Sunburst',
+                sankey: '🔀 Sankey', funnel: '🌪️ Huni', radar: '🕸️ Radar',
+                scatter: '🫧 Dağılım', heatmap: '🔥 Isı Haritası', kpi: '🔢 KPI',
+                pivot: '🧮 Pivot', table: '📋 Tablo'
+            };
+            return map[type] || '📊 Grafik';
+        }
+
+        function getWidgetCtxSummaryText(w) {
+            const metrics = getWidgetMetrics(w);
+            const valField = (metrics[0] && metrics[0].field) || w.valueField || '';
+            const hierarchy = getWidgetHierarchy(w);
+            const dimField = hierarchy[0] || w.dimension || '';
+            const parts = [];
+            if (dimField) parts.push(dimField);
+            if (valField) parts.push(valField);
+            return `${getWidgetTypeDisplay(w.type)}${parts.length ? ' · ' + parts.join(' / ') : ''}`;
+        }
+
+        function clearCtxWidgetHighlight() {
+            document.querySelectorAll('.widget-card.ctx-active-card').forEach(el => el.classList.remove('ctx-active-card'));
+        }
+
         function closeDesignerWidgetCtxMenu() {
             const menu = document.getElementById('designerWidgetCtxMenu');
             if (menu) menu.classList.remove('open');
+            clearCtxWidgetHighlight();
         }
 
         function openDesignerWidgetCtxMenu(e, widgetId, idx) {
             const menu = document.getElementById('designerWidgetCtxMenu');
             const w = (designerLayout.widgets || []).find(x => x.id === widgetId);
             if (!menu || !w) return;
+
+            clearCtxWidgetHighlight();
+            const activeCard = document.querySelector(`.widget-card[data-widget-id="${CSS.escape(widgetId)}"]`);
+            if (activeCard) activeCard.classList.add('ctx-active-card');
 
             const fam = getChartFamily(w);
             const hasSubType = !!(fam && CHART_SUBTYPE_CATALOG[fam]);
@@ -6318,6 +6389,7 @@
             const curW = Math.round(Number(w.w) || (w.type === 'kpi' ? 3 : 6));
             const clickX = e.clientX;
             const clickY = e.clientY;
+            const summaryText = getWidgetCtxSummaryText(w);
 
             const widthPillsHtml = [3, 4, 6, 8, 12].map(val =>
                 `<button type="button" class="ctx-w-pill ${curW === val ? 'active' : ''}" onclick="quickResizeWidgetWidth('${w.id}', ${val}); closeDesignerWidgetCtxMenu();">${val}</button>`
@@ -6325,8 +6397,11 @@
 
             menu.innerHTML = `
                 <div class="ctx-menu-header">
-                    <span style="overflow:hidden;text-overflow:ellipsis;">${escapeHtml(w.title || 'Bileşen')}</span>
-                    <span style="opacity:0.75;">${w.w}/12 × ${w.h}</span>
+                    <div class="ctx-menu-header-top">
+                        <span style="overflow:hidden;text-overflow:ellipsis;">${escapeHtml(w.title || 'Bileşen')}</span>
+                        <span style="opacity:0.75;font-weight:600;">${w.w}/12 × ${w.h}</span>
+                    </div>
+                    <div class="ctx-menu-sub" title="${escapeHtml(summaryText)}">${escapeHtml(summaryText)}</div>
                 </div>
                 <button type="button" class="ctx-menu-item" onclick="closeDesignerWidgetCtxMenu(); openWidgetPropsPanel(null, '${w.id}');">
                     <span>⚙️</span><span>Özellikler & Kolonlar</span>
@@ -6340,7 +6415,7 @@
                     <span>⬅</span><span>Üst Kırılıma Dön</span>
                 </button>` : ''}
                 <button type="button" class="ctx-menu-item" onclick="closeDesignerWidgetCtxMenu(); duplicateWidgetById('${w.id}');">
-                    <span>📋</span><span>Kopyala</span>
+                    <span>📋</span><span>Çoğalt</span>
                 </button>
                 <button type="button" class="ctx-menu-item" onclick="closeDesignerWidgetCtxMenu(); refreshWidgetDataSourceById('${w.id}');">
                     <span>🔄</span><span>Verisini Yenile</span>
@@ -6477,6 +6552,12 @@
                 const startY = e.clientY;
                 const startW = Number(widgetObj.w) || (widgetObj.type === 'kpi' ? 3 : 4);
                 const startH = Number(widgetObj.h) || (widgetObj.type === 'kpi' ? 2 : 5);
+                const initialMetrics = calcWidgetGridMetrics(widgetObj);
+                const initialSpan120 = initialMetrics.gridSpan120;
+                const initialRow = typeof widgetObj.row === 'number' ? widgetObj.row : 0;
+                const initialRowSpan = initialMetrics.rowSpan;
+                const initialCol = typeof widgetObj.col === 'number' ? widgetObj.col : 0;
+                const initialRightEdge = initialCol + initialSpan120;
 
                 function onMouseMove(ev) {
                     if (allowW) {
@@ -6517,7 +6598,27 @@
                 function onMouseUp() {
                     window.removeEventListener('mousemove', onMouseMove);
                     window.removeEventListener('mouseup', onMouseUp);
-                    ensureAndCompactLayout(designerLayout.widgets, widgetObj.id);
+                    if (allowW) {
+                        const finalMetrics = calcWidgetGridMetrics(widgetObj);
+                        const deltaMicro = finalMetrics.gridSpan120 - initialSpan120;
+                        if (deltaMicro !== 0) {
+                            const curCol = widgetObj.col || 0;
+                            const curRow = typeof widgetObj.row === 'number' ? widgetObj.row : initialRow;
+                            const curRowSpan = finalMetrics.rowSpan || initialRowSpan;
+                            const newRightEdge = curCol + finalMetrics.gridSpan120;
+                            designerLayout.widgets.forEach(other => {
+                                if (!other || other.id === widgetObj.id) return;
+                                const oCol = other.col || 0;
+                                const oMetrics = calcWidgetGridMetrics(other);
+                                const oRow = typeof other.row === 'number' ? other.row : 0;
+                                const sameRowBand = oRow < (curRow + curRowSpan) && (oRow + oMetrics.rowSpan) > curRow;
+                                if (sameRowBand && oCol >= initialRightEdge) {
+                                    other.col = Math.max(newRightEdge, oCol + deltaMicro);
+                                }
+                            });
+                        }
+                    }
+                    ensureAndCompactLayout(designerLayout.widgets, widgetObj.id, true);
                     renderDesignerCanvas();
                     renderDataBindingPanel();
                 }
@@ -8428,5 +8529,4 @@
         initDesigner();
     </script>
 </body>
-
 </html>

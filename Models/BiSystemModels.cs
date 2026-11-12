@@ -68,6 +68,7 @@ namespace SpsWebBI.Models
         public int refresh_seconds { get; set; } = 60;
         public int slide_duration_seconds { get; set; } = 30;
         public string? custom_layout_json { get; set; }
+        public string? last_params_json { get; set; }
     }
 
     /// <summary>
@@ -89,6 +90,7 @@ namespace SpsWebBI.Models
         public bool can_edit_layout { get; set; }
         public string effective_layout_json { get; set; } = "{}";
         public bool has_custom_layout { get; set; }
+        public string? last_params_json { get; set; }
     }
 }
 

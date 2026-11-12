@@ -43,6 +43,63 @@
             font-weight: 800; padding: 3px 8px; border-radius: 6px; font-size: 0.78rem; letter-spacing: 0.2px;
         }
         .dash-title { font-size: 0.9rem; font-weight: 700; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .design-mode-badge {
+            font-size: 0.74rem; font-weight: 700; color: #fbbf24;
+            background: rgba(245, 158, 11, 0.16); border: 1px solid rgba(245, 158, 11, 0.45);
+            padding: 1px 7px; border-radius: 999px; white-space: nowrap; display: none;
+        }
+        .top-dash-select {
+            max-width: 240px; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border);
+            background: #0f172a; color: var(--text); font-size: 0.76rem; font-weight: 600; cursor: pointer;
+        }
+        body.light-theme .top-dash-select { background: #ffffff; color: #0f172a; border-color: #cbd5e1; }
+        .top-icon-group {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 0 6px; border-left: 1px solid var(--border); border-right: 1px solid var(--border);
+        }
+        .top-icon-btn {
+            width: 28px; height: 26px; border-radius: 6px; border: 1px solid var(--border);
+            background: #0f172a; color: var(--muted); cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            position: relative; transition: all 0.14s;
+        }
+        .top-icon-btn:hover { border-color: #38bdf8; color: #e2e8f0; background: rgba(56, 189, 248, 0.12); }
+        .top-icon-btn.active { background: rgba(16, 185, 129, 0.18); border-color: #10b981; color: #34d399; }
+        .top-icon-btn.run-btn { background: rgba(59, 130, 246, 0.16); border-color: rgba(59, 130, 246, 0.55); color: #60a5fa; }
+        .top-icon-btn.run-btn:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .top-icon-btn.filter-has-params { border-color: rgba(56, 189, 248, 0.55); color: #38bdf8; }
+        .top-icon-btn.disabled { opacity: 0.4; cursor: not-allowed; }
+        .filter-count-dot {
+            position: absolute; top: -3px; right: -3px; min-width: 14px; height: 14px; padding: 0 3px;
+            border-radius: 999px; background: #0ea5e9; color: #fff; font-size: 0.6rem; font-weight: 800;
+            display: none; align-items: center; justify-content: center; line-height: 1;
+        }
+        body.light-theme .top-icon-btn { background: #ffffff; color: #475569; border-color: #cbd5e1; }
+        body.light-theme .top-icon-btn:hover { background: #e0f2fe; color: #0369a1; border-color: #38bdf8; }
+        body.light-theme .top-icon-btn.active { background: #d1fae5; color: #047857; border-color: #10b981; }
+        .user-edit-top-actions { display: none; align-items: center; gap: 5px; }
+        .filter-tabs {
+            display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 16px 0 16px;
+            border-bottom: 1px solid var(--border); background: rgba(15, 23, 42, 0.45);
+        }
+        body.light-theme .filter-tabs { background: #f1f5f9; }
+        .filter-tab-btn {
+            padding: 7px 14px; border-radius: 8px 8px 0 0; border: 1px solid transparent; border-bottom: none;
+            background: transparent; color: var(--muted); font-size: 0.78rem; font-weight: 700; cursor: pointer;
+            transition: all 0.14s;
+        }
+        .filter-tab-btn:hover { color: var(--text); }
+        .filter-tab-btn.active {
+            background: var(--panel); color: #38bdf8; border-color: var(--border);
+            position: relative; top: 1px;
+        }
+        body.light-theme .filter-tab-btn.active { background: #ffffff; color: #0284c7; }
+        .filter-tab-pane { display: none; padding: 16px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+        .filter-tab-pane.active { display: grid; }
+        .filter-popup-footer {
+            display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px;
+            border-top: 1px solid var(--border);
+        }
         .user-nav { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; }
         .btn {
             padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border);
@@ -265,12 +322,23 @@
             overflow: auto;
         }
 
-        /* Slayt ve Otomatik Yenileme İlerleme Çubuğu */
-        .timer-progress-wrap { height: 4px; width: 100%; background: rgba(255,255,255,0.05); position: relative; }
+        /* Slayt ve Otomatik Yenileme İlerleme Çubuğu (Status Bar hemen üstünde ince 2px) */
+        .timer-progress-wrap {
+            position: fixed; left: 0; right: 0; bottom: 26px; height: 2px; z-index: 901;
+            background: rgba(255,255,255,0.06); pointer-events: none;
+        }
+        body.light-theme .timer-progress-wrap { background: rgba(15,23,42,0.08); }
         .timer-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #3b82f6, #10b981); transition: width 0.25s linear; }
 
         /* Alt Durum Çubuğu (Status Bar) — Aktif Cross-Filter (Tek Tık) Bilgileri */
-        body { padding-bottom: 26px; }
+        body { padding-bottom: 28px; }
+        .status-timer-badge {
+            font-size: 0.72rem; font-weight: 600; color: #6ee7b7;
+            background: rgba(16,185,129,0.12); padding: 1px 8px;
+            border-radius: 999px; white-space: nowrap; display: inline-block;
+        }
+        body.light-theme .status-timer-badge { color: #047857; background: rgba(16,185,129,0.14); }
+        body.spsteks-theme .status-timer-badge { color: #7dd3fc; background: rgba(56,189,248,0.15); }
         .viewer-status-bar {
             position: fixed; left: 0; right: 0; bottom: 0; height: 26px; z-index: 900;
             display: flex; align-items: center; gap: 12px; padding: 0 12px;
@@ -322,6 +390,24 @@
         .widget-body.table-scroll { display: block; padding: 0; overflow: auto; }
 
         /* Kullanıcı Tasarım Modunda Sürükle-Bırak ve Köşeden Boyutlandırma */
+        .grid-drop-preview {
+            border: 2px dashed #38bdf8;
+            background: rgba(14, 165, 233, 0.14);
+            border-radius: 10px;
+            pointer-events: none;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #7dd3fc;
+            font-size: 0.78rem;
+            font-weight: 700;
+            box-shadow: inset 0 0 18px rgba(56, 189, 248, 0.2);
+        }
+        .widget-card.dragging-card {
+            visibility: hidden;
+            pointer-events: none;
+        }
         .widget-card.card-drop-target {
             border-color: #10b981;
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.4);
@@ -711,15 +797,33 @@
         }
         .widget-context-menu.open { display: flex; }
         .ctx-menu-header {
-            padding: 5px 8px 6px 8px;
-            font-size: 0.7rem;
+            padding: 6px 8px 7px 8px;
+            font-size: 0.72rem;
             font-weight: 800;
-            color: var(--muted);
+            color: var(--text);
             border-bottom: 1px solid var(--border);
             margin-bottom: 3px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+        .ctx-menu-sub {
+            font-size: 0.65rem;
+            font-weight: 500;
+            color: var(--muted);
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .widget-card.ctx-active-card {
+            border-color: #38bdf8 !important;
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.65), 0 0 26px rgba(56, 189, 248, 0.25) !important;
+            z-index: 25;
+        }
+        .widget-card.ctx-active-card .widget-header {
+            background: rgba(14, 165, 233, 0.18) !important;
+            border-bottom-color: rgba(56, 189, 248, 0.35) !important;
         }
         .ctx-menu-item {
             width: 100%;
@@ -821,9 +925,60 @@
             </div>
             <span class="brand-badge">SpsWebBI</span>
             <h1 class="dash-title" id="activeDashboardTitle">Yükleniyor...</h1>
-            <span id="timerStatusBadge" style="font-size:0.72rem;color:#6ee7b7;background:rgba(16,185,129,0.12);padding:2px 8px;border-radius:999px;display:none;white-space:nowrap;"></span>
+            <span class="design-mode-badge" id="designModeBadge">(Tasarım)</span>
+            <select id="selectDashboard" class="top-dash-select" style="display:none;" onchange="onDashboardSelectionChanged(true)" title="Dashboard Seçimi"></select>
         </div>
+
+        <!-- En Üst Panel Kontrol İkonları: Slayt, Otomatik Yenileme, Göster(Refresh), Filtre ve Tasarım Butonları -->
         <div class="user-nav">
+            <input type="checkbox" id="chkSlideMode" onchange="onModeCheckboxChanged('slide')" style="display:none;">
+            <input type="checkbox" id="chkAutoRefresh" onchange="onModeCheckboxChanged('refresh')" style="display:none;">
+
+            <div class="user-edit-top-actions" id="userEditTopActions">
+                <button type="button" class="btn btn-accent" onclick="saveUserCustomLayout()" title="Kişisel yerleşimi hesabınıza kaydedin">💾 Tasarımımı Kaydet</button>
+                <button type="button" class="btn" onclick="toggleUserEditMode()" title="Kişisel tasarım modundan çık">Kapat</button>
+            </div>
+
+            <div class="top-icon-group">
+                <button type="button" class="top-icon-btn" id="btnIconSlideMode" onclick="toggleViewerIconMode('slide')"
+                        title="Slayt Görünümü: Yetkili tüm dashboard'ları sırasına ve ekranda kalma süresine göre döngüsel gösterir">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                        <polygon points="10 7 15 10 10 13 10 7"></polygon>
+                    </svg>
+                </button>
+
+                <button type="button" class="top-icon-btn" id="btnIconAutoRefresh" onclick="toggleViewerIconMode('refresh')"
+                        title="Otomatik Yenileme: Seçili dashboard'u tanımlı yenileme süresinde otomatik yeniler">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="13" r="8"></circle>
+                        <polyline points="12 9 12 13 14.5 14.5"></polyline>
+                        <path d="M5 3 2 6"></path>
+                        <path d="m22 6-3-3"></path>
+                        <line x1="12" y1="2" x2="12" y2="5"></line>
+                    </svg>
+                </button>
+
+                <button type="button" class="top-icon-btn run-btn" id="btnIconShow" onclick="onShowButtonClicked()"
+                        title="Göster / Verileri Yenile: Seçili filtre parametreleriyle verileri sorgula ve grafikleri yenile">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <polyline points="1 20 1 14 7 14"></polyline>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                    </svg>
+                </button>
+
+                <button type="button" class="top-icon-btn" id="btnIconFilter" onclick="openFilterPopup()"
+                        title="Filtreler / Parametreler: Veri kaynaklarına tanımlı parametreleri aç">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                    <span class="filter-count-dot" id="filterParamCountBadge"></span>
+                </button>
+            </div>
+
             <select id="selThemeMode" class="btn" onchange="onThemeSelectChange(this.value)" title="Görünüm Teması Seçin" style="padding:3px 8px;cursor:pointer;">
                 <option value="dark">🌙 Koyu Tema</option>
                 <option value="light">☀️ Açık Tema</option>
@@ -834,91 +989,44 @@
         </div>
     </header>
 
-    <div class="timer-progress-wrap">
-        <div class="timer-progress-bar" id="timerProgressBar"></div>
-    </div>
-
-    <!-- Kullanıcı Kişisel Düzenleme Araç Çubuğu (Madde 10) -->
-    <div id="userEditBanner" style="display:none;padding:8px 16px;background:rgba(245,158,11,0.12);border-bottom:1px solid rgba(245,158,11,0.35);align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-        <span style="font-size:0.82rem;color:#fcd34d;">
-            <strong>Kişisel Tasarım Modu:</strong> Kartların sağ üstündeki <em>"Düzenle"</em> veya <em>"+ Yeni Bileşen Ekle"</em> ile görünümü değiştirip kaydedebilirsiniz.
-        </span>
-        <div style="display:flex;gap:8px;">
-            <button type="button" class="btn btn-primary" onclick="openAddWidgetModal()">+ Yeni Bileşen Ekle</button>
-            <button type="button" class="btn btn-accent" onclick="saveUserCustomLayout()">💾 Tasarımımı Kaydet</button>
-            <button type="button" class="btn" onclick="toggleUserEditMode()">Kapat</button>
-        </div>
-    </div>
-
-    <!-- Ana Çalışma Alanı: Sol Dikey Parametre Paneli + Sağ Grafik Tuvali -->
+    <!-- Ana Çalışma Alanı: Tam Ekran Grafik Tuvali -->
     <div class="viewer-workspace">
-        <aside class="control-sidebar" id="controlBarSection">
-            <div class="sidebar-collapsed-strip" onclick="toggleControlBar()" title="Parametre ve Kontrol Panelini Açmak İçin Tıklayın">
-                <span style="color:#38bdf8;font-weight:800;">»</span>
-                <span class="strip-vertical-title">PARAMETRELER & KONTROL</span>
-            </div>
-            <div class="sidebar-inner">
-                <div class="sidebar-header">
-                    <span>🎛️ Parametreler</span>
-                    <button type="button" class="sidebar-collapse-btn" onclick="toggleControlBar()" title="Parametre Panelini Gizle">«</button>
-                </div>
-
-                <!-- Slayt Görünümü, Otomatik Yenileme ve Göster İçin İkon Butonları -->
-                <div class="sidebar-icon-actions">
-                    <input type="checkbox" id="chkSlideMode" onchange="onModeCheckboxChanged('slide')" style="display:none;">
-                    <input type="checkbox" id="chkAutoRefresh" onchange="onModeCheckboxChanged('refresh')" style="display:none;">
-
-                    <button type="button" class="icon-action-btn" id="btnIconSlideMode" onclick="toggleViewerIconMode('slide')"
-                            title="Slayt Görünümü: Yetkili tüm dashboard'ları sırasına ve ekranda kalma süresine göre döngüsel gösterir">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                            <line x1="8" y1="21" x2="16" y2="21"></line>
-                            <line x1="12" y1="17" x2="12" y2="21"></line>
-                            <polygon points="10 7 15 10 10 13 10 7"></polygon>
-                        </svg>
-                    </button>
-
-                    <button type="button" class="icon-action-btn" id="btnIconAutoRefresh" onclick="toggleViewerIconMode('refresh')"
-                            title="Otomatik Yenileme: Seçili dashboard'u tanımlı yenileme süresinde otomatik yeniler">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="23 4 23 10 17 10"></polyline>
-                            <polyline points="1 20 1 14 7 14"></polyline>
-                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                        </svg>
-                    </button>
-
-                    <button type="button" class="icon-action-btn run-btn" id="btnIconShow" onclick="onShowButtonClicked()"
-                            title="Göster: Seçili filtre parametreleriyle verileri sorgula ve grafikleri yenile">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                            <polygon points="6 4 20 12 6 20 6 4"></polygon>
-                        </svg>
-                    </button>
-                </div>
-
-                <!-- Alt Alta Dizili Dashboard Seçimi ve Dinamik Filtre Parametreleri -->
-                <div class="sidebar-body">
-                    <div class="ctrl-group">
-                        <label for="selectDashboard">Dashboard Seçimi</label>
-                        <select id="selectDashboard" onchange="onDashboardSelectionChanged()"></select>
-                    </div>
-
-                    <div id="dynamicFiltersContainer" style="display:flex;flex-direction:column;gap:10px;"></div>
-                </div>
-            </div>
-            <div class="sidebar-resizer" id="sidebarResizer" title="Fareyle sağa/sola çekerek filtre panelini genişletebilirsiniz"></div>
-        </aside>
-
         <div class="viewer-main-col">
             <!-- Dashboard Tuvali (Grid) -->
             <main class="dashboard-canvas" id="dashboardCanvas"></main>
         </div>
     </div>
 
-    <!-- Alt Durum Çubuğu: Grafik tıklamasıyla oluşan Cross-Filter bilgileri -->
+    <!-- Çoklu Veri Kaynağı Parametreleri Popup Modalı (PageTab) -->
+    <div class="modal-backdrop" id="filterPopupModal" onclick="if(event.target===this) closeFilterPopup()">
+        <div class="modal-card" style="max-width:760px;">
+            <div class="modal-header">
+                <h3 style="margin:0;font-size:1rem;">🎛️ Dashboard Parametreleri & Filtreler</h3>
+                <button type="button" class="btn" onclick="closeFilterPopup()">✕</button>
+            </div>
+            <div class="filter-tabs" id="filterPopupTabs"></div>
+            <div id="filterPopupPanes"></div>
+            <div class="filter-popup-footer">
+                <button type="button" class="btn" onclick="closeFilterPopup()">Kapat</button>
+                <button type="button" class="btn btn-primary" onclick="applyFilterPopup()">Uygula</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar Hemen Üstü: İnce Otomatik Yenileme / Slayt İlerleme Çubuğu -->
+    <div class="timer-progress-wrap">
+        <div class="timer-progress-bar" id="timerProgressBar"></div>
+    </div>
+
+    <!-- Alt Durum Çubuğu: Grafik tıklamasıyla oluşan Cross-Filter, Sorgu, Kayıt ve Yenileme Süresi -->
     <footer class="viewer-status-bar" id="viewerStatusBar">
         <div class="status-sec status-filters">
             <span class="status-label">🔎 Filtre:</span>
             <div id="crossFilterBadges" style="display:flex;gap:6px;align-items:center;"></div>
+        </div>
+        <span class="status-sep"></span>
+        <div class="status-sec" title="Otomatik yenileme / slayt geri sayım durumu">
+            <span id="timerStatusBadge" class="status-timer-badge" style="display:none;"></span>
         </div>
         <span class="status-sep"></span>
         <div class="status-sec" title="Sorgu veri kaynağı yenileme durumu (Canlı veya Sunucu TTL Önbellek)">
@@ -952,6 +1060,9 @@
         let currentColumns = [];
         let rawRows = [];
         let appDataSourceCache = {}; // { [dsId]: { columns, rows, isPassive, message } }
+        let activeParamsByDs = {};
+        let dashboardParamGroups = [];
+        let activeFilterTabDsId = null;
         let activeFetchAbortController = null;
         let activeCrossFilters = {}; // { KolonAdi: Deger }
         let widgetDrillState = {};   // { widgetId: { levelIndex: 0, path: [{dim, val}] } }
@@ -1021,6 +1132,7 @@
 
         // Zamanlayıcılar (Standalone Refresh & Slayt Modu)
         let activeTimer = null;
+        let timerGeneration = 0;
         let timerRemainingSec = 0;
         let timerTotalSec = 0;
 
@@ -1099,12 +1211,10 @@
                 document.getElementById('chkSlideMode').checked = true;
                 document.getElementById('chkAutoRefresh').checked = false;
                 syncViewerIconButtons();
-                document.getElementById('controlBarSection').classList.add('collapsed');
                 await startDisplayEngine();
             } else {
-                // Varsayılan olarak ilk dashboard'un filtrelerini yükle ve göster
                 syncViewerIconButtons();
-                await onDashboardSelectionChanged();
+                await onDashboardSelectionChanged(false);
                 await startDisplayEngine();
             }
         }
@@ -1119,9 +1229,10 @@
             authorizedDashboards.forEach((d, idx) => {
                 const opt = document.createElement('option');
                 opt.value = idx;
-                opt.textContent = `${d.datasource_name} — ${d.title} (Sıra: ${d.display_order})`;
+                opt.textContent = `${d.title} (${d.datasource_name})`;
                 sel.appendChild(opt);
             });
+            sel.style.display = authorizedDashboards.length > 1 ? 'inline-block' : 'none';
         }
 
         function toggleViewerHamburgerMenu(e) {
@@ -1163,6 +1274,7 @@
                 closeViewerHamburgerMenu();
                 closeViewerWidgetCtxMenu();
                 closeSubTypeGallery();
+                closeFilterPopup();
             }
         });
 
@@ -1198,35 +1310,158 @@
                 chkSlide.checked = false;
             }
             syncViewerIconButtons();
+            if (authorizedDashboards.length > 0) {
+                scheduleActiveDisplayTimer();
+            }
         }
 
-        async function onDashboardSelectionChanged() {
+        async function onDashboardSelectionChanged(shouldStart = false) {
             const sel = document.getElementById('selectDashboard');
             activeDashboardIndex = parseInt(sel.value || '0', 10);
-            const dash = authorizedDashboards[activeDashboardIndex];
-            if (!dash) return;
+            if (shouldStart) {
+                await startDisplayEngine();
+            }
+        }
 
-            // Seçilen datasource için dinamik filtreleri yükle (Madde 5 & 8.2.4)
-            const container = document.getElementById('dynamicFiltersContainer');
-            container.innerHTML = '<span style="font-size:0.82rem;color:#94a3b8;">Filtreler yükleniyor...</span>';
-
+        function parseSavedParamsJson(rawJson) {
+            if (!rawJson) return {};
             try {
-                const res = await fetch(`/api/datasources/${dash.primary_datasource_id}/parameters`);
-                const data = await res.json();
-                const params = data.parameters || [];
-                container.innerHTML = '';
+                const parsed = JSON.parse(rawJson);
+                return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
+            } catch (_) {
+                return {};
+            }
+        }
 
-                params.forEach(p => {
+        function getFiltersForDataSource(dsId) {
+            const map = activeParamsByDs[String(dsId)] || activeParamsByDs[Number(dsId)] || {};
+            const out = {};
+            Object.keys(map).forEach(k => {
+                const v = map[k];
+                out[k] = (v === undefined || v === null || v === '') ? null : v;
+            });
+            return out;
+        }
+
+        function collectFilterValues() {
+            const dash = authorizedDashboards[activeDashboardIndex];
+            return dash ? getFiltersForDataSource(dash.primary_datasource_id) : {};
+        }
+
+        function updateFilterIconState() {
+            const btn = document.getElementById('btnIconFilter');
+            const badge = document.getElementById('filterParamCountBadge');
+            if (!btn || !badge) return;
+            const totalParams = dashboardParamGroups.reduce((acc, g) => acc + g.parameters.length, 0);
+            if (totalParams > 0) {
+                btn.classList.remove('disabled');
+                btn.classList.add('filter-has-params');
+                btn.title = `Filtreler / Parametreler (${dashboardParamGroups.length} veri kaynağı, ${totalParams} parametre)`;
+                badge.textContent = String(totalParams);
+                badge.style.display = 'inline-flex';
+            } else {
+                btn.classList.add('disabled');
+                btn.classList.remove('filter-has-params');
+                btn.title = 'Bu dashboard için tanımlı parametre bulunmuyor';
+                badge.style.display = 'none';
+            }
+        }
+
+        async function loadDashboardDatasourceParameters(dash, layout, preserveFilters = false) {
+            if (!dash) return;
+            if (!preserveFilters) {
+                activeParamsByDs = parseSavedParamsJson(dash.last_params_json);
+            }
+
+            const neededDsIds = [];
+            const seen = new Set();
+            const addId = id => {
+                const n = Number(id || 0);
+                if (n > 0 && !seen.has(n)) {
+                    seen.add(n);
+                    neededDsIds.push(n);
+                }
+            };
+            addId(dash.primary_datasource_id);
+            (layout?.widgets || []).forEach(w => addId(w && w.dataSourceId));
+
+            const responses = await Promise.all(neededDsIds.map(async id => {
+                try {
+                    const res = await fetch(`/api/datasources/${id}/parameters`);
+                    if (!res.ok) return { dsId: id, dsName: `Veri Kaynağı #${id}`, parameters: [] };
+                    const data = await res.json();
+                    return {
+                        dsId: id,
+                        dsName: data.datasourceName || (id === Number(dash.primary_datasource_id) ? dash.datasource_name : `Veri Kaynağı #${id}`),
+                        parameters: Array.isArray(data.parameters) ? data.parameters : []
+                    };
+                } catch (_) {
+                    return { dsId: id, dsName: `Veri Kaynağı #${id}`, parameters: [] };
+                }
+            }));
+
+            dashboardParamGroups = responses.filter(g => g.parameters.length > 0);
+            dashboardParamGroups.forEach(g => {
+                const key = String(g.dsId);
+                if (!activeParamsByDs[key] || typeof activeParamsByDs[key] !== 'object') {
+                    activeParamsByDs[key] = {};
+                }
+                g.parameters.forEach(p => {
+                    if (activeParamsByDs[key][p.param_name] === undefined) {
+                        activeParamsByDs[key][p.param_name] = p.default_value || '';
+                    }
+                });
+            });
+
+            if (dashboardParamGroups.length > 0 && !dashboardParamGroups.some(g => g.dsId === activeFilterTabDsId)) {
+                activeFilterTabDsId = dashboardParamGroups[0].dsId;
+            }
+            updateFilterIconState();
+        }
+
+        function openFilterPopup() {
+            if (!dashboardParamGroups || dashboardParamGroups.length === 0) return;
+            const modal = document.getElementById('filterPopupModal');
+            const tabsEl = document.getElementById('filterPopupTabs');
+            const panesEl = document.getElementById('filterPopupPanes');
+            tabsEl.innerHTML = '';
+            panesEl.innerHTML = '';
+
+            if (!dashboardParamGroups.some(g => g.dsId === activeFilterTabDsId)) {
+                activeFilterTabDsId = dashboardParamGroups[0].dsId;
+            }
+
+            dashboardParamGroups.forEach(g => {
+                const isActive = g.dsId === activeFilterTabDsId;
+                const tabBtn = document.createElement('button');
+                tabBtn.type = 'button';
+                tabBtn.className = 'filter-tab-btn' + (isActive ? ' active' : '');
+                tabBtn.dataset.dsId = String(g.dsId);
+                tabBtn.textContent = `${g.dsName} (${g.parameters.length})`;
+                tabBtn.onclick = () => switchFilterTab(g.dsId);
+                tabsEl.appendChild(tabBtn);
+
+                const pane = document.createElement('div');
+                pane.className = 'filter-tab-pane' + (isActive ? ' active' : '');
+                pane.dataset.dsId = String(g.dsId);
+
+                const savedForDs = activeParamsByDs[String(g.dsId)] || {};
+                g.parameters.forEach(p => {
                     const grp = document.createElement('div');
                     grp.className = 'ctrl-group';
                     const lbl = document.createElement('label');
                     lbl.textContent = p.label || p.param_name;
                     grp.appendChild(lbl);
 
+                    const curVal = savedForDs[p.param_name] !== undefined && savedForDs[p.param_name] !== null
+                        ? String(savedForDs[p.param_name])
+                        : (p.default_value || '');
+
                     if (p.options && p.options.length > 0) {
                         const s = document.createElement('select');
+                        s.className = 'popup-filter-input';
+                        s.dataset.dsId = String(g.dsId);
                         s.dataset.paramName = p.param_name;
-                        s.className = 'ds-filter-input';
                         const allOpt = document.createElement('option');
                         allOpt.value = '';
                         allOpt.textContent = 'Tümü';
@@ -1237,46 +1472,87 @@
                             opt.textContent = o.text;
                             s.appendChild(opt);
                         });
-                        if (p.default_value) s.value = p.default_value;
-                        s.onchange = () => refreshActiveDashboardData();
+                        s.value = curVal;
                         grp.appendChild(s);
                     } else {
                         const inp = document.createElement('input');
                         inp.type = p.param_type === 'date' ? 'date' : (p.param_type === 'number' ? 'number' : 'text');
+                        inp.className = 'popup-filter-input';
+                        inp.dataset.dsId = String(g.dsId);
                         inp.dataset.paramName = p.param_name;
-                        inp.className = 'ds-filter-input';
                         inp.placeholder = 'Tümü';
-                        if (p.default_value) inp.value = p.default_value;
+                        inp.value = curVal;
                         grp.appendChild(inp);
                     }
-                    container.appendChild(grp);
+                    pane.appendChild(grp);
                 });
-            } catch (_) {
-                container.innerHTML = '';
-            }
-        }
-
-        function collectFilterValues() {
-            const filters = {};
-            document.querySelectorAll('.ds-filter-input').forEach(el => {
-                const name = el.dataset.paramName;
-                if (name) filters[name] = el.value || null;
+                panesEl.appendChild(pane);
             });
-            return filters;
+
+            modal.style.display = 'flex';
         }
 
-        // Madde 8.2.6 / 8.3.6 / 8.4.6 / 8.5.6: "Göster" tuşuna basılınca
+        function switchFilterTab(dsId) {
+            activeFilterTabDsId = Number(dsId);
+            document.querySelectorAll('#filterPopupTabs .filter-tab-btn').forEach(btn => {
+                btn.classList.toggle('active', Number(btn.dataset.dsId) === activeFilterTabDsId);
+            });
+            document.querySelectorAll('#filterPopupPanes .filter-tab-pane').forEach(pane => {
+                pane.classList.toggle('active', Number(pane.dataset.dsId) === activeFilterTabDsId);
+            });
+        }
+
+        function closeFilterPopup() {
+            const modal = document.getElementById('filterPopupModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function applyFilterPopup() {
+            document.querySelectorAll('#filterPopupPanes .popup-filter-input').forEach(el => {
+                const dsId = el.dataset.dsId;
+                const name = el.dataset.paramName;
+                if (!dsId || !name) return;
+                if (!activeParamsByDs[dsId]) activeParamsByDs[dsId] = {};
+                activeParamsByDs[dsId][name] = el.value;
+            });
+
+            closeFilterPopup();
+
+            const dash = authorizedDashboards[activeDashboardIndex];
+            if (dash) {
+                const paramsJson = JSON.stringify(activeParamsByDs);
+                dash.last_params_json = paramsJson;
+                try {
+                    await fetch(`/api/dashboards/${dash.dashboard_id}/user-params`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ paramsJson })
+                    });
+                } catch (_) { }
+            }
+
+            await refreshActiveDashboardData(false);
+        }
+
+        // Üst panel Refresh / Göster ikonuna basılınca verileri canlı yenile ve zamanlayıcıyı sıfırla
         async function onShowButtonClicked() {
-            await startDisplayEngine();
+            await refreshActiveDashboardData(true);
+            scheduleActiveDisplayTimer();
         }
 
         async function startDisplayEngine() {
             stopActiveTimer();
-
-            const isSlide = document.getElementById('chkSlideMode').checked;
-            const isAutoRefresh = document.getElementById('chkAutoRefresh').checked;
-
             await loadAndRenderDashboard(activeDashboardIndex, false);
+            scheduleActiveDisplayTimer();
+        }
+
+        function scheduleActiveDisplayTimer() {
+            stopActiveTimer();
+
+            const chkSlide = document.getElementById('chkSlideMode');
+            const chkRefresh = document.getElementById('chkAutoRefresh');
+            const isSlide = !!(chkSlide && chkSlide.checked);
+            const isAutoRefresh = !!(chkRefresh && chkRefresh.checked);
 
             const dash = authorizedDashboards[activeDashboardIndex];
             if (!dash) return;
@@ -1287,55 +1563,78 @@
                 // Birden fazla dashboard varsa slide_duration_seconds sonunda sıradaki dashboard'a geç.
                 if (authorizedDashboards.length === 1) {
                     const sec = dash.refresh_seconds > 0 ? dash.refresh_seconds : 60;
-                    startCountdownTimer(sec, 'Slayt (Tek Dashboard Yenileme)', async () => {
+                    startCountdownTimer(sec, 'Slayt (Tek Dashboard Yenileme)', async gen => {
                         await refreshActiveDashboardData();
+                        if (gen === timerGeneration && document.getElementById('chkSlideMode').checked) {
+                            scheduleActiveDisplayTimer();
+                        }
                     });
                 } else {
                     const sec = dash.slide_duration_seconds > 0 ? dash.slide_duration_seconds : 30;
-                    startCountdownTimer(sec, `Slayt Modu (${activeDashboardIndex + 1}/${authorizedDashboards.length})`, async () => {
+                    startCountdownTimer(sec, `Slayt Modu (${activeDashboardIndex + 1}/${authorizedDashboards.length})`, async gen => {
+                        if (gen !== timerGeneration || !document.getElementById('chkSlideMode').checked) return;
                         activeDashboardIndex = (activeDashboardIndex + 1) % authorizedDashboards.length;
                         document.getElementById('selectDashboard').value = activeDashboardIndex;
                         await onDashboardSelectionChanged();
-                        await startDisplayEngine();
+                        if (gen === timerGeneration && document.getElementById('chkSlideMode').checked) {
+                            await startDisplayEngine();
+                        }
                     });
                 }
             } else if (isAutoRefresh) {
-                // Madde 7.3.1: Standalone modda refresh süresi tanımlı ise süre dolduğunda yenile
+                // Madde 7.3.1: Standalone modda refresh süresi tanımlı ise süre dolduğunda yenile ve sayacı yeniden başlat
                 const sec = dash.refresh_seconds > 0 ? dash.refresh_seconds : 60;
-                startCountdownTimer(sec, 'Otomatik Yenileme', async () => {
+                startCountdownTimer(sec, 'Otomatik Yenileme', async gen => {
                     await refreshActiveDashboardData();
+                    if (gen === timerGeneration && document.getElementById('chkAutoRefresh').checked) {
+                        scheduleActiveDisplayTimer();
+                    }
                 });
             } else {
                 // Madde 8.2.6.2: Otomatik yenileme seçilmediyse refresh süresi devre dışı kalır
                 const badge = document.getElementById('timerStatusBadge');
-                badge.style.display = 'inline-block';
-                badge.textContent = 'Sabit Görünüm (Yenileme Kapalı)';
-                document.getElementById('timerProgressBar').style.width = '0%';
+                const bar = document.getElementById('timerProgressBar');
+                if (badge) {
+                    badge.style.display = 'inline-block';
+                    badge.textContent = 'Sabit Görünüm (Yenileme Kapalı)';
+                }
+                if (bar) bar.style.width = '0%';
             }
         }
 
         function startCountdownTimer(seconds, modeLabel, onComplete) {
             stopActiveTimer();
-            timerTotalSec = seconds;
-            timerRemainingSec = seconds;
+            const safeSec = Math.max(1, Number(seconds) || 60);
+            const gen = timerGeneration;
+            timerTotalSec = safeSec;
+            timerRemainingSec = safeSec;
             const badge = document.getElementById('timerStatusBadge');
             const bar = document.getElementById('timerProgressBar');
             badge.style.display = 'inline-block';
+            bar.style.width = '0%';
+            badge.textContent = `${modeLabel}: ${timerRemainingSec} sn`;
 
             activeTimer = setInterval(async () => {
+                if (gen !== timerGeneration) {
+                    clearInterval(activeTimer);
+                    activeTimer = null;
+                    return;
+                }
                 timerRemainingSec--;
                 const pct = ((timerTotalSec - timerRemainingSec) / timerTotalSec) * 100;
                 bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
-                badge.textContent = `${modeLabel}: ${timerRemainingSec} sn`;
+                badge.textContent = `${modeLabel}: ${Math.max(0, timerRemainingSec)} sn`;
 
                 if (timerRemainingSec <= 0) {
-                    stopActiveTimer();
-                    await onComplete();
+                    clearInterval(activeTimer);
+                    activeTimer = null;
+                    await onComplete(gen);
                 }
             }, 1000);
         }
 
         function stopActiveTimer() {
+            timerGeneration++;
             if (activeTimer) {
                 clearInterval(activeTimer);
                 activeTimer = null;
@@ -1370,6 +1669,7 @@
                 renderCrossFilterBadges();
             }
 
+            await loadDashboardDatasourceParameters(dash, currentLayout, preserveFilters);
             await refreshActiveDashboardData();
         }
 
@@ -1467,7 +1767,7 @@
             });
 
             const results = await Promise.all(
-                Array.from(neededDsIds).map(id => fetchAndCacheAppDataSource(id, filters, forceRefresh, ctrl.signal))
+                Array.from(neededDsIds).map(id => fetchAndCacheAppDataSource(id, getFiltersForDataSource(id), forceRefresh, ctrl.signal))
             );
             if (ctrl.signal.aborted || results.some(r => r && r.aborted)) {
                 return;
@@ -1580,6 +1880,106 @@
             return currentLayout?.canvasMode === 'expandable' ? 'expandable' : 'fixed';
         }
 
+        function getAppMaxMicroCols() {
+            return getAppCanvasMode() === 'expandable' ? 480 : 120;
+        }
+
+        function appBoxesOverlap(a, b) {
+            return a.col < b.col + b.wSpan &&
+                a.col + a.wSpan > b.col &&
+                a.row < b.row + b.hSpan &&
+                a.row + a.hSpan > b.row;
+        }
+
+        function findAppFirstFreeSlot(placedList, wSpan, hSpan) {
+            const maxColSpan = getAppMaxMicroCols();
+            const searchMax = Math.max(120, getAppEffectiveCanvasCols() * 10);
+            for (let r = 0; r < 500; r++) {
+                for (let c = 0; c <= Math.min(maxColSpan, searchMax) - wSpan; c++) {
+                    const candidate = { col: c, row: r, wSpan, hSpan };
+                    if (!placedList.some(p => appBoxesOverlap(candidate, p))) {
+                        return { col: c, row: r };
+                    }
+                }
+            }
+            return { col: 0, row: 0 };
+        }
+
+        function ensureAndCompactAppLayout(widgets, pinnedWidgetId = null, preferShiftRight = false) {
+            if (!Array.isArray(widgets) || widgets.length === 0) return;
+            const maxMicroCols = getAppMaxMicroCols();
+            const placed = [];
+            const unplaced = [];
+
+            if (pinnedWidgetId) {
+                const pw = widgets.find(x => x.id === pinnedWidgetId);
+                if (pw && typeof pw.col === 'number' && typeof pw.row === 'number') {
+                    const { gridSpan120, rowSpan } = calcAppWidgetGridMetrics(pw);
+                    pw.col = Math.max(0, Math.min(maxMicroCols - gridSpan120, Math.round(pw.col)));
+                    pw.row = Math.max(0, Math.round(pw.row));
+                    placed.push({ id: pw.id, ref: pw, col: pw.col, row: pw.row, wSpan: gridSpan120, hSpan: rowSpan });
+                }
+            }
+
+            const withCoords = widgets
+                .filter(w => w.id !== pinnedWidgetId && typeof w.col === 'number' && typeof w.row === 'number')
+                .sort((a, b) => (a.row - b.row) || (a.col - b.col));
+
+            withCoords.forEach(w => {
+                const { gridSpan120, rowSpan } = calcAppWidgetGridMetrics(w);
+                const c = Math.max(0, Math.min(maxMicroCols - gridSpan120, Math.round(w.col)));
+                const r = Math.max(0, Math.round(w.row));
+                const box = { id: w.id, ref: w, col: c, row: r, wSpan: gridSpan120, hSpan: rowSpan };
+                let blocker = placed.find(p => appBoxesOverlap(box, p));
+                while (blocker) {
+                    const nextRightCol = blocker.col + blocker.wSpan;
+                    if (preferShiftRight && nextRightCol + box.wSpan <= maxMicroCols) {
+                        box.col = nextRightCol;
+                    } else {
+                        box.col = c;
+                        box.row++;
+                    }
+                    blocker = placed.find(p => appBoxesOverlap(box, p));
+                }
+                w.col = box.col;
+                w.row = box.row;
+                placed.push(box);
+            });
+
+            widgets.forEach(w => {
+                if (!placed.some(p => p.id === w.id)) unplaced.push(w);
+            });
+
+            unplaced.forEach(w => {
+                const { gridSpan120, rowSpan } = calcAppWidgetGridMetrics(w);
+                const slot = findAppFirstFreeSlot(placed, gridSpan120, rowSpan);
+                w.col = slot.col;
+                w.row = slot.row;
+                placed.push({ id: w.id, ref: w, col: w.col, row: w.row, wSpan: gridSpan120, hSpan: rowSpan });
+            });
+
+            if (!preferShiftRight) {
+                placed.sort((a, b) => (a.row - b.row) || (a.col - b.col));
+                placed.forEach(box => {
+                    let targetRow = 0;
+                    for (const other of placed) {
+                        if (other.id === box.id) continue;
+                        const horizOverlap = box.col < other.col + other.wSpan && box.col + box.wSpan > other.col;
+                        if (horizOverlap && other.row + other.hSpan <= box.row) {
+                            if (other.row + other.hSpan > targetRow) {
+                                targetRow = other.row + other.hSpan;
+                            }
+                        }
+                    }
+                    const testBox = { ...box, row: targetRow };
+                    if (!placed.some(p => p.id !== box.id && appBoxesOverlap(testBox, p))) {
+                        box.row = targetRow;
+                        box.ref.row = targetRow;
+                    }
+                });
+            }
+        }
+
         function getAppViewport12ColWidth() {
             const mainCol = document.querySelector('.viewer-main-col');
             if (!mainCol) return 1200;
@@ -1635,42 +2035,15 @@
 
             const canvas = document.getElementById('dashboardCanvas');
             canvas.innerHTML = '';
+            canvas.ondragover = null;
+            canvas.ondrop = null;
             applyAppCanvasDimensions();
-
-            if (isUserEditMode) {
-                canvas.ondragover = e => {
-                    if (userDraggedWidgetIndex !== null) e.preventDefault();
-                };
-                canvas.ondrop = e => {
-                    if (userDraggedWidgetIndex === null) return;
-                    e.preventDefault();
-                    const fromIdx = userDraggedWidgetIndex;
-                    userDraggedWidgetIndex = null;
-                    const cards = Array.from(canvas.querySelectorAll('.widget-card'));
-                    let insertAfterIdx = -1;
-                    cards.forEach((cardEl, idx) => {
-                        if (idx === fromIdx) return;
-                        const r = cardEl.getBoundingClientRect();
-                        if (r.bottom <= e.clientY + 14 || (r.top <= e.clientY + 14 && r.left < e.clientX)) {
-                            insertAfterIdx = idx;
-                        }
-                    });
-                    let targetIdx = insertAfterIdx + 1;
-                    const moved = currentLayout.widgets.splice(fromIdx, 1)[0];
-                    if (targetIdx > fromIdx) targetIdx--;
-                    targetIdx = Math.max(0, Math.min(currentLayout.widgets.length, targetIdx));
-                    currentLayout.widgets.splice(targetIdx, 0, moved);
-                    renderAllWidgets();
-                };
-            } else {
-                canvas.ondragover = null;
-                canvas.ondrop = null;
-            }
 
             const widgets = currentLayout.widgets || [];
             widgets.forEach((w, idx) => {
                 const card = document.createElement('div');
                 card.className = 'widget-card';
+                card.dataset.widgetId = w.id;
                 const { colSpan12, gridSpan120, hUnits, rowSpan } = calcAppWidgetGridMetrics(w);
                 if (typeof w.col === 'number' && typeof w.row === 'number') {
                     card.style.gridColumn = `${w.col + 1} / span ${gridSpan120}`;
@@ -1723,33 +2096,10 @@
 
                 header.appendChild(titleWrap);
 
-                // Kişisel Tasarım Modunda Sürükle-Bırak ve Köşeden Boyutlandırma (Düzenle/Sil sağ tuş menüsünde)
+                // Kişisel Tasarım Modunda 2 Boyutlu Serbest Taşıma ve Köşeden Boyutlandırma (Düzenle/Sil sağ tuş menüsünde)
                 if (isUserEditMode) {
                     header.style.cursor = 'move';
-                    header.draggable = true;
-                    header.addEventListener('dragstart', e => {
-                        userDraggedWidgetIndex = idx;
-                        e.dataTransfer.setData('text/plain', String(idx));
-                    });
-                    card.addEventListener('dragover', e => {
-                        if (userDraggedWidgetIndex !== null && userDraggedWidgetIndex !== idx) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            card.classList.add('card-drop-target');
-                        }
-                    });
-                    card.addEventListener('dragleave', () => card.classList.remove('card-drop-target'));
-                    card.addEventListener('drop', e => {
-                        card.classList.remove('card-drop-target');
-                        if (userDraggedWidgetIndex !== null && userDraggedWidgetIndex !== idx) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            const moved = currentLayout.widgets.splice(userDraggedWidgetIndex, 1)[0];
-                            currentLayout.widgets.splice(idx, 0, moved);
-                            userDraggedWidgetIndex = null;
-                            renderAllWidgets();
-                        }
-                    });
+                    attachUserMoveBehavior(card, w, header);
                 }
 
                 const body = document.createElement('div');
@@ -1783,6 +2133,227 @@
             });
         }
 
+        function attachUserMoveBehavior(cardEl, widgetObj, headerEl) {
+            headerEl.addEventListener('mousedown', e => {
+                if (e.button !== 0 || e.target.closest('button, .widget-breadcrumb')) return;
+                e.preventDefault();
+                clearCtxWidgetHighlight();
+                cardEl.classList.add('ctx-active-card');
+
+                const canvasEl = document.getElementById('dashboardCanvas');
+                const areaEl = document.querySelector('.viewer-main-col');
+                const cardRect = cardEl.getBoundingClientRect();
+                const grabOffsetX = e.clientX - cardRect.left;
+                const grabOffsetY = e.clientY - cardRect.top;
+                const startX = e.clientX;
+                const startY = e.clientY;
+
+                const { gridSpan120, rowSpan, colSpan12, hUnits } = calcAppWidgetGridMetrics(widgetObj);
+                const unit120W = getAppViewport12ColWidth();
+                const maxMicroCols = getAppMaxMicroCols();
+                const initialCol = typeof widgetObj.col === 'number' ? widgetObj.col : 0;
+                const initialRow = typeof widgetObj.row === 'number' ? widgetObj.row : 0;
+                const initialRightEdge = initialCol + gridSpan120;
+                let isDragging = false;
+                let previewEl = null;
+                let targetCol = initialCol;
+                let targetRow = initialRow;
+
+                function getOtherCardRects() {
+                    const items = [];
+                    canvasEl.querySelectorAll('.widget-card:not(.dragging-card)').forEach(el => {
+                        const wid = el.dataset.widgetId;
+                        const w = (currentLayout?.widgets || []).find(x => x.id === wid);
+                        if (!w || w.id === widgetObj.id) return;
+                        items.push({ widget: w, rect: el.getBoundingClientRect() });
+                    });
+                    return items;
+                }
+
+                // Bırakma hedefi: { row, sortKey } — sortKey satırdaki kolonlarla karşılaştırılıp sıra belirlenir
+                let dropTarget = null;
+                const rowOfW = w => (typeof w.row === 'number' ? w.row : 0);
+                const colOfW = w => (typeof w.col === 'number' ? w.col : 0);
+
+                function computeDropTarget(ghostLeft, ghostCenterY, cardItems) {
+                    if (!cardItems.length) return { row: 0, sortKey: 0 };
+
+                    // 1) Dikey merkeze göre hedef satırı bul
+                    let row = null;
+                    let bestTop = -Infinity;
+                    for (const item of cardItems) {
+                        if (ghostCenterY >= item.rect.top && ghostCenterY <= item.rect.bottom && item.rect.top > bestTop) {
+                            bestTop = item.rect.top;
+                            row = rowOfW(item.widget);
+                        }
+                    }
+                    if (row === null) {
+                        const maxBottomPx = Math.max(...cardItems.map(i => i.rect.bottom));
+                        if (ghostCenterY > maxBottomPx) {
+                            row = Math.max(...cardItems.map(i => rowOfW(i.widget) + calcAppWidgetGridMetrics(i.widget).rowSpan));
+                        } else {
+                            let bestDist = Infinity;
+                            cardItems.forEach(i => {
+                                const d = Math.abs(ghostCenterY - (i.rect.top + i.rect.bottom) / 2);
+                                if (d < bestDist) { bestDist = d; row = rowOfW(i.widget); }
+                            });
+                        }
+                    }
+
+                    // 2) Sürüklenen panelin sol çizgisi, satırdaki hangi kartın dikey orta çizgisinin solundaysa onun önüne koy
+                    const rowItems = cardItems
+                        .filter(i => rowOfW(i.widget) === row)
+                        .sort((a, b) => colOfW(a.widget) - colOfW(b.widget));
+                    for (const i of rowItems) {
+                        if (ghostLeft < i.rect.left + i.rect.width / 2) {
+                            return { row, sortKey: colOfW(i.widget) - 0.5 };
+                        }
+                    }
+                    const last = rowItems[rowItems.length - 1];
+                    return { row, sortKey: last ? colOfW(last.widget) + 0.5 : 0 };
+                }
+
+                // Satırı (taşınan grafik dahil) soldan boşluksuz dizer; apply=false ise sadece taşınan grafiğin kolonunu döner
+                function packRowWithMoved(rowIdx, sortKey, apply) {
+                    const items = (currentLayout?.widgets || [])
+                        .filter(o => o && o.id !== widgetObj.id && rowOfW(o) === rowIdx)
+                        .map(o => ({ w: o, key: colOfW(o) }));
+                    items.push({ w: widgetObj, key: sortKey });
+                    items.sort((a, b) => a.key - b.key);
+                    let cursor = 0;
+                    let movedCol = 0;
+                    items.forEach(it => {
+                        if (it.w === widgetObj) movedCol = cursor;
+                        if (apply) { it.w.col = cursor; it.w.row = rowIdx; }
+                        cursor += calcAppWidgetGridMetrics(it.w).gridSpan120;
+                    });
+                    return movedCol;
+                }
+
+                let ghostEl = null;
+                const MOVE_STEP_PX = 10;
+
+                function createDragGhost() {
+                    const g = cardEl.cloneNode(true);
+                    g.removeAttribute('id');
+                    g.classList.remove('dragging-card', 'ctx-active-card');
+                    g.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+                    // ECharts canvas içeriklerini kopyaya aktar
+                    const srcCanvases = cardEl.querySelectorAll('canvas');
+                    const dstCanvases = g.querySelectorAll('canvas');
+                    srcCanvases.forEach((src, i) => {
+                        const dst = dstCanvases[i];
+                        if (!dst) return;
+                        try {
+                            dst.width = src.width;
+                            dst.height = src.height;
+                            dst.getContext('2d').drawImage(src, 0, 0);
+                        } catch (_) {}
+                    });
+                    Object.assign(g.style, {
+                        position: 'fixed',
+                        left: `${cardRect.left}px`,
+                        top: `${cardRect.top}px`,
+                        width: `${cardRect.width}px`,
+                        height: `${cardRect.height}px`,
+                        margin: '0',
+                        zIndex: '9999',
+                        pointerEvents: 'none',
+                        opacity: '0.8',
+                        boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
+                        outline: '2px solid #3b82f6',
+                        transition: 'none'
+                    });
+                    document.body.appendChild(g);
+                    return g;
+                }
+
+                function onMouseMove(ev) {
+                    const dist = Math.hypot(ev.clientX - startX, ev.clientY - startY);
+                    if (!isDragging && dist > 4) {
+                        isDragging = true;
+                        cardEl.classList.add('dragging-card');
+                        previewEl = document.createElement('div');
+                        previewEl.className = 'grid-drop-preview';
+                        canvasEl.appendChild(previewEl);
+                        ghostEl = createDragGhost();
+                    }
+                    if (!isDragging) return;
+
+                    // 10 piksellik adımlarla hareket
+                    const stepDx = Math.round((ev.clientX - startX) / MOVE_STEP_PX) * MOVE_STEP_PX;
+                    const stepDy = Math.round((ev.clientY - startY) / MOVE_STEP_PX) * MOVE_STEP_PX;
+                    if (ghostEl) {
+                        ghostEl.style.left = `${cardRect.left + stepDx}px`;
+                        ghostEl.style.top = `${cardRect.top + stepDy}px`;
+                    }
+                    const ghostLeft = cardRect.left + stepDx;
+                    const ghostCenterY = cardRect.top + stepDy + cardRect.height / 2;
+
+                    if (getAppCanvasMode() === 'expandable' && areaEl) {
+                        const aRect = areaEl.getBoundingClientRect();
+                        if (ev.clientX > aRect.right - 36) {
+                            areaEl.scrollLeft += 18;
+                        } else if (ev.clientX < aRect.left + 36 && areaEl.scrollLeft > 0) {
+                            areaEl.scrollLeft = Math.max(0, areaEl.scrollLeft - 18);
+                        }
+                    }
+
+                    const cardItems = getOtherCardRects();
+                    dropTarget = computeDropTarget(ghostLeft, ghostCenterY, cardItems);
+                    targetRow = dropTarget.row;
+                    targetCol = Math.max(0, Math.min(Math.max(0, maxMicroCols - gridSpan120),
+                        packRowWithMoved(dropTarget.row, dropTarget.sortKey, false)));
+
+                    if (getAppCanvasMode() === 'expandable') {
+                        const neededMicro = Math.max(getAppEffectiveCanvasCols() * 10, targetCol + gridSpan120);
+                        applyAppCanvasDimensions(neededMicro);
+                    }
+
+                    const totalColsUi = Math.round(getAppMaxMicroCols() === 120 ? 12 : Math.max(12, Math.ceil((targetCol + gridSpan120) / 10)));
+                    previewEl.style.gridColumn = `${targetCol + 1} / span ${gridSpan120}`;
+                    previewEl.style.gridRow = `${targetRow + 1} / span ${rowSpan}`;
+                    previewEl.textContent = `📍 Konum: ${(targetCol / 10).toFixed(1)}/${totalColsUi} (${colSpan12}×${hUnits})`;
+                }
+
+                function onMouseUp() {
+                    window.removeEventListener('mousemove', onMouseMove);
+                    window.removeEventListener('mouseup', onMouseUp);
+                    cardEl.classList.remove('ctx-active-card');
+                    if (ghostEl) { ghostEl.remove(); ghostEl = null; }
+                    if (isDragging) {
+                        cardEl.classList.remove('dragging-card');
+                        if (previewEl) previewEl.remove();
+
+                        const allWidgets = currentLayout?.widgets || [];
+                        const finalRow = dropTarget ? dropTarget.row : targetRow;
+                        const finalKey = dropTarget ? dropTarget.sortKey : targetCol - 0.5;
+
+                        // Kaynak satırı (taşınan hariç) soldan boşluksuz diz
+                        function packSourceRow(rowIdx) {
+                            let cursor = 0;
+                            allWidgets
+                                .filter(o => o && o.id !== widgetObj.id && rowOfW(o) === rowIdx)
+                                .sort((a, b) => colOfW(a) - colOfW(b))
+                                .forEach(o => {
+                                    o.col = cursor;
+                                    cursor += calcAppWidgetGridMetrics(o).gridSpan120;
+                                });
+                        }
+
+                        packRowWithMoved(finalRow, finalKey, true);
+                        if (initialRow !== finalRow) packSourceRow(initialRow);
+
+                        ensureAndCompactAppLayout(currentLayout.widgets, widgetObj.id, true);
+                        renderAllWidgets();
+                    }
+                }
+
+                window.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('mouseup', onMouseUp);
+            });
+        }
+
         function attachUserResizeBehavior(cardEl, widgetObj, handleEl, allowW, allowH) {
             handleEl.addEventListener('mousedown', e => {
                 e.preventDefault();
@@ -1794,6 +2365,12 @@
                 const startX = e.clientX, startY = e.clientY;
                 const startW = Number(widgetObj.w) || (widgetObj.type === 'kpi' ? 3 : 4);
                 const startH = Number(widgetObj.h) || (widgetObj.type === 'kpi' ? 2 : 5);
+                const initialMetrics = calcAppWidgetGridMetrics(widgetObj);
+                const initialSpan120 = initialMetrics.gridSpan120;
+                const initialRow = typeof widgetObj.row === 'number' ? widgetObj.row : 0;
+                const initialRowSpan = initialMetrics.rowSpan;
+                const initialCol = typeof widgetObj.col === 'number' ? widgetObj.col : 0;
+                const initialRightEdge = initialCol + initialSpan120;
 
                 function onMove(ev) {
                     if (allowW) {
@@ -1819,7 +2396,11 @@
                         const newH = Math.min(16, Math.max(1.2, Math.round((startH + deltaMicroRows * 0.05) * 20) / 20));
                         widgetObj.h = newH;
                         const { rowSpan } = calcAppWidgetGridMetrics(widgetObj);
-                        cardEl.style.gridRow = `span ${rowSpan}`;
+                        if (typeof widgetObj.row === 'number') {
+                            cardEl.style.gridRow = `${widgetObj.row + 1} / span ${rowSpan}`;
+                        } else {
+                            cardEl.style.gridRow = `span ${rowSpan}`;
+                        }
                     }
                     const sb = document.getElementById(`uSize_${widgetObj.id}`);
                     if (sb) sb.textContent = `${widgetObj.w}/12 × ${widgetObj.h}`;
@@ -1828,7 +2409,26 @@
                 function onUp() {
                     window.removeEventListener('mousemove', onMove);
                     window.removeEventListener('mouseup', onUp);
-                    chartInstances.forEach(c => { try { c.resize(); } catch (_) {} });
+                    if (allowW && typeof widgetObj.col === 'number') {
+                        const finalMetrics = calcAppWidgetGridMetrics(widgetObj);
+                        const deltaMicro = finalMetrics.gridSpan120 - initialSpan120;
+                        if (deltaMicro !== 0) {
+                            const curRow = typeof widgetObj.row === 'number' ? widgetObj.row : initialRow;
+                            const curRowSpan = finalMetrics.rowSpan || initialRowSpan;
+                            const newRightEdge = widgetObj.col + finalMetrics.gridSpan120;
+                            currentLayout.widgets.forEach(other => {
+                                if (!other || other.id === widgetObj.id || typeof other.col !== 'number') return;
+                                const oMetrics = calcAppWidgetGridMetrics(other);
+                                const oRow = typeof other.row === 'number' ? other.row : 0;
+                                const sameRowBand = oRow < (curRow + curRowSpan) && (oRow + oMetrics.rowSpan) > curRow;
+                                if (sameRowBand && other.col >= initialRightEdge) {
+                                    other.col = Math.max(newRightEdge, other.col + deltaMicro);
+                                }
+                            });
+                        }
+                    }
+                    ensureAndCompactAppLayout(currentLayout.widgets, widgetObj.id, true);
+                    renderAllWidgets();
                 }
                 window.addEventListener('mousemove', onMove);
                 window.addEventListener('mouseup', onUp);
@@ -2123,15 +2723,46 @@
             }
         }
 
+        function getWidgetTypeDisplay(type) {
+            const map = {
+                bar: '📊 Sütun', stackedBar: '📚 Yığılmış Sütun', horizontalBar: '📉 Yatay Sütun',
+                line: '📈 Çizgi', area: '⛰️ Alan', pie: '🥧 Pasta', donut: '🍩 Halka',
+                gauge: '🎯 İbre', treemap: '🟩 Treemap', sunburst: '☀️ Sunburst',
+                sankey: '🔀 Sankey', funnel: '🌪️ Huni', radar: '🕸️ Radar',
+                scatter: '🫧 Dağılım', heatmap: '🔥 Isı Haritası', kpi: '🔢 KPI',
+                pivot: '🧮 Pivot', table: '📋 Tablo'
+            };
+            return map[type] || '📊 Grafik';
+        }
+
+        function getWidgetCtxSummaryText(w) {
+            const metrics = getWidgetMetrics(w);
+            const valField = w.valueField || (metrics[0] && metrics[0].field) || '';
+            const dimField = w.dimension || (Array.isArray(w.drillHierarchy) && w.drillHierarchy[0]) || '';
+            const parts = [];
+            if (dimField) parts.push(dimField);
+            if (valField) parts.push(valField);
+            return `${getWidgetTypeDisplay(w.type)}${parts.length ? ' · ' + parts.join(' / ') : ''}`;
+        }
+
+        function clearCtxWidgetHighlight() {
+            document.querySelectorAll('.widget-card.ctx-active-card').forEach(el => el.classList.remove('ctx-active-card'));
+        }
+
         function closeViewerWidgetCtxMenu() {
             const menu = document.getElementById('viewerWidgetCtxMenu');
             if (menu) menu.classList.remove('open');
+            clearCtxWidgetHighlight();
         }
 
         function openViewerWidgetCtxMenu(e, widgetId, idx) {
             const menu = document.getElementById('viewerWidgetCtxMenu');
             const w = currentLayout?.widgets ? currentLayout.widgets.find(x => x.id === widgetId) : null;
             if (!menu || !w) return;
+
+            clearCtxWidgetHighlight();
+            const activeCard = document.querySelector(`.widget-card[data-widget-id="${CSS.escape(widgetId)}"]`);
+            if (activeCard) activeCard.classList.add('ctx-active-card');
 
             const fam = getChartFamily(w);
             const hasSubType = !!(fam && CHART_SUBTYPE_CATALOG[fam]);
@@ -2141,9 +2772,13 @@
             const hasCrossFilters = Object.keys(activeCrossFilters || {}).length > 0;
             const clickX = e.clientX;
             const clickY = e.clientY;
+            const summaryText = getWidgetCtxSummaryText(w);
 
             menu.innerHTML = `
-                <div class="ctx-menu-header" title="${escapeHtml(w.title || 'Bileşen')}">${escapeHtml(w.title || 'Bileşen')}</div>
+                <div class="ctx-menu-header" title="${escapeHtml(w.title || 'Bileşen')}">
+                    <div style="overflow:hidden;text-overflow:ellipsis;">${escapeHtml(w.title || 'Bileşen')}</div>
+                    <div class="ctx-menu-sub" title="${escapeHtml(summaryText)}">${escapeHtml(summaryText)}</div>
+                </div>
                 ${hasSubType ? `
                 <button type="button" class="ctx-menu-item" onclick="closeViewerWidgetCtxMenu(); openViewerSubTypeGallery({ clientX: ${clickX}, clientY: ${clickY} }, '${w.id}');">
                     <span>🎨</span><span>Grafik Alt Stili Değiştir</span>
@@ -3495,10 +4130,18 @@
         }
 
         // Madde 10: Son Kullanıcının Kendi Tasarımını Özelleştirmesi ve Kaydetmesi
+        function syncUserEditModeUi() {
+            const badge = document.getElementById('designModeBadge');
+            const topActions = document.getElementById('userEditTopActions');
+            const btnSaveMenu = document.getElementById('btnSaveUserLayout');
+            if (badge) badge.style.display = isUserEditMode ? 'inline-block' : 'none';
+            if (topActions) topActions.style.display = isUserEditMode ? 'inline-flex' : 'none';
+            if (btnSaveMenu) btnSaveMenu.style.display = isUserEditMode ? 'inline-flex' : 'none';
+        }
+
         function toggleUserEditMode() {
             isUserEditMode = !isUserEditMode;
-            document.getElementById('userEditBanner').style.display = isUserEditMode ? 'flex' : 'none';
-            document.getElementById('btnSaveUserLayout').style.display = isUserEditMode ? 'inline-flex' : 'none';
+            syncUserEditModeUi();
             renderAllWidgets();
         }
 
@@ -3517,15 +4160,44 @@
             });
         }
 
-        function openEditWidgetModal(index) {
+        async function openEditWidgetModal(index) {
             const w = currentLayout.widgets[index];
             if (!w) return;
-            openWidgetConfigModal(index, w);
+            await openWidgetConfigModal(index, w);
         }
 
-        function openWidgetConfigModal(index, w) {
+        function getSortedAppColumns(colsOverride = null) {
+            const src = Array.isArray(colsOverride) ? colsOverride : currentColumns;
+            return [...src].sort((a, b) =>
+                String(a.name || '').localeCompare(String(b.name || ''), 'tr-TR', { sensitivity: 'base', numeric: true })
+            );
+        }
+
+        async function openWidgetConfigModal(index, w) {
             document.getElementById('modalTitle').textContent = index >= 0 ? 'Bileşeni Düzenle' : 'Yeni Bileşen Ekle';
-            const colOpts = currentColumns.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)} (${c.dataType})</option>`).join('');
+            const effDsId = getEffectiveAppWidgetDataSourceId(w);
+            if (effDsId > 0 && (!appDataSourceCache[effDsId] || !Array.isArray(appDataSourceCache[effDsId].columns) || appDataSourceCache[effDsId].columns.length === 0)) {
+                await fetchAndCacheAppDataSource(effDsId, collectFilterValues(), false);
+            }
+            const dsEntry = appDataSourceCache[effDsId];
+            let rawCols = (dsEntry?.columns && dsEntry.columns.length > 0)
+                ? dsEntry.columns
+                : currentColumns;
+            if ((!rawCols || rawCols.length === 0) && dsEntry?.rows && dsEntry.rows.length > 0) {
+                rawCols = Object.keys(dsEntry.rows[0]).map(k => ({
+                    name: k,
+                    dataType: typeof dsEntry.rows[0][k] === 'number' ? 'number' : 'string'
+                }));
+            }
+            const sortedCols = getSortedAppColumns(rawCols || []);
+            const colOpts = sortedCols.length > 0
+                ? sortedCols.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)} (${c.dataType})</option>`).join('')
+                : '<option value="">-- Kolon bulunamadı --</option>';
+
+            const initMetrics = getWidgetMetrics(w);
+            const initDim = w.dimension || (Array.isArray(w.drillHierarchy) && w.drillHierarchy[0]) || '';
+            const initVal = w.valueField || (initMetrics[0] && initMetrics[0].field) || '';
+            const initAgg = (initMetrics[0] && initMetrics[0].agg) || w.agg || 'sum';
             const body = document.getElementById('modalBody');
             body.style.padding = '16px';
 
@@ -3573,9 +4245,9 @@
                     <div class="ctrl-group">
                         <label>Hesaplama Tipi (Aggregation)</label>
                         <select id="cfgAgg">
-                            <option value="sum" ${w.agg === 'sum' ? 'selected' : ''}>Toplam (SUM)</option>
-                            <option value="count" ${w.agg === 'count' ? 'selected' : ''}>Adet (COUNT)</option>
-                            <option value="avg" ${w.agg === 'avg' ? 'selected' : ''}>Ortalama (AVG)</option>
+                            <option value="sum" ${initAgg === 'sum' ? 'selected' : ''}>Toplam (SUM)</option>
+                            <option value="count" ${initAgg === 'count' ? 'selected' : ''}>Adet (COUNT)</option>
+                            <option value="avg" ${initAgg === 'avg' ? 'selected' : ''}>Ortalama (AVG)</option>
                         </select>
                     </div>
                     <div class="ctrl-group">
@@ -3595,23 +4267,27 @@
                     <button type="button" class="btn btn-primary" onclick="applyWidgetConfig(${index})">Uygula</button>
                 </div>`;
 
-            if (w.dimension) document.getElementById('cfgDim').value = w.dimension;
-            if (w.valueField) document.getElementById('cfgVal').value = w.valueField;
+            if (initDim) document.getElementById('cfgDim').value = initDim;
+            if (initVal) document.getElementById('cfgVal').value = initVal;
             document.getElementById('detailModal').style.display = 'flex';
         }
 
         function applyWidgetConfig(index) {
             const drillStr = document.getElementById('cfgDrill').value;
             const drillArr = drillStr.split(',').map(s => s.trim()).filter(Boolean);
+            const valField = document.getElementById('cfgVal').value;
+            const aggVal = document.getElementById('cfgAgg').value;
+            const existing = index >= 0 ? currentLayout.widgets[index] : null;
             const updated = {
-                id: index >= 0 ? currentLayout.widgets[index].id : ('w_' + Date.now()),
+                id: existing ? existing.id : ('w_' + Date.now()),
                 title: document.getElementById('cfgTitle').value.trim(),
                 subtitle: document.getElementById('cfgSubtitle') ? document.getElementById('cfgSubtitle').value : undefined,
                 type: document.getElementById('cfgType').value,
                 dimension: document.getElementById('cfgDim').value,
-                secondaryDimension: currentColumns[1]?.name || '',
-                valueField: document.getElementById('cfgVal').value,
-                agg: document.getElementById('cfgAgg').value,
+                secondaryDimension: existing?.secondaryDimension || currentColumns[1]?.name || '',
+                valueField: valField,
+                agg: aggVal,
+                valueMetrics: valField ? [{ field: valField, agg: aggVal }] : [],
                 drillHierarchy: drillArr,
                 w: parseInt(document.getElementById('cfgW').value || '4', 10),
                 h: parseInt(document.getElementById('cfgH').value || '5', 10)
@@ -3643,8 +4319,7 @@
                 dash.has_custom_layout = true;
                 document.getElementById('btnResetUserLayout').style.display = 'inline-flex';
                 isUserEditMode = false;
-                document.getElementById('userEditBanner').style.display = 'none';
-                document.getElementById('btnSaveUserLayout').style.display = 'none';
+                syncUserEditModeUi();
                 renderAllWidgets();
             }
         }
@@ -3664,55 +4339,6 @@
         function closeModal() {
             document.getElementById('detailModal').style.display = 'none';
         }
-
-        function toggleControlBar() {
-            const el = document.getElementById('controlBarSection');
-            if (!el) return;
-            el.classList.toggle('collapsed');
-            setTimeout(() => {
-                chartInstances.forEach(c => { try { c.resize(); } catch (_) {} });
-            }, 200);
-        }
-
-        function initSidebarResizer() {
-            const sidebar = document.getElementById('controlBarSection');
-            const resizer = document.getElementById('sidebarResizer');
-            if (!sidebar || !resizer) return;
-
-            const savedWidth = parseInt(localStorage.getItem('sps_viewer_sidebar_w') || '0', 10);
-            if (savedWidth >= 180 && savedWidth <= 520) {
-                sidebar.style.width = `${savedWidth}px`;
-                sidebar.style.minWidth = `${savedWidth}px`;
-            }
-
-            resizer.addEventListener('mousedown', e => {
-                if (sidebar.classList.contains('collapsed')) return;
-                e.preventDefault();
-                sidebar.classList.add('resizing');
-                const startX = e.clientX;
-                const startW = sidebar.getBoundingClientRect().width;
-
-                function onMouseMove(ev) {
-                    const nextW = Math.min(520, Math.max(180, Math.round(startW + (ev.clientX - startX))));
-                    sidebar.style.width = `${nextW}px`;
-                    sidebar.style.minWidth = `${nextW}px`;
-                    chartInstances.forEach(c => { try { c.resize(); } catch (_) {} });
-                }
-
-                function onMouseUp() {
-                    sidebar.classList.remove('resizing');
-                    window.removeEventListener('mousemove', onMouseMove);
-                    window.removeEventListener('mouseup', onMouseUp);
-                    const finalW = Math.round(sidebar.getBoundingClientRect().width);
-                    localStorage.setItem('sps_viewer_sidebar_w', String(finalW));
-                    chartInstances.forEach(c => { try { c.resize(); } catch (_) {} });
-                }
-
-                window.addEventListener('mousemove', onMouseMove);
-                window.addEventListener('mouseup', onMouseUp);
-            });
-        }
-        initSidebarResizer();
 
         async function logout() {
             await fetch('/api/auth/logout', { method: 'POST' });

@@ -247,6 +247,27 @@
 - **Otomatik Boyut Senkronizasyonu (`createManagedChart`, `ensureChartResizeObserver`, `disposeAllCharts`):**
   - Tüm ECharts konteynerleri paylaşılan `ResizeObserver` ve çizim sonrası `requestAnimationFrame` üzerinden `chart.resize()` ile senkronize edildi; yeniden çizimlerde `disconnect()` ile bellek sızıntısı önlendi.
 
+---
 
+### [x] Adım 24: Viewer Üst Bar Sadeleştirmesi, Çoklu Veri Kaynağı Filtre Popup'ı ve BI DB Parametre Hafızası (2026-11-12)
+- **Üst Bar & Kişisel Tasarım Modu (`wwwroot/app.html`):**
+  - İkinci tasarım çubuğu kaldırıldı; `(Tasarım)` rozeti dashboard başlığının yanına, `💾 Tasarımımı Kaydet` / `Kapat` butonları ile Slayt, Otomatik Yenileme, Göster (Refresh) ve Filtre ikonları üst bara taşındı.
+  - Viewer kişisel tasarım modundan `+ Yeni Bileşen Ekle` butonu kaldırıldı; mevcut bileşen düzenleme/kopyalama/taşıma/boyutlandırma akışı korundu.
+- **Otomatik Yenileme & Alt Durum Çubuğu (`wwwroot/app.html`):**
+  - `scheduleActiveDisplayTimer` ve `timerGeneration` ile yenileme/slayt geri sayımının kesintisiz ilerlemesi sağlandı; sayaç rozeti (`#timerStatusBadge`) ve 2px ilerleme çubuğu (`#timerProgressBar`) alt durum çubuğuna (`#viewerStatusBar`) taşındı.
+- **Çoklu Veri Kaynağı `PageTab` Filtre Popup'ı ve Kalıcı Parametreler (`Models/BiSystemModels.cs`, `Data/DatabaseInitializer.cs`, `Services/DynamicQueryService.cs`, `Controllers/DataSourceController.cs`, `Controllers/DashboardController.cs`, `wwwroot/app.html`):**
+  - Dashboard üzerindeki veri kaynaklarından yalnızca parametre tanımlı olanlar için sekmeli (`PageTab`) `#filterPopupModal` eklendi (`Uygula` ve `Kapat` butonları ile).
+  - Kullanıcı bazlı son filtre değerleri BI sistem veritabanındaki `bi_user_dashboards.last_params_json` alanında (`POST /api/dashboards/{id}/user-params`) saklandı ve dashboard yeniden açıldığında bu parametrelerle otomatik yüklenmesi sağlandı.
+- **Düzenleme Modalı Kolon Sıralaması (`wwwroot/app.html`):**
+  - `getSortedAppColumns` ile kolon listesi alfabetik sıralandı ve bileşene özel `dataSourceId` kolonlarının modal açılışında otomatik yüklenmesi sağlandı.
+
+---
+
+### [x] Adım 25: Yatay Boyutlandırma ve 10px Adımlı Sürükle-Bırak Yerleşim İyileştirmeleri (2026-11-12)
+- **Yatay Boyutlandırma (`wwwroot/app.html`, `wwwroot/designer.html`):**
+  - `attachUserResizeBehavior` ve `attachResizeBehavior` içinde aynı satır bandındaki sağda kalan grafiklerin genişleme/daraltma oranında kaydırılması ve `ensureAndCompactAppLayout(..., true)` / `ensureAndCompactLayout(..., true)` ile üst satırdaki boşluklara kaçmalarının engellenmesi sağlandı.
+- **10px Adımlı Sürükleme & Sol Kenar Çizgisi Kuralı (`wwwroot/app.html`):**
+  - `attachUserMoveBehavior` içinde 10px adımlarla hareket eden yarı saydam kart kopyası (`ghostEl`) eklendi ve sürükleme sırasında orijinal kart gizlendi (`.dragging-card`).
+  - Hedef belirleme sürüklenen panelin sol kenar çizgisine (`ghostLeft`) ve hedef panellerin dikey orta çizgisine göre yapıldı; bırakıldığında hem çıkılan satır hem hedef satır en soldan boşluksuz yan yana dizilecek şekilde güncellendi.
 
 
