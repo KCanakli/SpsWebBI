@@ -90,6 +90,7 @@ namespace SpsWebBI.Models
         public bool can_edit_layout { get; set; }
         public string effective_layout_json { get; set; } = "{}";
         public bool has_custom_layout { get; set; }
+        public string? master_layout_json { get; set; }
         public string? last_params_json { get; set; }
     }
 }

@@ -270,4 +270,57 @@
   - `attachUserMoveBehavior` içinde 10px adımlarla hareket eden yarı saydam kart kopyası (`ghostEl`) eklendi ve sürükleme sırasında orijinal kart gizlendi (`.dragging-card`).
   - Hedef belirleme sürüklenen panelin sol kenar çizgisine (`ghostLeft`) ve hedef panellerin dikey orta çizgisine göre yapıldı; bırakıldığında hem çıkılan satır hem hedef satır en soldan boşluksuz yan yana dizilecek şekilde güncellendi.
 
+---
+
+### [x] Adım 26: Yeni Grafik Bildirimleri/Modali, Kişisel Grafik Gizleme, Hızlı Taşıma ve Üst Header Sabitleme (2026-11-13)
+- **Yeni Eklenen Grafikler Bildirimi & Modalı (`wwwroot/app.html`, `Models/BiSystemModels.cs`, `Services/DynamicQueryService.cs`):**
+  - Admin tarafından ana dashboard'a yeni bir grafik eklendiğinde, kişisel tasarımı olan kullanıcılara açılışta sağ üstte bildirim kartı (`#newWidgetsToast`) ve üst barda sayaçlı rozet (`#btnNewWidgetsBadge`) gösterildi; "7 Gün Gösterme" seçeneği ile susturma sağlandı.
+  - `#newWidgetsModal` penceresinde yeni grafikler listelendi; "➕ Tasarımıma Ekle" ile tek tek eklenirken modalın açık kalması, yalnızca tümü eklendiğinde veya kullanıcı "Kapat" dediğinde kapanması sağlandı.
+- **Kişisel Tasarım Modunda Grafikleri Görünümden Kaldırma / Gizleme:**
+  - Kişisel tasarım modunda (`isUserEditMode`) her kartın başlığına çöp sepeti butonu (`.btn-widget-remove`) eklendi; kaldırılan grafikler silinmeyip "Yeni Grafikler" listesine aktarıldı.
+- **Admin Tasarımcısı Hızında ve Kararlılığında Sürükle-Bırak:**
+  - Ağır DOM klonlama ve canvas kopyalama yapan yapı kaldırılarak `designer.html` ile birebir aynı mimariye geçildi (`opacity: 0.55` kart, hafif `.grid-drop-preview`, `computeSnapCol`, `computeTargetRow`).
+- **Üst Hamburger Menü Satırının Sabitlenmesi (`position: sticky`):**
+  - `body { height: 100vh; overflow: hidden; }` ve `.top-header { position: sticky; top: 0; flex-shrink: 0; z-index: 200; }` tanımlanarak dikey kaydırmada menü çubuğunun ekranda her an sabit kalması sağlandı.
+
+---
+
+### [x] Adım 27: Akıllı 2B Slot & Takas (Swap) Motoru ve 60 FPS Sürükleme Optimizasyonu (2026-11-13)
+- **Akıllı Yerleşim ve Takas Motoru (`applySmartLayoutDrop` - `wwwroot/app.html`):**
+  - Domino etkisi yaratan körlemesine sağa itme döngüsü kaldırıldı.
+  - **Boş Alana Bırakma:** Taşınan grafik boş bir alana bırakıldığında diğer hiçbir grafiğe dokunulmadan doğrudan o koordinata yerleşmesi sağlandı (aradaki boşluklar korundu).
+  - **Akıllı Takas (Direct Swap):** Bir grafik başka bir grafiğin yerine sürüklendiğinde, hedefteki kart taşınan kartın boşalttığı eski yere yerleşerek iki kartın düzeni bozmadan takas edilmesi sağlandı.
+  - **Çok Satırlı & Küçük Kart İzolasyonu:** 2 katlı büyük grafiklerin (Huni) ve küçük kartların (KPI) yanlarındaki yerleşimlerde aday slot önceliklendirmesi (eski yer, sağ, sol, alt) ile stabil yerleşim garantilendi.
+- **60 FPS Sürükleme Performansı:**
+  - `mousedown` anında tuval ve diğer kartların koordinatları bir kez önbelleğe alınarak `mousemove` sırasındaki forced DOM reflow yükü sıfırlandı.
+  - `requestAnimationFrame` ve hücre değişikliği kontrolü ile yalnızca yeni ızgara hücresine geçildiğinde önizleme güncellenerek yağ gibi akıcı sürükleme sağlandı.
+
+---
+
+### [x] Adım 28: Sol Kart Korumalı Sütun Ekleme ve Zincirleme Sağa Kaydırma Motoru (2026-11-13)
+- **Sol Kart Korumalı Sütun Ekleme (`applySmartLayoutDrop` & `applySmartDesignerDrop` - `wwwroot/app.html`, `wwwroot/designer.html`):**
+  - İki sütun arasına grafik sürüklendiğinde (örneğin solundaki KPI kartlarının sağ kenarına bitişik sütuna bırakıldığında) soldaki kartların takasla veya taşma nedeniyle en sağa fırlaması engellendi.
+  - `ob.col < finalCol && ob.col + ob.wSpan > finalCol` durumunda bırakılan grafik sol kartın tam sağ kenarına (`ob.col + ob.wSpan`) hizalanarak sol kartlar tamamen kilitlendi.
+  - Yalnızca hedef sütundaki ve sağındaki çakışan grafikler (ör. Huni ve sağındakiler) zincirleme olarak sağa kaydırıldı; boş alana bırakmada ise diğer hiçbir karta dokunulmadı.
+- **Akıllı Kenar Snap Önceliği (`computeSnapCol`):**
+  - Sabit ızgara çizgileri (`30, 40, 60, 80, 90`) yerine gerçek bileşen kenarlarına (`oc`, `oc + m.gridSpan120`, `oc - gridSpan120`) öncelik verilerek en yakın snap noktasının seçilmesi sağlandı.
+
+---
+
+### [x] Adım 29: Serbest Bırakma, Sola Yasla Butonu, <1ms Anlık DOM Güncelleme, Kaydırma Koruması ve Tablo Alt Özet Seçenekleri (2026-11-13)
+- **Tam Serbest Fare Bırakma & Hassas Yerleşim (`wwwroot/designer.html`, `wwwroot/app.html`):**
+  - Sürükleme sırasındaki zorunlu kenar/satır yapışmaları (`computeSnapCol`, `computeTargetRow`) kaldırıldı; sürükleme eşiği `2px` (`dist > 2`), ızgara adımı `1` mikro-birime düşürüldü.
+  - Bırakılan noktadaki çakışan kartlardan sağdakiler sağa, altındakiler aşağı kaydırılacak şekilde güncellendi; `renderDesignerCanvas()` içinde `ensureAndCompactLayout(widgets, null, true)` ile dikey yerçekiminin kartları en üste çekmesi engellendi.
+- **Sola Yasla Butonu (`compactWidgetsLeft` / `compactAppWidgetsLeft`):**
+  - Tasarım Stüdyosu ve Viewer Tasarım modu araç çubuklarına **Sola Yasla** SVG ikonu eklendi; tek tıkla tuvaldeki tüm kartların satır yüksekliğini bozmadan soldaki komşularına sıfır boşlukla yaslanması sağlandı.
+- **<1ms Anlık Bırakma & Kaydırma Konumu Koruması (`syncDesignerPositionsToDom` / `syncAppPositionsToDom`):**
+  - Taşıma bırakıldığında ve **Sola Yasla** tıklandığında ECharts grafiklerinin ve tabloların silinip baştan çizilmesi yerine mevcut DOM kartlarının `gridColumn` / `gridRow` değerleri yerinde güncellendi; ayrıca `renderDesignerCanvas()` ve `renderAllWidgets()` içine kaydırma konumu (`scrollTop`/`scrollLeft`) koruması eklendi.
+- **Tablo Sütunları Alt Özet (`tfoot`) Seçenekleri (`w.columnAggs`, `formatTableFooterCell`):**
+  - `designer.html` **Tablo Sütunları** listesinde her kolonun altına `Alt Özet` açılır listesi eklendi (`Otomatik`, `Yok`, `Toplam (Σ)`, `Adet (#)`, `Ortalama (x̄)`, `Minimum (↓)`, `Maksimum (↑)`).
+  - Sayısal alt özet değerlerinin ilgili kolonun `columnFormats` biçim maskesiyle aynı formatta gösterilmesi sağlandı.
+
+
+
+
+
 

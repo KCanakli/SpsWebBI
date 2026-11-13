@@ -21,11 +21,14 @@
         }
         * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
         body {
-            margin: 0; background: var(--bg); color: var(--text); min-height: 100vh;
-            display: flex; flex-direction: column; overflow-x: hidden;
+            margin: 0; background: var(--bg); color: var(--text); height: 100vh;
+            display: flex; flex-direction: column; overflow: hidden;
         }
         /* Üst Navigasyon Çubuğu (İnce / Dar Tasarım + Hamburger Menü) */
         .top-header {
+            position: sticky;
+            top: 0;
+            flex-shrink: 0;
             height: 36px;
             min-height: 36px;
             background: var(--panel);
@@ -405,8 +408,9 @@
             box-shadow: inset 0 0 18px rgba(56, 189, 248, 0.2);
         }
         .widget-card.dragging-card {
-            visibility: hidden;
-            pointer-events: none;
+            opacity: 0.55;
+            border-color: #38bdf8;
+            z-index: 30;
         }
         .widget-card.card-drop-target {
             border-color: #10b981;
@@ -484,6 +488,9 @@
         .modal-backdrop {
             display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75);
             z-index: 1000; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-backdrop.active {
+            display: flex !important;
         }
         .modal-card {
             background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
@@ -856,6 +863,133 @@
             border-color: #7da2ce;
             box-shadow: 0 16px 36px rgba(16, 42, 76, 0.22);
         }
+
+        /* YENİ GRAFİKLER BİLDİRİM KARTI (TOAST) & ROZET */
+        .new-widgets-toast {
+            position: fixed;
+            top: 48px;
+            right: 18px;
+            z-index: 1050;
+            background: var(--card-bg, #1e293b);
+            border: 1px solid #38bdf8;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+            border-radius: 8px;
+            padding: 12px 14px;
+            max-width: 380px;
+            animation: toastSlideIn 0.25s ease-out;
+        }
+        @keyframes toastSlideIn {
+            from { transform: translateY(-16px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .toast-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .toast-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .toast-close {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 0.95rem;
+            padding: 2px 4px;
+            line-height: 1;
+        }
+        .toast-close:hover { color: var(--text); }
+        .toast-body {
+            font-size: 0.8rem;
+            color: var(--text);
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+        .toast-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .btn-new-widgets-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.72rem;
+            padding: 4px 9px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            animation: badgePulse 2s infinite ease-in-out;
+        }
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            50% { transform: scale(1.04); box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2); }
+        }
+        .new-widget-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            margin-bottom: 8px;
+            gap: 12px;
+        }
+        body.light-theme .new-widget-item {
+            background: #f8fafc;
+        }
+        .new-widget-item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+            flex: 1;
+        }
+        .new-widget-item-title {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+        .new-widget-item-sub {
+            font-size: 0.73rem;
+            color: var(--muted);
+        }
+        .btn-widget-remove {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #f87171;
+            width: 24px;
+            height: 24px;
+            border-radius: 5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            margin-left: auto;
+            flex-shrink: 0;
+            transition: all 0.15s ease;
+        }
+        .btn-widget-remove:hover {
+            background: #ef4444;
+            color: #ffffff;
+            border-color: #dc2626;
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -935,6 +1069,15 @@
             <input type="checkbox" id="chkAutoRefresh" onchange="onModeCheckboxChanged('refresh')" style="display:none;">
 
             <div class="user-edit-top-actions" id="userEditTopActions">
+                <button type="button" class="btn" onclick="compactAppWidgetsLeft()" title="Tuvaldeki grafikleri satırlarını bozmadan sola yasla"
+                    style="display:inline-flex;align-items:center;gap:4px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="4" y1="3" x2="4" y2="21"></line>
+                        <rect x="8" y="5" width="12" height="5" rx="1"></rect>
+                        <rect x="8" y="14" width="8" height="5" rx="1"></rect>
+                    </svg>
+                    <span>Sola Yasla</span>
+                </button>
                 <button type="button" class="btn btn-accent" onclick="saveUserCustomLayout()" title="Kişisel yerleşimi hesabınıza kaydedin">💾 Tasarımımı Kaydet</button>
                 <button type="button" class="btn" onclick="toggleUserEditMode()" title="Kişisel tasarım modundan çık">Kapat</button>
             </div>
@@ -977,6 +1120,10 @@
                     </svg>
                     <span class="filter-count-dot" id="filterParamCountBadge"></span>
                 </button>
+
+                <button type="button" class="btn-new-widgets-badge" id="btnNewWidgetsBadge" style="display:none;" onclick="openNewWidgetsModal()" title="Admin tarafından yeni analiz grafikleri eklendi">
+                    🔔 <span id="newWidgetsCountText">0 Yeni Grafik</span>
+                </button>
             </div>
 
             <select id="selThemeMode" class="btn" onchange="onThemeSelectChange(this.value)" title="Görünüm Teması Seçin" style="padding:3px 8px;cursor:pointer;">
@@ -988,6 +1135,21 @@
             <button type="button" class="btn btn-danger" onclick="logout()" title="Oturumu kapat ve şifre ekranına dön">Çıkış</button>
         </div>
     </header>
+
+    <!-- Admin Yeni Grafik Bildirim Kartı (Toast) -->
+    <div id="newWidgetsToast" class="new-widgets-toast" style="display:none;">
+        <div class="toast-header">
+            <span class="toast-title">📢 Yeni Analiz Grafikleri Eklendi</span>
+            <button type="button" class="toast-close" onclick="closeNewWidgetsToast()" title="Kapat">✕</button>
+        </div>
+        <div class="toast-body" id="newWidgetsToastBody">
+            Bu dashboard için yöneticiniz tarafından <strong>1 yeni grafik</strong> tanımlandı. Kendi tasarımınıza eklemek ister misiniz?
+        </div>
+        <div class="toast-actions">
+            <button type="button" class="btn btn-primary" style="padding:4px 10px;font-size:0.75rem;" onclick="openNewWidgetsModal()">➕ Grafikleri İncele & Ekle</button>
+            <button type="button" class="btn" style="padding:4px 10px;font-size:0.75rem;" onclick="dismissNewWidgetsFor7Days()">🗓️ 7 Gün Gösterme</button>
+        </div>
+    </div>
 
     <!-- Ana Çalışma Alanı: Tam Ekran Grafik Tuvali -->
     <div class="viewer-workspace">
@@ -1009,6 +1171,27 @@
             <div class="filter-popup-footer">
                 <button type="button" class="btn" onclick="closeFilterPopup()">Kapat</button>
                 <button type="button" class="btn btn-primary" onclick="applyFilterPopup()">Uygula</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Yeni Eklenen Grafikleri İnceleme ve Seçici Ekleme Modalı -->
+    <div class="modal-backdrop" id="newWidgetsModal" onclick="if(event.target===this) closeNewWidgetsModal()">
+        <div class="modal-card" style="max-width:620px;">
+            <div class="modal-header">
+                <h3 style="margin:0;font-size:1rem;display:flex;align-items:center;gap:6px;">
+                    <span>✨</span>
+                    <span>Admin Tarafından Eklenen Yeni Grafikler</span>
+                </h3>
+                <button type="button" class="btn" onclick="closeNewWidgetsModal()">✕</button>
+            </div>
+            <div style="padding:14px 18px 6px 18px;font-size:0.8rem;color:var(--muted);">
+                Aşağıdaki grafikler yöneticiniz tarafından ana şablona eklendi ancak kişisel tasarımınızda henüz bulunmuyor. Eklemek istediklerinizi seçebilirsiniz:
+            </div>
+            <div style="padding:10px 18px 16px 18px;max-height:55vh;overflow-y:auto;" id="newWidgetsModalList"></div>
+            <div class="filter-popup-footer" style="padding:10px 18px;">
+                <button type="button" class="btn" onclick="closeNewWidgetsModal()">Kapat</button>
+                <button type="button" class="btn btn-accent" onclick="addAllNewWidgetsToLayout()">➕ Tümünü Tasarımıma Ekle</button>
             </div>
         </div>
     </div>
@@ -1671,6 +1854,7 @@
 
             await loadDashboardDatasourceParameters(dash, currentLayout, preserveFilters);
             await refreshActiveDashboardData();
+            checkAndNotifyNewWidgets(dash);
         }
 
         function getEffectiveAppWidgetDataSourceId(w) {
@@ -1905,6 +2089,135 @@
             return { col: 0, row: 0 };
         }
 
+        // SERBEST BIRAKMA & SAĞA/AŞAĞI KAYDIRMA MOTORU
+        function applySmartLayoutDrop(widgets, movedWidget, initialCol, initialRow, targetCol, targetRow) {
+            if (!Array.isArray(widgets) || !movedWidget) return;
+            const maxMicroCols = getAppMaxMicroCols();
+            const metricsA = calcAppWidgetGridMetrics(movedWidget);
+            const wSpanA = metricsA.gridSpan120;
+            const hSpanA = metricsA.rowSpan;
+
+            const finalCol = Math.max(0, Math.min(maxMicroCols - wSpanA, Math.round(targetCol)));
+            const finalRow = Math.max(0, Math.round(targetRow));
+
+            if (finalCol === initialCol && finalRow === initialRow) {
+                movedWidget.col = finalCol;
+                movedWidget.row = finalRow;
+                return;
+            }
+
+            const getBox = w => {
+                const m = calcAppWidgetGridMetrics(w);
+                return {
+                    w,
+                    id: w.id,
+                    col: typeof w.col === 'number' ? w.col : 0,
+                    row: typeof w.row === 'number' ? w.row : 0,
+                    wSpan: m.gridSpan120,
+                    hSpan: m.rowSpan
+                };
+            };
+
+            movedWidget.col = finalCol;
+            movedWidget.row = finalRow;
+            const placedBoxes = [{ id: movedWidget.id, col: finalCol, row: finalRow, wSpan: wSpanA, hSpan: hSpanA }];
+
+            const otherBoxes = widgets
+                .filter(w => w.id !== movedWidget.id)
+                .map(getBox)
+                .sort((a, b) => (a.col - b.col) || (a.row - b.row));
+
+            for (const ob of otherBoxes) {
+                let curCol = ob.col;
+                let curRow = ob.row;
+
+                let safety = 0;
+                while (safety++ < 50) {
+                    const curBox = { id: ob.id, col: curCol, row: curRow, wSpan: ob.wSpan, hSpan: ob.hSpan };
+                    const blocker = placedBoxes.find(p => appBoxesOverlap(curBox, p));
+                    if (!blocker) break;
+
+                    // Altındaki nesneyi aşağı kaydır; yanındaki/sağındaki nesneyi sağa kaydır
+                    if (curRow >= blocker.row + Math.ceil(blocker.hSpan / 2)) {
+                        curRow = blocker.row + blocker.hSpan;
+                    } else {
+                        const nextCol = blocker.col + blocker.wSpan;
+                        if (nextCol + ob.wSpan <= maxMicroCols) {
+                            curCol = nextCol;
+                        } else {
+                            curRow = blocker.row + blocker.hSpan;
+                        }
+                    }
+                }
+
+                ob.w.col = curCol;
+                ob.w.row = curRow;
+                placedBoxes.push({ id: ob.id, col: curCol, row: curRow, wSpan: ob.wSpan, hSpan: ob.hSpan });
+            }
+        }
+
+        // TÜM GRAFİKLERİ SATIRLARINI KORUYARAK SOLA YASLA
+        function compactAppWidgetsLeft() {
+            const widgets = currentLayout?.widgets || [];
+            if (widgets.length === 0) return;
+
+            const items = widgets.map(w => {
+                const m = calcAppWidgetGridMetrics(w);
+                return {
+                    w,
+                    id: w.id,
+                    col: typeof w.col === 'number' ? w.col : 0,
+                    row: typeof w.row === 'number' ? w.row : 0,
+                    wSpan: m.gridSpan120,
+                    hSpan: m.rowSpan
+                };
+            }).sort((a, b) => (a.col - b.col) || (a.row - b.row));
+
+            const placed = [];
+            for (const item of items) {
+                let targetCol = 0;
+                for (const p of placed) {
+                    const vertOverlap = item.row < p.row + p.hSpan && item.row + item.hSpan > p.row;
+                    if (vertOverlap) {
+                        const rightEdge = p.col + p.wSpan;
+                        if (rightEdge > targetCol) {
+                            targetCol = rightEdge;
+                        }
+                    }
+                }
+                item.col = targetCol;
+                item.w.col = targetCol;
+                placed.push(item);
+            }
+
+            if (!syncAppPositionsToDom()) renderAllWidgets();
+        }
+
+        // GRAFİKLERİ SİLİP YENİDEN ÇİZMEDEN YALNIZCA DOM KONUMLARINI ANLIK GÜNCELLE (<1ms)
+        function syncAppPositionsToDom() {
+            const canvas = document.getElementById('dashboardCanvas');
+            const widgets = currentLayout?.widgets || [];
+            if (!canvas || widgets.length === 0) return false;
+
+            const cardMap = new Map();
+            canvas.querySelectorAll('.widget-card[data-widget-id]').forEach(el => {
+                cardMap.set(el.dataset.widgetId, el);
+            });
+            if (cardMap.size !== widgets.length) return false;
+
+            applyAppCanvasDimensions();
+            for (const w of widgets) {
+                const card = cardMap.get(String(w.id));
+                if (!card) return false;
+                const { gridSpan120, rowSpan } = calcAppWidgetGridMetrics(w);
+                const cStart = (typeof w.col === 'number' ? w.col : 0) + 1;
+                const rStart = (typeof w.row === 'number' ? w.row : 0) + 1;
+                card.style.gridColumn = `${cStart} / span ${gridSpan120}`;
+                card.style.gridRow = `${rStart} / span ${rowSpan}`;
+            }
+            return true;
+        }
+
         function ensureAndCompactAppLayout(widgets, pinnedWidgetId = null, preferShiftRight = false) {
             if (!Array.isArray(widgets) || widgets.length === 0) return;
             const maxMicroCols = getAppMaxMicroCols();
@@ -1937,7 +2250,7 @@
                         box.col = nextRightCol;
                     } else {
                         box.col = c;
-                        box.row++;
+                        box.row = blocker.row + blocker.hSpan;
                     }
                     blocker = placed.find(p => appBoxesOverlap(box, p));
                 }
@@ -2034,6 +2347,14 @@
             disposeAllCharts();
 
             const canvas = document.getElementById('dashboardCanvas');
+            const scrollEl = document.querySelector('.canvas-area') || canvas.parentElement;
+            const savedScrollTop = scrollEl ? scrollEl.scrollTop : 0;
+            const savedScrollLeft = scrollEl ? scrollEl.scrollLeft : 0;
+            const savedWinY = window.scrollY;
+            const savedWinX = window.scrollX;
+            const prevMinH = canvas.style.minHeight;
+            if (canvas.offsetHeight > 0) canvas.style.minHeight = canvas.offsetHeight + 'px';
+
             canvas.innerHTML = '';
             canvas.ondragover = null;
             canvas.ondrop = null;
@@ -2096,10 +2417,27 @@
 
                 header.appendChild(titleWrap);
 
-                // Kişisel Tasarım Modunda 2 Boyutlu Serbest Taşıma ve Köşeden Boyutlandırma (Düzenle/Sil sağ tuş menüsünde)
+                // Kişisel Tasarım Modunda 2 Boyutlu Serbest Taşıma, Köşeden Boyutlandırma ve Gizle/Kaldır Butonu
                 if (isUserEditMode) {
                     header.style.cursor = 'move';
                     attachUserMoveBehavior(card, w, header);
+
+                    const btnRemove = document.createElement('button');
+                    btnRemove.type = 'button';
+                    btnRemove.className = 'btn-widget-remove';
+                    btnRemove.title = 'Bu grafiği görünümden gizle / kaldır';
+                    btnRemove.innerHTML = `
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg>`;
+                    btnRemove.onclick = e => {
+                        e.stopPropagation();
+                        removeWidgetFromUserLayout(w.id);
+                    };
+                    header.appendChild(btnRemove);
                 }
 
                 const body = document.createElement('div');
@@ -2131,6 +2469,15 @@
 
                 renderSingleWidget(w, body);
             });
+
+            canvas.style.minHeight = prevMinH || '';
+            if (scrollEl) {
+                scrollEl.scrollTop = savedScrollTop;
+                scrollEl.scrollLeft = savedScrollLeft;
+            }
+            if (window.scrollY !== savedWinY || window.scrollX !== savedWinX) {
+                window.scrollTo(savedWinX, savedWinY);
+            }
         }
 
         function attachUserMoveBehavior(cardEl, widgetObj, headerEl) {
@@ -2153,142 +2500,56 @@
                 const maxMicroCols = getAppMaxMicroCols();
                 const initialCol = typeof widgetObj.col === 'number' ? widgetObj.col : 0;
                 const initialRow = typeof widgetObj.row === 'number' ? widgetObj.row : 0;
-                const initialRightEdge = initialCol + gridSpan120;
                 let isDragging = false;
                 let previewEl = null;
                 let targetCol = initialCol;
                 let targetRow = initialRow;
 
-                function getOtherCardRects() {
-                    const items = [];
-                    canvasEl.querySelectorAll('.widget-card:not(.dragging-card)').forEach(el => {
-                        const wid = el.dataset.widgetId;
-                        const w = (currentLayout?.widgets || []).find(x => x.id === wid);
-                        if (!w || w.id === widgetObj.id) return;
-                        items.push({ widget: w, rect: el.getBoundingClientRect() });
-                    });
-                    return items;
+                // Mousedown anında tuval koordinatlarını ve diğer kartların verilerini 1 kez önbelleğe al (Sıfır Reflow)
+                const cRect = canvasEl.getBoundingClientRect();
+                const gridLeft = cRect.left + 16;
+                const gridTop = cRect.top + 16;
+                const microColW = unit120W / 120;
+                const maxCol = Math.max(0, maxMicroCols - gridSpan120);
+
+                const otherCards = [];
+                const widgetColSnapPoints = [];
+                const gridColSnapPoints = [0, 30, 40, 60, 80, 90, 120, 120 - gridSpan120, maxCol];
+                const rowSnapPoints = [0];
+
+                (currentLayout?.widgets || []).forEach(other => {
+                    if (other.id === widgetObj.id) return;
+                    const m = calcAppWidgetGridMetrics(other);
+                    const oc = typeof other.col === 'number' ? other.col : 0;
+                    const or = typeof other.row === 'number' ? other.row : 0;
+                    otherCards.push({ id: other.id, col: oc, row: or, wSpan: m.gridSpan120, hSpan: m.rowSpan });
+                    widgetColSnapPoints.push(oc, oc + m.gridSpan120, oc - gridSpan120);
+                    rowSnapPoints.push(or, or + m.rowSpan);
+                });
+                const colSnapPoints = [...widgetColSnapPoints, ...gridColSnapPoints];
+
+                function computeSnapCol(rawCol) {
+                    return Math.max(0, Math.min(maxCol, Math.round(rawCol)));
                 }
 
-                // Bırakma hedefi: { row, sortKey } — sortKey satırdaki kolonlarla karşılaştırılıp sıra belirlenir
-                let dropTarget = null;
-                const rowOfW = w => (typeof w.row === 'number' ? w.row : 0);
-                const colOfW = w => (typeof w.col === 'number' ? w.col : 0);
-
-                function computeDropTarget(ghostLeft, ghostCenterY, cardItems) {
-                    if (!cardItems.length) return { row: 0, sortKey: 0 };
-
-                    // 1) Dikey merkeze göre hedef satırı bul
-                    let row = null;
-                    let bestTop = -Infinity;
-                    for (const item of cardItems) {
-                        if (ghostCenterY >= item.rect.top && ghostCenterY <= item.rect.bottom && item.rect.top > bestTop) {
-                            bestTop = item.rect.top;
-                            row = rowOfW(item.widget);
-                        }
-                    }
-                    if (row === null) {
-                        const maxBottomPx = Math.max(...cardItems.map(i => i.rect.bottom));
-                        if (ghostCenterY > maxBottomPx) {
-                            row = Math.max(...cardItems.map(i => rowOfW(i.widget) + calcAppWidgetGridMetrics(i.widget).rowSpan));
-                        } else {
-                            let bestDist = Infinity;
-                            cardItems.forEach(i => {
-                                const d = Math.abs(ghostCenterY - (i.rect.top + i.rect.bottom) / 2);
-                                if (d < bestDist) { bestDist = d; row = rowOfW(i.widget); }
-                            });
-                        }
-                    }
-
-                    // 2) Sürüklenen panelin sol çizgisi, satırdaki hangi kartın dikey orta çizgisinin solundaysa onun önüne koy
-                    const rowItems = cardItems
-                        .filter(i => rowOfW(i.widget) === row)
-                        .sort((a, b) => colOfW(a.widget) - colOfW(b.widget));
-                    for (const i of rowItems) {
-                        if (ghostLeft < i.rect.left + i.rect.width / 2) {
-                            return { row, sortKey: colOfW(i.widget) - 0.5 };
-                        }
-                    }
-                    const last = rowItems[rowItems.length - 1];
-                    return { row, sortKey: last ? colOfW(last.widget) + 0.5 : 0 };
+                function computeTargetRow(col, rawRow) {
+                    return Math.max(0, Math.round(rawRow));
                 }
 
-                // Satırı (taşınan grafik dahil) soldan boşluksuz dizer; apply=false ise sadece taşınan grafiğin kolonunu döner
-                function packRowWithMoved(rowIdx, sortKey, apply) {
-                    const items = (currentLayout?.widgets || [])
-                        .filter(o => o && o.id !== widgetObj.id && rowOfW(o) === rowIdx)
-                        .map(o => ({ w: o, key: colOfW(o) }));
-                    items.push({ w: widgetObj, key: sortKey });
-                    items.sort((a, b) => a.key - b.key);
-                    let cursor = 0;
-                    let movedCol = 0;
-                    items.forEach(it => {
-                        if (it.w === widgetObj) movedCol = cursor;
-                        if (apply) { it.w.col = cursor; it.w.row = rowIdx; }
-                        cursor += calcAppWidgetGridMetrics(it.w).gridSpan120;
-                    });
-                    return movedCol;
-                }
-
-                let ghostEl = null;
-                const MOVE_STEP_PX = 10;
-
-                function createDragGhost() {
-                    const g = cardEl.cloneNode(true);
-                    g.removeAttribute('id');
-                    g.classList.remove('dragging-card', 'ctx-active-card');
-                    g.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
-                    // ECharts canvas içeriklerini kopyaya aktar
-                    const srcCanvases = cardEl.querySelectorAll('canvas');
-                    const dstCanvases = g.querySelectorAll('canvas');
-                    srcCanvases.forEach((src, i) => {
-                        const dst = dstCanvases[i];
-                        if (!dst) return;
-                        try {
-                            dst.width = src.width;
-                            dst.height = src.height;
-                            dst.getContext('2d').drawImage(src, 0, 0);
-                        } catch (_) {}
-                    });
-                    Object.assign(g.style, {
-                        position: 'fixed',
-                        left: `${cardRect.left}px`,
-                        top: `${cardRect.top}px`,
-                        width: `${cardRect.width}px`,
-                        height: `${cardRect.height}px`,
-                        margin: '0',
-                        zIndex: '9999',
-                        pointerEvents: 'none',
-                        opacity: '0.8',
-                        boxShadow: '0 12px 32px rgba(0,0,0,0.45)',
-                        outline: '2px solid #3b82f6',
-                        transition: 'none'
-                    });
-                    document.body.appendChild(g);
-                    return g;
-                }
+                let rafId = null;
+                let lastRenderedCol = -1;
+                let lastRenderedRow = -1;
 
                 function onMouseMove(ev) {
                     const dist = Math.hypot(ev.clientX - startX, ev.clientY - startY);
-                    if (!isDragging && dist > 4) {
+                    if (!isDragging && dist > 2) {
                         isDragging = true;
                         cardEl.classList.add('dragging-card');
                         previewEl = document.createElement('div');
                         previewEl.className = 'grid-drop-preview';
                         canvasEl.appendChild(previewEl);
-                        ghostEl = createDragGhost();
                     }
                     if (!isDragging) return;
-
-                    // 10 piksellik adımlarla hareket
-                    const stepDx = Math.round((ev.clientX - startX) / MOVE_STEP_PX) * MOVE_STEP_PX;
-                    const stepDy = Math.round((ev.clientY - startY) / MOVE_STEP_PX) * MOVE_STEP_PX;
-                    if (ghostEl) {
-                        ghostEl.style.left = `${cardRect.left + stepDx}px`;
-                        ghostEl.style.top = `${cardRect.top + stepDy}px`;
-                    }
-                    const ghostLeft = cardRect.left + stepDx;
-                    const ghostCenterY = cardRect.top + stepDy + cardRect.height / 2;
 
                     if (getAppCanvasMode() === 'expandable' && areaEl) {
                         const aRect = areaEl.getBoundingClientRect();
@@ -2299,53 +2560,46 @@
                         }
                     }
 
-                    const cardItems = getOtherCardRects();
-                    dropTarget = computeDropTarget(ghostLeft, ghostCenterY, cardItems);
-                    targetRow = dropTarget.row;
-                    targetCol = Math.max(0, Math.min(Math.max(0, maxMicroCols - gridSpan120),
-                        packRowWithMoved(dropTarget.row, dropTarget.sortKey, false)));
+                    if (rafId) cancelAnimationFrame(rafId);
+                    rafId = requestAnimationFrame(() => {
+                        const relX = (ev.clientX - grabOffsetX) - gridLeft;
+                        const relY = (ev.clientY - grabOffsetY) - gridTop;
 
-                    if (getAppCanvasMode() === 'expandable') {
-                        const neededMicro = Math.max(getAppEffectiveCanvasCols() * 10, targetCol + gridSpan120);
-                        applyAppCanvasDimensions(neededMicro);
-                    }
+                        const rawCol = Math.round(relX / microColW);
+                        const rawRow = Math.max(0, Math.round(relY / 14));
 
-                    const totalColsUi = Math.round(getAppMaxMicroCols() === 120 ? 12 : Math.max(12, Math.ceil((targetCol + gridSpan120) / 10)));
-                    previewEl.style.gridColumn = `${targetCol + 1} / span ${gridSpan120}`;
-                    previewEl.style.gridRow = `${targetRow + 1} / span ${rowSpan}`;
-                    previewEl.textContent = `📍 Konum: ${(targetCol / 10).toFixed(1)}/${totalColsUi} (${colSpan12}×${hUnits})`;
+                        targetCol = computeSnapCol(rawCol);
+                        targetRow = computeTargetRow(targetCol, rawRow);
+
+                        if (getAppCanvasMode() === 'expandable') {
+                            const neededMicro = Math.max(getAppEffectiveCanvasCols() * 10, targetCol + gridSpan120);
+                            applyAppCanvasDimensions(neededMicro);
+                        }
+
+                        // SADECE hücre değiştiğinde DOM grid güncellemesi yap (60 FPS Akıcılık)
+                        if (targetCol !== lastRenderedCol || targetRow !== lastRenderedRow) {
+                            lastRenderedCol = targetCol;
+                            lastRenderedRow = targetRow;
+                            const totalColsUi = Math.round(getAppMaxMicroCols() === 120 ? 12 : Math.max(12, Math.ceil((targetCol + gridSpan120) / 10)));
+                            previewEl.style.gridColumn = `${targetCol + 1} / span ${gridSpan120}`;
+                            previewEl.style.gridRow = `${targetRow + 1} / span ${rowSpan}`;
+                            previewEl.textContent = `📍 Konum: ${(targetCol / 10).toFixed(1)}/${totalColsUi} (${colSpan12}×${hUnits})`;
+                        }
+                    });
                 }
 
                 function onMouseUp() {
                     window.removeEventListener('mousemove', onMouseMove);
                     window.removeEventListener('mouseup', onMouseUp);
+                    if (rafId) cancelAnimationFrame(rafId);
                     cardEl.classList.remove('ctx-active-card');
-                    if (ghostEl) { ghostEl.remove(); ghostEl = null; }
                     if (isDragging) {
                         cardEl.classList.remove('dragging-card');
                         if (previewEl) previewEl.remove();
 
-                        const allWidgets = currentLayout?.widgets || [];
-                        const finalRow = dropTarget ? dropTarget.row : targetRow;
-                        const finalKey = dropTarget ? dropTarget.sortKey : targetCol - 0.5;
-
-                        // Kaynak satırı (taşınan hariç) soldan boşluksuz diz
-                        function packSourceRow(rowIdx) {
-                            let cursor = 0;
-                            allWidgets
-                                .filter(o => o && o.id !== widgetObj.id && rowOfW(o) === rowIdx)
-                                .sort((a, b) => colOfW(a) - colOfW(b))
-                                .forEach(o => {
-                                    o.col = cursor;
-                                    cursor += calcAppWidgetGridMetrics(o).gridSpan120;
-                                });
-                        }
-
-                        packRowWithMoved(finalRow, finalKey, true);
-                        if (initialRow !== finalRow) packSourceRow(initialRow);
-
-                        ensureAndCompactAppLayout(currentLayout.widgets, widgetObj.id, true);
-                        renderAllWidgets();
+                        // Akıllı Yerleşim & Takas (Swap) Motoru
+                        applySmartLayoutDrop(currentLayout.widgets, widgetObj, initialCol, initialRow, targetCol, targetRow);
+                        if (!syncAppPositionsToDom()) renderAllWidgets();
                     }
                 }
 
@@ -4012,6 +4266,25 @@
             return [];
         }
 
+        function formatTableFooterCell(rows, c, colMeta, aggMode, idx) {
+            const mode = (aggMode || 'auto').toLowerCase();
+            if (mode === 'none') return '';
+            if (mode === 'auto') {
+                if (colMeta && colMeta.dataType === 'number' && !c.toLowerCase().endsWith('_id') && !/y[ıi]l|ay\b/i.test(c)) {
+                    return escapeHtml(formatValueByColumn(computeAggregate(rows, c, 'sum'), c, 'number'));
+                }
+                return idx === 0 ? 'Toplam (' + rows.length + ')' : '';
+            }
+            if (mode === 'count') {
+                const cnt = computeAggregate(rows, c, 'count');
+                return 'Adet: ' + escapeHtml(cnt.toLocaleString('tr-TR'));
+            }
+            const val = computeAggregate(rows, c, mode);
+            const formatted = escapeHtml(formatValueByColumn(val, c, 'number'));
+            const prefix = mode === 'avg' ? 'Ort: ' : (mode === 'min' ? 'Min: ' : (mode === 'max' ? 'Maks: ' : ''));
+            return prefix + formatted;
+        }
+
         function renderDataTable(w, rows, container) {
             const widgetKey = w.id || 'modal_table';
             const widgetColsMeta = getWidgetColumnsMeta(w, rows);
@@ -4057,12 +4330,8 @@
             cols.forEach((c, idx) => {
                 const colMeta = getColumnMeta(c) || widgetColsMeta.find(x => x.name.toLowerCase() === c.toLowerCase());
                 const cAlign = getColumnAlign(c, w.align || 'left');
-                if (colMeta && colMeta.dataType === 'number' && !c.toLowerCase().endsWith('_id') && !/y[ıi]l|ay\b/i.test(c)) {
-                    const sum = computeAggregate(rows, c, 'sum');
-                    html += `<td style="text-align:${cAlign};">${escapeHtml(formatValueByColumn(sum, c, 'number'))}</td>`;
-                } else {
-                    html += `<td style="text-align:${cAlign};">${idx === 0 ? 'Toplam (' + rows.length + ')' : ''}</td>`;
-                }
+                const aggMode = (w.columnAggs && w.columnAggs[c]) ? w.columnAggs[c] : 'auto';
+                html += `<td style="text-align:${cAlign};">${formatTableFooterCell(rows, c, colMeta, aggMode, idx)}</td>`;
             });
             html += '</tr></tfoot></table>';
             container.innerHTML = html;
@@ -4334,6 +4603,206 @@
                 await loadAuthorizedDashboards();
                 await loadAndRenderDashboard(activeDashboardIndex, false);
             }
+        }
+
+        // ==========================================
+        // YENİ GRAFİKLER BİLDİRİM VE SEÇİCİ EKLEME
+        // ==========================================
+        let currentMissingWidgets = [];
+
+        function checkAndNotifyNewWidgets(dash) {
+            currentMissingWidgets = [];
+            const badge = document.getElementById('btnNewWidgetsBadge');
+            const toast = document.getElementById('newWidgetsToast');
+            if (badge) badge.style.display = 'none';
+            if (toast) toast.style.display = 'none';
+
+            if (!dash || !dash.has_custom_layout || !dash.master_layout_json) return;
+
+            let masterLayout = null;
+            try {
+                masterLayout = JSON.parse(dash.master_layout_json);
+            } catch (_) {}
+
+            if (!masterLayout || !Array.isArray(masterLayout.widgets) || masterLayout.widgets.length === 0) return;
+
+            const currentIds = new Set((currentLayout?.widgets || []).map(w => w.id));
+            const missing = masterLayout.widgets.filter(w => w && w.id && !currentIds.has(w.id));
+            currentMissingWidgets = missing;
+
+            if (missing.length === 0) return;
+
+            // Üst barda rozet göster
+            if (badge) {
+                const countSpan = document.getElementById('newWidgetsCountText');
+                if (countSpan) countSpan.textContent = `${missing.length} Yeni Grafik`;
+                badge.style.display = 'inline-flex';
+            }
+
+            // 7 gün erteleme kontrolü
+            const storageKey = `sps_dismiss_new_widgets_${dash.dashboard_id}`;
+            const dismissedUntil = Number(localStorage.getItem(storageKey) || 0);
+            const dismissedSignature = localStorage.getItem(`${storageKey}_sig`) || '';
+            const currentSignature = missing.map(m => m.id).sort().join(',');
+            const now = Date.now();
+
+            // Eğer eksik widget listesi değişmişse veya 7 gün dolmuşsa göster
+            const isDismissed = (now < dismissedUntil) && (dismissedSignature === currentSignature);
+
+            if (!isDismissed) {
+                const bodyEl = document.getElementById('newWidgetsToastBody');
+                if (bodyEl) {
+                    bodyEl.innerHTML = `Bu dashboard için yöneticiniz tarafından <strong>${missing.length} yeni grafik</strong> tanımlandı. Kendi tasarımınıza eklemek ister misiniz?`;
+                }
+                if (toast) toast.style.display = 'block';
+            }
+        }
+
+        function closeNewWidgetsToast() {
+            const toast = document.getElementById('newWidgetsToast');
+            if (toast) toast.style.display = 'none';
+        }
+
+        function dismissNewWidgetsFor7Days() {
+            const dash = authorizedDashboards[activeDashboardIndex];
+            if (dash) {
+                const storageKey = `sps_dismiss_new_widgets_${dash.dashboard_id}`;
+                const until = Date.now() + (7 * 24 * 60 * 60 * 1000);
+                localStorage.setItem(storageKey, String(until));
+                const sig = currentMissingWidgets.map(m => m.id).sort().join(',');
+                localStorage.setItem(`${storageKey}_sig`, sig);
+            }
+            closeNewWidgetsToast();
+        }
+
+        function openNewWidgetsModal() {
+            closeNewWidgetsToast();
+            const modal = document.getElementById('newWidgetsModal');
+            const listEl = document.getElementById('newWidgetsModalList');
+            if (!modal || !listEl) return;
+
+            if (!currentMissingWidgets.length) {
+                listEl.innerHTML = '<div style="padding:16px;text-align:center;color:var(--muted);">Eklenebilecek yeni grafik bulunamadı.</div>';
+                modal.style.display = 'flex';
+                modal.classList.add('active');
+                return;
+            }
+
+            const typeLabels = {
+                bar: 'Sütun Grafiği',
+                stackedBar: 'Yığılmış Sütun',
+                horizontalBar: 'Yatay Çubuk',
+                line: 'Çizgi Grafiği',
+                area: 'Alan Grafiği',
+                pie: 'Pasta Grafiği',
+                donut: 'Halka Grafiği',
+                gauge: 'Gösterge (Gauge)',
+                treemap: 'Ağaç Haritası',
+                sunburst: 'Güneş Patlaması',
+                sankey: 'Sankey Akış',
+                funnel: 'Huni (Funnel)',
+                radar: 'Radar Grafiği',
+                scatter: 'Dağılım (Scatter)',
+                heatmap: 'Isı Haritası',
+                kpi: 'KPI Kartı',
+                pivot: 'Pivot Tablo',
+                table: 'Detay Tablo'
+            };
+
+            listEl.innerHTML = currentMissingWidgets.map((w, idx) => {
+                const typeName = typeLabels[w.type] || w.type || 'Grafik';
+                const dim = w.dimension || (w.drillHierarchy && w.drillHierarchy[0]) || '';
+                const val = w.valueField || (w.valueMetrics && w.valueMetrics[0]?.field) || '';
+                const sub = [typeName, dim ? `Boyut: ${dim}` : '', val ? `Ölçüm: ${val}` : ''].filter(Boolean).join(' • ');
+
+                return `
+                    <div class="new-widget-item">
+                        <div class="new-widget-item-info">
+                            <span class="new-widget-item-title">${escapeHtml(w.title || 'Başlıksız Bileşen')}</span>
+                            <span class="new-widget-item-sub">${escapeHtml(sub)}</span>
+                        </div>
+                        <button type="button" class="btn btn-primary" style="padding:4px 10px;font-size:0.75rem;white-space:nowrap;" onclick="addSingleNewWidgetToLayout(${idx})">
+                            ➕ Tasarımıma Ekle
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            modal.style.display = 'flex';
+            modal.classList.add('active');
+        }
+
+        function closeNewWidgetsModal() {
+            const modal = document.getElementById('newWidgetsModal');
+            if (modal) {
+                modal.style.display = 'none';
+                modal.classList.remove('active');
+            }
+        }
+
+        function addSingleNewWidgetToLayout(index) {
+            const w = currentMissingWidgets[index];
+            if (!w) return;
+            addWidgetsToLayout([w], true);
+        }
+
+        function addAllNewWidgetsToLayout() {
+            if (!currentMissingWidgets.length) return;
+            addWidgetsToLayout([...currentMissingWidgets], false);
+        }
+
+        async function addWidgetsToLayout(widgetsToAdd, keepModalOpen = false) {
+            if (!Array.isArray(widgetsToAdd) || widgetsToAdd.length === 0 || !currentLayout) return;
+
+            let maxBottomRow = 0;
+            (currentLayout.widgets || []).forEach(w => {
+                const r = typeof w.row === 'number' ? w.row : 0;
+                const m = calcAppWidgetGridMetrics(w);
+                maxBottomRow = Math.max(maxBottomRow, r + m.rowSpan);
+            });
+
+            widgetsToAdd.forEach(orig => {
+                const wCopy = JSON.parse(JSON.stringify(orig));
+                wCopy.row = maxBottomRow;
+                wCopy.col = 0;
+                const m = calcAppWidgetGridMetrics(wCopy);
+                maxBottomRow += m.rowSpan;
+                currentLayout.widgets.push(wCopy);
+            });
+
+            ensureAndCompactAppLayout(currentLayout.widgets, null, true);
+
+            const dash = authorizedDashboards[activeDashboardIndex];
+            checkAndNotifyNewWidgets(dash);
+            await refreshActiveDashboardData(false);
+
+            if (keepModalOpen && currentMissingWidgets.length > 0) {
+                openNewWidgetsModal();
+            } else {
+                closeNewWidgetsModal();
+                closeNewWidgetsToast();
+            }
+        }
+
+        function removeWidgetFromUserLayout(widgetId) {
+            if (!currentLayout || !Array.isArray(currentLayout.widgets)) return;
+            const w = currentLayout.widgets.find(x => x.id === widgetId);
+            const title = w ? (w.title || 'Bileşen') : 'Grafik';
+
+            if (!confirm(`"${title}" grafiğini görünümden kaldırmak istiyor musunuz?\n\n(Daha sonra üst paneldeki "🔔 Yeni Grafikler" rozetinden dilediğiniz zaman tekrar ekleyebilirsiniz.)`)) {
+                return;
+            }
+
+            const idx = currentLayout.widgets.findIndex(x => x.id === widgetId);
+            if (idx >= 0) {
+                currentLayout.widgets.splice(idx, 1);
+            }
+
+            ensureAndCompactAppLayout(currentLayout.widgets, null, true);
+            renderAllWidgets();
+
+            const dash = authorizedDashboards[activeDashboardIndex];
+            checkAndNotifyNewWidgets(dash);
         }
 
         function closeModal() {

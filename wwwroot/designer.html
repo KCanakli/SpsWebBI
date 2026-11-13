@@ -2595,6 +2595,16 @@
             </div>
             <button type="button" class="btn" onclick="clearCanvasWidgets()"
                 title="Tuvaldeki tüm bileşenleri temizle">Tuvali Temizle</button>
+            <button type="button" class="btn" id="btnCompactLeft" onclick="compactWidgetsLeft()"
+                title="Tuvaldeki grafikleri satırlarını bozmadan sola yasla"
+                style="display:inline-flex;align-items:center;gap:4px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="4" y1="3" x2="4" y2="21"></line>
+                    <rect x="8" y="5" width="12" height="5" rx="1"></rect>
+                    <rect x="8" y="14" width="8" height="5" rx="1"></rect>
+                </svg>
+                <span>Sola Yasla</span>
+            </button>
             <button type="button" class="btn" id="btnPaletteMode" onclick="togglePalettePosition()"
                 title="Araçlar panelini dikey/yatay arasında değiştirir">📐</button>
             <div class="meta-item">
@@ -3229,6 +3239,136 @@
             }
             const fallback = findFirstFreeSlot(placedList, wSpan, hSpan);
             return { col: fallback.col, row: fallback.row, placedRight: false };
+        }
+
+        // SERBEST BIRAKMA & SAĞA/AŞAĞI KAYDIRMA MOTORU
+        function applySmartDesignerDrop(widgets, movedWidget, initialCol, initialRow, targetCol, targetRow) {
+            if (!Array.isArray(widgets) || !movedWidget) return;
+            const maxMicroCols = getMaxMicroCols();
+            const metricsA = calcWidgetGridMetrics(movedWidget);
+            const wSpanA = metricsA.gridSpan120;
+            const hSpanA = metricsA.rowSpan;
+
+            const finalCol = Math.max(0, Math.min(maxMicroCols - wSpanA, Math.round(targetCol)));
+            const finalRow = Math.max(0, Math.round(targetRow));
+
+            if (finalCol === initialCol && finalRow === initialRow) {
+                movedWidget.col = finalCol;
+                movedWidget.row = finalRow;
+                return;
+            }
+
+            const getBox = w => {
+                const m = calcWidgetGridMetrics(w);
+                return {
+                    w,
+                    id: w.id,
+                    col: typeof w.col === 'number' ? w.col : 0,
+                    row: typeof w.row === 'number' ? w.row : 0,
+                    wSpan: m.gridSpan120,
+                    hSpan: m.rowSpan
+                };
+            };
+
+            movedWidget.col = finalCol;
+            movedWidget.row = finalRow;
+            const placedBoxes = [{ id: movedWidget.id, col: finalCol, row: finalRow, wSpan: wSpanA, hSpan: hSpanA }];
+
+            const otherBoxes = widgets
+                .filter(w => w.id !== movedWidget.id)
+                .map(getBox)
+                .sort((a, b) => (a.col - b.col) || (a.row - b.row));
+
+            for (const ob of otherBoxes) {
+                let curCol = ob.col;
+                let curRow = ob.row;
+
+                let safety = 0;
+                while (safety++ < 50) {
+                    const curBox = { id: ob.id, col: curCol, row: curRow, wSpan: ob.wSpan, hSpan: ob.hSpan };
+                    const blocker = placedBoxes.find(p => boxesOverlap(curBox, p));
+                    if (!blocker) break;
+
+                    // Altındaki nesneyi aşağı kaydır; yanındaki/sağındaki nesneyi sağa kaydır
+                    if (curRow >= blocker.row + Math.ceil(blocker.hSpan / 2)) {
+                        curRow = blocker.row + blocker.hSpan;
+                    } else {
+                        const nextCol = blocker.col + blocker.wSpan;
+                        if (nextCol + ob.wSpan <= maxMicroCols) {
+                            curCol = nextCol;
+                        } else {
+                            curRow = blocker.row + blocker.hSpan;
+                        }
+                    }
+                }
+
+                ob.w.col = curCol;
+                ob.w.row = curRow;
+                placedBoxes.push({ id: ob.id, col: curCol, row: curRow, wSpan: ob.wSpan, hSpan: ob.hSpan });
+            }
+        }
+
+        // TÜM GRAFİKLERİ SATIRLARINI KORUYARAK SOLA YASLA
+        function compactWidgetsLeft() {
+            const widgets = designerLayout?.widgets || [];
+            if (widgets.length === 0) return;
+
+            const items = widgets.map(w => {
+                const m = calcWidgetGridMetrics(w);
+                return {
+                    w,
+                    id: w.id,
+                    col: typeof w.col === 'number' ? w.col : 0,
+                    row: typeof w.row === 'number' ? w.row : 0,
+                    wSpan: m.gridSpan120,
+                    hSpan: m.rowSpan
+                };
+            }).sort((a, b) => (a.col - b.col) || (a.row - b.row));
+
+            const placed = [];
+            for (const item of items) {
+                let targetCol = 0;
+                for (const p of placed) {
+                    const vertOverlap = item.row < p.row + p.hSpan && item.row + item.hSpan > p.row;
+                    if (vertOverlap) {
+                        const rightEdge = p.col + p.wSpan;
+                        if (rightEdge > targetCol) {
+                            targetCol = rightEdge;
+                        }
+                    }
+                }
+                item.col = targetCol;
+                item.w.col = targetCol;
+                placed.push(item);
+            }
+
+            if (!syncDesignerPositionsToDom()) renderDesignerCanvas();
+            updateStatusBar();
+        }
+
+        // GRAFİKLERİ SİLİP YENİDEN ÇİZMEDEN YALNIZCA DOM KONUMLARINI ANLIK GÜNCELLE (<1ms)
+        function syncDesignerPositionsToDom() {
+            const canvas = document.getElementById('designerCanvas');
+            const widgets = designerLayout?.widgets || [];
+            if (!canvas || widgets.length === 0) return false;
+
+            const cardMap = new Map();
+            canvas.querySelectorAll('.widget-card[data-widget-id]').forEach(el => {
+                cardMap.set(el.dataset.widgetId, el);
+            });
+            if (cardMap.size !== widgets.length) return false;
+
+            applyCanvasDimensions();
+            for (const w of widgets) {
+                const card = cardMap.get(String(w.id));
+                if (!card) return false;
+                const { gridSpan120, rowSpan } = calcWidgetGridMetrics(w);
+                const cStart = (typeof w.col === 'number' ? w.col : 0) + 1;
+                const rStart = (typeof w.row === 'number' ? w.row : 0) + 1;
+                card.style.gridColumn = `${cStart} / span ${gridSpan120}`;
+                card.style.gridRow = `${rStart} / span ${rowSpan}`;
+            }
+            return true;
         }
 
         // 2 BOYUTLU (X, Y) KOORDİNAT VE ÇAKIŞMA ÇÖZÜM MOTORU
@@ -5687,7 +5827,9 @@
 
             let pills = '';
             cols.forEach((col, i) => {
-                const hasFmt = !!(getColumnFormat(col) || getColumnAlign(col));
+                const curAgg = (w.columnAggs && w.columnAggs[col]) ? w.columnAggs[col] : 'auto';
+                const safeCol = escapeHtml(col).replace(/'/g, "\\'");
+                const hasFmt = !!(getColumnFormat(col) || getColumnAlign(col) || curAgg !== 'auto');
                 pills += `
                     <div class="bound-pill ${hasFmt ? 'has-fmt' : ''}">
                         <div class="bound-pill-top">
@@ -5699,6 +5841,19 @@
                             </div>
                         </div>
                         ${buildInlineFormatRowHtml(col, '', true)}
+                        <div class="bound-pill-fmt" style="margin-top:3px;">
+                            <span class="inline-fmt-label">Alt Özet:</span>
+                            <select class="inline-fmt-input" style="flex:1;padding:1px 4px;font-size:0.68rem;"
+                                    onchange="setTableColumnAgg('${safeCol}', this.value)">
+                                <option value="auto" ${curAgg === 'auto' ? 'selected' : ''}>Otomatik</option>
+                                <option value="none" ${curAgg === 'none' ? 'selected' : ''}>Yok</option>
+                                <option value="sum" ${curAgg === 'sum' ? 'selected' : ''}>Toplam (Σ)</option>
+                                <option value="count" ${curAgg === 'count' ? 'selected' : ''}>Adet (#)</option>
+                                <option value="avg" ${curAgg === 'avg' ? 'selected' : ''}>Ortalama (x̄)</option>
+                                <option value="min" ${curAgg === 'min' ? 'selected' : ''}>Minimum (↓)</option>
+                                <option value="max" ${curAgg === 'max' ? 'selected' : ''}>Maksimum (↑)</option>
+                            </select>
+                        </div>
                     </div>`;
             });
 
@@ -5716,6 +5871,19 @@
                         ${buildColumnOptionsHtml('', '+ Listeden Sütun Seçerek Ekle...')}
                     </select>
                 </div>`;
+        }
+
+        function setTableColumnAgg(colName, aggMode) {
+            const w = getSelectedWidget();
+            if (!w) return;
+            if (!w.columnAggs || typeof w.columnAggs !== 'object') w.columnAggs = {};
+            if (!aggMode || aggMode === 'auto') {
+                delete w.columnAggs[colName];
+            } else {
+                w.columnAggs[colName] = aggMode;
+            }
+            renderDesignerCanvas();
+            renderDataBindingPanel();
         }
 
         function bindDropZoneEvents() {
@@ -6083,6 +6251,12 @@
             disposeAllCharts();
 
             const canvas = document.getElementById('designerCanvas');
+            const areaEl = document.querySelector('.canvas-area');
+            const savedScrollTop = areaEl ? areaEl.scrollTop : 0;
+            const savedScrollLeft = areaEl ? areaEl.scrollLeft : 0;
+            const prevMinH = canvas.style.minHeight;
+            if (canvas.offsetHeight > 0) canvas.style.minHeight = canvas.offsetHeight + 'px';
+
             canvas.innerHTML = '';
 
             const widgets = designerLayout.widgets || [];
@@ -6105,7 +6279,7 @@
                 return;
             }
 
-            ensureAndCompactLayout(widgets);
+            ensureAndCompactLayout(widgets, null, true);
             applyCanvasDimensions();
 
             widgets.forEach((w, idx) => {
@@ -6204,6 +6378,12 @@
 
                 renderWidgetContent(w, body);
             });
+
+            canvas.style.minHeight = prevMinH || '';
+            if (areaEl) {
+                areaEl.scrollTop = savedScrollTop;
+                areaEl.scrollLeft = savedScrollLeft;
+            }
         }
 
         // FAREYLE 2 BOYUTLU SERBEST TAŞIMA VE CANLI MAVİ HEDEF ÖNİZLEME (DROP PREVIEW)
@@ -6226,52 +6406,25 @@
                 const areaEl = document.querySelector('.canvas-area');
                 const unit120W = getViewport12ColWidth();
                 const maxMicroCols = getMaxMicroCols();
+                const initialCol = typeof widgetObj.col === 'number' ? widgetObj.col : 0;
+                const initialRow = typeof widgetObj.row === 'number' ? widgetObj.row : 0;
                 let isDragging = false;
                 let previewEl = null;
-                let targetCol = widgetObj.col || 0;
-                let targetRow = widgetObj.row || 0;
+                let targetCol = initialCol;
+                let targetRow = initialRow;
 
                 function computeSnapCol(rawCol) {
                     const maxCol = Math.max(0, maxMicroCols - gridSpan120);
-                    const snapPoints = [0, 30, 40, 60, 80, 90, 120, 120 - gridSpan120, maxCol];
-                    (designerLayout.widgets || []).forEach(other => {
-                        if (other.id === widgetObj.id) return;
-                        const m = calcWidgetGridMetrics(other);
-                        const oc = other.col || 0;
-                        snapPoints.push(oc, oc + m.gridSpan120, oc - gridSpan120);
-                    });
-                    for (const sp of snapPoints) {
-                        if (sp >= 0 && sp <= maxCol && Math.abs(rawCol - sp) <= 3) {
-                            return sp;
-                        }
-                    }
-                    const rounded = Math.round(rawCol / 2) * 2;
-                    return Math.max(0, Math.min(maxCol, rounded));
+                    return Math.max(0, Math.min(maxCol, Math.round(rawCol)));
                 }
 
                 function computeTargetRow(col, rawRow) {
-                    const others = (designerLayout.widgets || []).filter(x => x.id !== widgetObj.id);
-                    let maxBottomAbove = 0;
-                    for (const other of others) {
-                        const m = calcWidgetGridMetrics(other);
-                        const oc = other.col || 0;
-                        const or = other.row || 0;
-                        const horizOverlap = col < oc + m.gridSpan120 && col + gridSpan120 > oc;
-                        if (!horizOverlap) continue;
-                        // Eğer doğrudan bu kartın üst yarısına sürükleniyorsa onun satırını hedef al
-                        if (rawRow >= or && rawRow < or + Math.ceil(m.rowSpan / 2)) {
-                            return or;
-                        }
-                        if (or < rawRow && or + m.rowSpan > maxBottomAbove) {
-                            maxBottomAbove = or + m.rowSpan;
-                        }
-                    }
-                    return maxBottomAbove;
+                    return Math.max(0, Math.round(rawRow));
                 }
 
                 function onMouseMove(ev) {
                     const dist = Math.hypot(ev.clientX - startX, ev.clientY - startY);
-                    if (!isDragging && dist > 4) {
+                    if (!isDragging && dist > 2) {
                         isDragging = true;
                         cardEl.classList.add('dragging-card');
                         previewEl = document.createElement('div');
@@ -6317,10 +6470,8 @@
                     if (isDragging) {
                         cardEl.classList.remove('dragging-card');
                         if (previewEl) previewEl.remove();
-                        widgetObj.col = targetCol;
-                        widgetObj.row = targetRow;
-                        ensureAndCompactLayout(designerLayout.widgets, widgetObj.id, true);
-                        renderDesignerCanvas();
+                        applySmartDesignerDrop(designerLayout.widgets, widgetObj, initialCol, initialRow, targetCol, targetRow);
+                        if (!syncDesignerPositionsToDom()) renderDesignerCanvas();
                         updateStatusBar();
                     }
                 }
@@ -7590,6 +7741,25 @@
             });
         }
 
+        function formatTableFooterCell(rows, c, colMeta, aggMode, idx) {
+            const mode = (aggMode || 'auto').toLowerCase();
+            if (mode === 'none') return '';
+            if (mode === 'auto') {
+                if (colMeta && colMeta.dataType === 'number' && !c.toLowerCase().endsWith('_id') && !/y[ıi]l|ay\b/i.test(c)) {
+                    return escapeHtml(formatValueByColumn(computeAggregate(rows, c, 'sum'), c, 'number'));
+                }
+                return idx === 0 ? 'Toplam (' + rows.length + ')' : '';
+            }
+            if (mode === 'count') {
+                const cnt = computeAggregate(rows, c, 'count');
+                return 'Adet: ' + escapeHtml(cnt.toLocaleString('tr-TR'));
+            }
+            const val = computeAggregate(rows, c, mode);
+            const formatted = escapeHtml(formatValueByColumn(val, c, 'number'));
+            const prefix = mode === 'avg' ? 'Ort: ' : (mode === 'min' ? 'Min: ' : (mode === 'max' ? 'Maks: ' : ''));
+            return prefix + formatted;
+        }
+
         function compareCellValues(aVal, bVal, dataType) {
             if (aVal === null || aVal === undefined || aVal === '') return (bVal === null || bVal === undefined || bVal === '') ? 0 : 1;
             if (bVal === null || bVal === undefined || bVal === '') return -1;
@@ -7649,11 +7819,8 @@
             cols.forEach((c, idx) => {
                 const colMeta = getColumnMeta(c) || dsCols.find(x => x.name.toLowerCase() === c.toLowerCase());
                 const cAlign = getColumnAlign(c, w.align || 'left');
-                if (colMeta && colMeta.dataType === 'number' && !c.toLowerCase().endsWith('_id') && !/y[ıi]l|ay\b/i.test(c)) {
-                    html += `<td style="text-align:${cAlign};">${escapeHtml(formatValueByColumn(computeAggregate(rows, c, 'sum'), c, 'number'))}</td>`;
-                } else {
-                    html += `<td style="text-align:${cAlign};">${idx === 0 ? 'Toplam (' + rows.length + ')' : ''}</td>`;
-                }
+                const aggMode = (w.columnAggs && w.columnAggs[c]) ? w.columnAggs[c] : 'auto';
+                html += `<td style="text-align:${cAlign};">${formatTableFooterCell(rows, c, colMeta, aggMode, idx)}</td>`;
             });
             html += '</tr></tfoot></table>';
             container.innerHTML = html;

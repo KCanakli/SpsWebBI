@@ -136,6 +136,7 @@ namespace SpsWebBI.Services
                        ud.can_edit_layout,
                        COALESCE(NULLIF(ud.custom_layout_json, ''), d.layout_json) AS effective_layout_json,
                        CASE WHEN ud.custom_layout_json IS NOT NULL AND ud.custom_layout_json <> '' THEN 1 ELSE 0 END AS has_custom_layout,
+                       d.layout_json AS master_layout_json,
                        ud.last_params_json
                   FROM bi_user_dashboards ud
                   INNER JOIN bi_dashboards d ON d.dashboard_id = ud.dashboard_id AND d.is_active = 1
