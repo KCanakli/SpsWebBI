@@ -319,6 +319,50 @@
   - `designer.html` **Tablo Sütunları** listesinde her kolonun altına `Alt Özet` açılır listesi eklendi (`Otomatik`, `Yok`, `Toplam (Σ)`, `Adet (#)`, `Ortalama (x̄)`, `Minimum (↓)`, `Maksimum (↑)`).
   - Sayısal alt özet değerlerinin ilgili kolonun `columnFormats` biçim maskesiyle aynı formatta gösterilmesi sağlandı.
 
+---
+
+### [x] Adım 30: Kişisel Tasarım İzni (`can_edit_layout`) Görünürlük ve Güvenlik Kısıtlaması (2026-11-19)
+- **Tasarımı Özelleştir & Kaydet Seçeneklerinin İzne Bağlanması (`wwwroot/app.html`):**
+  - Admin ekranında kullanıcının ilgili dashboard için "Kişisel Tasarım İzni (M.10)" kapalı (`can_edit_layout = 0`) olduğunda hamburger menüdeki **"Tasarımı Özelleştir"** (`#btnCustomizeLayout`) ve **"Tasarımı Kaydet"** (`#btnSaveUserLayout`) butonları gizlendi (`display: none`).
+  - Üst çubukta yer alan kişisel tasarım aksiyonları (`#userEditTopActions`) gizlendi.
+  - `toggleUserEditMode()` ve `saveUserCustomLayout()` fonksiyonlarına istemci tarafı izin doğrulaması eklendi; izin yokken tasarım modu açılamayacak veya kaydedilemeyecek şekilde kilitlendi.
+  - Dashboard geçişlerinde yetki durumu anında dinamik olarak güncellenir.
+- **Slayt Modunda Geçiş Öncesi Canlı Yetki, Sıralama, Süre ve Şablon Kontrolü (`advanceSlideWithPermissionCheck` - `wwwroot/app.html`):**
+  - Slayt sayacı dolup bir sonraki dashboard'a geçileceği anda `loadAuthorizedDashboards()` çağrılarak sayfa yenilenmesine (`F5`) gerek kalmadan güncel yetkiler, `display_order` sıralaması, slayt/yenileme süreleri ve şablon güncellemeleri kontrol edilip sıradaki dashboard'a geçilmesi sağlandı (ağ kesintisi korumalı).
+
+---
+
+### [x] Adım 31: Çoklu Veri Kaynağında Cross-Filter Tıklama Düzeltmesi ve Görsel Vurgulama (2026-11-19)
+- **Akıllı Tekil Widget Muafiyeti (`lastCrossFilterOriginWidgetId` - `wwwroot/app.html`):**
+  - `excludeWidgetDimension` mantık hatası düzeltildi; aynı boyutu (`YIL`) taşıyan tüm grafiklerin filtreyi atlaması (`continue`) engellendi. Muafiyet yalnızca tıklanan tekil bileşene verildi; 2. veri kaynağından gelen tüm grafikler anında tıklanan yıla göre filtrelenir.
+- **Power BI Tarzı Görsel Vurgulama (Highlight & Dim):**
+  - Tıklanan grafikte seçilen yıl çubuğu %100 opak ve çerçeveli kalırken, diğer yıllar otomatik %35 opaklığa düşerek seçim belirginleştirildi. Tekrar tıklandığında tümü normale döner.
+- **Değer Eşleştirme Motoru (`matchesFilterValue`):**
+  - Ham sayı (`2024`), metin ve binlik ayraçlı/maskelenmiş formatlar (`2.024`) için çift yönlü sayısal normalize eşleştirme eklendi.
+- **ECharts Eksen Etiketi Tıklaması (`triggerEvent: true`):**
+  - Kategori eksenine (`catAxis`) `triggerEvent: true` eklenerek eksendeki yıl yazısına tıklandığında da filtrenin tetiklenmesi sağlandı.
+- **Backend `BETWEEN` Parametre Null Koruması (`DynamicQueryService.cs`):**
+  - `where YIL between @BaslaYil and @BitirYil` kalıbı için parametrelerin boş bırakılması durumunda otomatik `(@BaslaYil IS NULL OR @BitirYil IS NULL OR ...)` sarmalaması eklendi.
+
+---
+
+### [x] Adım 32: Tasarım Ekranında Grafiğe Özel Veri Kaynağı Seçicisi ve Kolon Senkronizasyonu (2026-11-19)
+- **Bileşen Özelliklerine Doğrudan Veri Kaynağı Seçicisi (`buildWidgetDataSourceOptionsHtml` - `wwwroot/designer.html`):**
+  - Grafik özellikleri sol bölmesinde Bileşen Başlığı ile Görsel Tipi arasına "Veri Kaynağı" açılır kutusu eklendi; varsayılan veya sistemdeki diğer tüm aktif veri kaynakları doğrudan seçilebilir hale getirildi.
+- **Çift Yönlü Anında Senkronizasyon (`onWidgetDataSourceChange` & `onPanelDataSourceBrowseChange`):**
+  - Veri kaynağı değiştirildiğinde yeni kaynağın kolonları arka planda hemen çekilerek seçili bileşene bağlanır; sol paneldeki Değer/Ölçüm, Boyut, Hiyerarşi ve Tablo kolon açılır listeleri (`buildColumnOptionsHtml`) anında yeni kolonlarla güncellenir.
+- **`getSortedColumns` Önbellek Entegrasyonu:**
+  - Seçili grafiğin bağlı olduğu efektif veri kaynağının kolonları (`designerDataSourceCache[effDsId].columns`) doğrudan referans alınarak senkron gecikmeler tamamen önlendi.
+
+---
+
+### [x] Adım 33: Viewer Yetkisiz Durumda Yenile Butonuyla Canlı Yetki Kontrolü (2026-11-19)
+- **Canlı Yetki Kontrolü (`checkAndReloadAuthorizedDashboards` - `wwwroot/app.html`):**
+  - Üst çubuktaki Göster/Yenile (`#btnIconShow`) butonuna tıklandığında ekranda yetkili dashboard yoksa arka planda `/api/datasources/authorized-dashboards` servisi çağrılır.
+  - Yetki tanımlandıysa sayfa yenilenmeden (`F5` yapmadan) dashboard, parametreleri ve grafikleriyle anında yüklenir; yeşil bildirim kartı (`showViewerToast`) ile kullanıcı bilgilendirilir.
+- **Kilit Ekranı Ortasına Yenileme Butonu:**
+  - Yetkili dashboard bulunamadığında ekranda gösterilen kilit uyarısının altına doğrudan `🔄 Yetkileri Kontrol Et & Yenile` butonu eklendi.
+
 
 
 

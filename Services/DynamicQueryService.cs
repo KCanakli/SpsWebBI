@@ -527,6 +527,12 @@ namespace SpsWebBI.Services
                         {
                             effectiveSql = System.Text.RegularExpressions.Regex.Replace(
                                 effectiveSql,
+                                $@"(?<=\b(?:WHERE|AND|OR)\s+|\(\s*)([a-zA-Z0-9_.]+(?:\s*\([^()]*\))?)\s+BETWEEN\s+(@[a-zA-Z0-9_]+)\s+AND\s+(@[a-zA-Z0-9_]+)\b",
+                                m => $"({m.Groups[2].Value} IS NULL OR {m.Groups[3].Value} IS NULL OR {m.Value})",
+                                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+                            effectiveSql = System.Text.RegularExpressions.Regex.Replace(
+                                effectiveSql,
                                 $@"(?<=\b(?:WHERE|AND|OR)\s+|\(\s*)([a-zA-Z0-9_.]+(?:\s*\([^()]*\))?)\s*(=|>=|<=|>|<|<>|!=|LIKE)\s*@{System.Text.RegularExpressions.Regex.Escape(paramName)}\b",
                                 m => $"(@{paramName} IS NULL OR {m.Value})",
                                 System.Text.RegularExpressions.RegexOptions.IgnoreCase);

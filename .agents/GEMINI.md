@@ -2,8 +2,10 @@
 
 Bu dosya, `c:\Projeler\SpsWebBI` projesinde alınan tüm mimari, siber güvenlik ve iş kurallarını yeni oturumlarda eksiksiz hatırlamak için oluşturulmuştur.
 
-## 1. Çalışma Prensibi (Zorunlu)
-- Her adımdan veya değişiklikten önce kullanıcıya **ne yapılacağı ve neden yapılacağı** anlatılacak, onay alındıktan sonra uygulanacaktır.
+## 1. Çalışma Prensibi ve Token Tasarrufu (Zorunlu)
+- **Tek Turda Doğrudan Uygulama:** Kullanıcının isteği net ise onay turu beklemeden doğrudan uygulanır ve yapılan işlem kısaca Türkçe raporlanır. Yalnızca belirsiz durumlarda veya kritik/mimari değişikliklerde önce kullanıcıya sorularak onay alınır.
+- **İngilizce Prompt -> Türkçe Yanıt:** Kullanıcı token tasarrufu amacıyla isteklerini (promptlarını) **İngilizce** yazsa dahi, tüm açıklamalar, sorular, kod içi kullanıcı mesajları ve raporlamalar **Türkçe** olarak yapılır.
+- **Toplu Dokümantasyon:** `PROJE_DURUMU.md` dosyası her küçük adımda değil, yalnızca kullanıcı istediğinde veya Git/GitHub güncellemesi öncesinde topluca güncellenir.
 
 ## 2. Mimari ve Veritabanı Özeti
 - **Proje Dizini:** `c:\Projeler\SpsWebBI` (.NET 8.0 Web Host App, Dapper, MySqlConnector, yerel Apache ECharts 5).

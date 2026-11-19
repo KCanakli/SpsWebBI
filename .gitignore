@@ -8,7 +8,10 @@ x86/
 [Ll]og/
 [Ll]ogs/
 
-# Visual Studio / VS Code / Rider
+# SQLite Temp
+*.db-shm
+*.db-wal
+
 .vs/
 .vscode/
 .idea/

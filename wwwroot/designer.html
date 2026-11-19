@@ -3117,7 +3117,15 @@
         let dragPayload = null;
 
         function getSortedColumns(colsOverride = null) {
-            const src = Array.isArray(colsOverride) ? colsOverride : liveColumns;
+            if (Array.isArray(colsOverride) && colsOverride.length > 0) {
+                return [...colsOverride].sort((a, b) =>
+                    String(a.name || '').localeCompare(String(b.name || ''), 'tr-TR', { sensitivity: 'base', numeric: true })
+                );
+            }
+            const w = getSelectedWidget();
+            const effDsId = getEffectiveWidgetDataSourceId(w);
+            const dsCols = (effDsId > 0 && designerDataSourceCache[effDsId]?.columns) ? designerDataSourceCache[effDsId].columns : null;
+            const src = (Array.isArray(dsCols) && dsCols.length > 0) ? dsCols : liveColumns;
             return [...src].sort((a, b) =>
                 String(a.name || '').localeCompare(String(b.name || ''), 'tr-TR', { sensitivity: 'base', numeric: true })
             );
@@ -4241,7 +4249,47 @@
             if (dsId > 0 && !designerDataSourceCache[dsId]) {
                 await fetchAndCacheDataSource(dsId);
             }
+            const w = getSelectedWidget();
+            if (w && dsId > 0) {
+                bindWidgetDataSourceIfChanged(w, dsId);
+                syncActiveDataSourceGlobalsForSelectedWidget();
+                renderDataBindingPanel();
+                renderDesignerCanvas();
+            }
             renderFieldList();
+        }
+
+        async function onWidgetDataSourceChange(dsIdVal) {
+            const w = getSelectedWidget();
+            if (!w) return;
+            const dsId = Number(dsIdVal || 0);
+            if (dsId > 0 && !designerDataSourceCache[dsId]) {
+                await fetchAndCacheDataSource(dsId);
+            }
+            bindWidgetDataSourceIfChanged(w, dsId);
+            panelBrowseDsId = dsId;
+            syncActiveDataSourceGlobalsForSelectedWidget();
+            renderDataBindingPanel();
+            renderFieldList();
+            renderDesignerCanvas();
+        }
+
+        function buildWidgetDataSourceOptionsHtml(w) {
+            const effId = getEffectiveWidgetDataSourceId(w);
+            const dashPrimary = getDashboardPrimaryDsId();
+            const dashDsObj = allDataSources.find(x => Number(x.datasource_id) === Number(dashPrimary));
+            const primaryLabel = dashDsObj ? `(Varsayılan) ${dashDsObj.code}` : '(Varsayılan)';
+
+            let html = `<option value="${dashPrimary || 0}" ${(!w.dataSourceId || Number(w.dataSourceId) === Number(dashPrimary)) ? 'selected' : ''}>${escapeHtml(primaryLabel)}</option>`;
+
+            const activeList = (allDataSources || []).filter(ds => ds.is_active !== false && ds.is_active !== 0);
+            activeList.forEach(ds => {
+                if (Number(ds.datasource_id) === Number(dashPrimary)) return;
+                const isSel = Number(w.dataSourceId) === Number(ds.datasource_id) ? 'selected' : '';
+                const connLabel = getConnectionLabelById(ds.connection_id);
+                html += `<option value="${ds.datasource_id}" ${isSel}>${escapeHtml(ds.code)} - ${escapeHtml(ds.name)} [${escapeHtml(connLabel)}]</option>`;
+            });
+            return html;
         }
 
         async function refreshBrowsedDataSource() {
@@ -4260,7 +4308,6 @@
             const dsId = Number(targetDsId || 0);
             if (!w || dsId <= 0) return false;
             const prevEff = getEffectiveWidgetDataSourceId(w);
-            if (prevEff === dsId) return false;
 
             const dashPrimary = getDashboardPrimaryDsId();
             if (currentDashId && dashPrimary > 0 && dsId === dashPrimary) {
@@ -4269,22 +4316,24 @@
                 w.dataSourceId = dsId;
             }
 
-            const entry = designerDataSourceCache[dsId];
-            const validCols = new Set((entry?.columns || []).map(c => c.name));
-            if (validCols.size > 0) {
-                w.valueMetrics = getWidgetMetrics(w).filter(m => validCols.has(m.field));
-                syncPrimaryMetricProps(w);
-                w.drillHierarchy = getWidgetHierarchy(w).filter(c => validCols.has(c));
-                if (w.dimension && !validCols.has(w.dimension)) w.dimension = w.drillHierarchy[0] || '';
-                if (w.secondaryDimension && !validCols.has(w.secondaryDimension)) w.secondaryDimension = w.drillHierarchy[1] || '';
-                if (Array.isArray(w.columns)) {
-                    w.columns = w.columns.filter(c => validCols.has(c));
+            if (prevEff !== dsId) {
+                const entry = designerDataSourceCache[dsId];
+                const validCols = new Set((entry?.columns || []).map(c => c.name));
+                if (validCols.size > 0) {
+                    w.valueMetrics = getWidgetMetrics(w).filter(m => validCols.has(m.field));
+                    syncPrimaryMetricProps(w);
+                    w.drillHierarchy = getWidgetHierarchy(w).filter(c => validCols.has(c));
+                    if (w.dimension && !validCols.has(w.dimension)) w.dimension = w.drillHierarchy[0] || '';
+                    if (w.secondaryDimension && !validCols.has(w.secondaryDimension)) w.secondaryDimension = w.drillHierarchy[1] || '';
+                    if (Array.isArray(w.columns)) {
+                        w.columns = w.columns.filter(c => validCols.has(c));
+                    }
                 }
             }
 
             syncActiveDataSourceGlobalsForSelectedWidget();
             const dsObj = allDataSources.find(x => Number(x.datasource_id) === dsId);
-            if (dsObj) {
+            if (dsObj && prevEff !== dsId) {
                 showToast(`Bileşen veri kaynağı "${dsObj.code}" olarak bağlandı.`);
             }
             return true;
@@ -4793,14 +4842,19 @@
             return (designerLayout.widgets || []).find(w => w.id === selectedWidgetId) || null;
         }
 
-        function selectWidget(id) {
+        async function selectWidget(id) {
             selectedWidgetId = id;
             document.querySelectorAll('#designerCanvas .widget-card').forEach(el => {
                 el.classList.toggle('selected', el.dataset.widgetId === id);
             });
             const w = getSelectedWidget();
             const effDs = getEffectiveWidgetDataSourceId(w) || getFirstActiveDataSourceId();
-            if (effDs > 0) panelBrowseDsId = effDs;
+            if (effDs > 0) {
+                panelBrowseDsId = effDs;
+                if (!designerDataSourceCache[effDs]) {
+                    await fetchAndCacheDataSource(effDs);
+                }
+            }
             syncActiveDataSourceGlobalsForSelectedWidget();
             renderDataBindingPanel();
             renderFieldList();
@@ -5581,10 +5635,16 @@
             }
 
             let html = `
-                <div style="display:grid;grid-template-columns:1fr 118px;gap:6px;margin-bottom:6px;">
+                <div style="display:grid;grid-template-columns:1fr 145px 115px;gap:6px;margin-bottom:6px;">
                     <div class="r-field">
                         <label>Bileşen Başlığı</label>
                         <input type="text" value="${escapeHtml(w.title || '')}" oninput="updateSelectedWidgetProp('title', this.value)">
+                    </div>
+                    <div class="r-field">
+                        <label>Veri Kaynağı</label>
+                        <select onchange="onWidgetDataSourceChange(this.value)">
+                            ${buildWidgetDataSourceOptionsHtml(w)}
+                        </select>
                     </div>
                     <div class="r-field">
                         <label>Görsel Tipi</label>
@@ -5821,9 +5881,11 @@
         }
 
         function renderTableColumnsDropZone(w) {
+            const effDsId = getEffectiveWidgetDataSourceId(w);
+            const effCols = (designerDataSourceCache[effDsId]?.columns) || liveColumns;
             const cols = Array.isArray(w.columns)
                 ? w.columns
-                : liveColumns.map(c => c.name);
+                : effCols.map(c => c.name);
 
             let pills = '';
             cols.forEach((col, i) => {
