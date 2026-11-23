@@ -363,8 +363,17 @@
 - **Kilit Ekranı Ortasına Yenileme Butonu:**
   - Yetkili dashboard bulunamadığında ekranda gösterilen kilit uyarısının altına doğrudan `🔄 Yetkileri Kontrol Et & Yenile` butonu eklendi.
 
+---
 
-
-
+### [x] Adım 34: 9 Apache ECharts Görsel Aracı, Başlıktan Sürüklenebilir Form Penceresi ve Son Kullanıcı Tasarım Yetki Kuralı (2026-11-23)
+- **9 Apache ECharts Görsel Aracı (`renderChartVisualTogglesHtml` - `wwwroot/designer.html`, `wwwroot/app.html`):**
+  - Grafik alt stili kutusuna ve galeri penceresine `123 Değerler` (`showLabel`), `⎯ Ortalama` (`showMarkLine`), `📍 Min/Maks` (`showMarkPoint`), `📈 Medyan` (`showMedianLine`), `🔍 Zoom Kaydırıcı` (`showDataZoom`), `🧮 Veri Tablosu` (`showDataView` + kart içi canlı özet veri tablosu `renderInlineChartDataView`), `〰️ Yumuşak Çizgi` (`smoothCurve`), `🧱 Kılavuz Çizgileri` (`showSplitLine`) ve `🏷️ Gösterge` (`showLegend`) araçları eklendi.
+  - Tüm grafik ailelerinde (`bar`, `line`, `pie`, `funnel`, `radar`, `scatter`, `waterfall`, `polar`, `hierarchy`, `heatmap`) tek tıkla anlık yeniden çizim ve `localStorage` (`sps_widget_visual_${dashId}_${widgetId}`) kalıcılığı sağlandı.
+- **Başlıktan Sürüklenebilir ve Temaya Göre Üstten Açılan Form Penceresi (`initDraggableGallery`, `formSlideDown`):**
+  - `#subTypeGalleryPopover` penceresine başlıktan tutup ekranın istenilen yerine sürükle-bırak (`⠿` tutamacı, ekran sınırı koruması ve taşındığında otomatik kapanmama) özelliği kazandırıldı.
+  - Sağ tuş bağlam menüsü (`.widget-context-menu`) ve özellikler penceresine (`.subtype-gallery-popover`) 3 temaya (`dark: #38bdf8`, `light: #0284c7`, `spsteks: #2563eb`) duyarlı 3.5px üst form vurgu şeridi ve üstten süzülen `formSlideDown` animasyonu eklendi.
+- **Son Kullanıcı Ekranı (`wwwroot/app.html`, `.agents/GEMINI.md`) Kesin Yetki & Sağ Tuş Kuralı:**
+  - Normal izleme modunda (`!isUserEditMode`) grafikler üzerinde hiçbir stil veya görsel özellik değişikliği yapılamaz; sağ tuş menüsünde yalnızca **Veriyi Canlı Yenile**, **Grafik Görselini İndir (PNG)** ve **Veriyi Excel (CSV) İndir** (varsa *Üst Kırılıma Dön* / *Aktif Filtreleri Temizle*) seçenekleri yer alır.
+  - Kullanıcının `can_edit_layout` yetkisi varsa, sol üst hamburger menüden **`🎨 Tasarımımı Özelleştir`** moduna geçtikten sonra kart başlığındaki `🎨 Stil & Özellik` butonu veya sağ tuş menüsündeki `🎨 Grafik Alt Stili & Görsel Özellikler`, `✏️ Kişisel Görünümü Düzenle` ve `🗑️ Görünümden Kaldır` seçenekleriyle grafiklerde değişiklik yapabilir.
 
 

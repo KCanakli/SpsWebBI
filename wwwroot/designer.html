@@ -2348,17 +2348,18 @@
             max-height: 480px;
             background: #0f172a;
             border: 1px solid rgba(56, 189, 248, 0.45);
+            border-top: 3.5px solid #38bdf8;
             border-radius: 12px;
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), 0 0 16px rgba(56, 189, 248, 0.15);
+            box-shadow: 0 20px 48px rgba(0, 0, 0, 0.75), 0 0 20px rgba(56, 189, 248, 0.22);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            backdrop-filter: blur(10px);
-            animation: galleryFadeIn 0.18s ease-out;
+            backdrop-filter: blur(12px);
+            animation: formSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        @keyframes galleryFadeIn {
-            from { opacity: 0; transform: scale(0.96) translateY(-4px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
+        @keyframes formSlideDown {
+            from { opacity: 0; transform: translateY(-16px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
         .subtype-gallery-header {
             display: flex;
@@ -2367,6 +2368,12 @@
             padding: 8px 12px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             background: rgba(15, 23, 42, 0.95);
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+        }
+        .subtype-gallery-header:active {
+            cursor: grabbing;
         }
         .btn-gallery-close {
             background: none;
@@ -2465,8 +2472,9 @@
         }
         body.light-theme .subtype-gallery-popover {
             background: #ffffff;
-            border-color: #cbd5e1;
-            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16);
+            border: 1px solid #cbd5e1;
+            border-top: 3.5px solid #0284c7;
+            box-shadow: 0 20px 42px rgba(15, 23, 42, 0.18), 0 2px 8px rgba(15, 23, 42, 0.08);
         }
         body.light-theme .subtype-gallery-header {
             background: #f8fafc;
@@ -2489,7 +2497,9 @@
         }
         body.spsteks-theme .subtype-gallery-popover {
             background: #edf4fc;
-            border-color: #94b8db;
+            border: 1px solid #94b8db;
+            border-top: 3.5px solid #2563eb;
+            box-shadow: 0 20px 45px rgba(16, 42, 76, 0.32), 0 0 16px rgba(37, 99, 235, 0.2);
         }
         body.spsteks-theme .subtype-gallery-header {
             background: #d9e7f5;
@@ -2506,9 +2516,10 @@
 
 <body>
     <!-- ALT GRAFİK STİLLERİ GÖRSEL SEÇİM PANELİ (POPOVER) -->
-    <div id="subTypeGalleryPopover" class="subtype-gallery-popover" style="display:none;" onmouseleave="scheduleGalleryClose()" onmouseenter="cancelGalleryClose()">
-        <div class="subtype-gallery-header">
-            <div style="display:flex;align-items:center;gap:6px;">
+    <div id="subTypeGalleryPopover" class="subtype-gallery-popover" style="display:none;" onclick="event.stopPropagation()" onmouseleave="scheduleGalleryClose()" onmouseenter="cancelGalleryClose()">
+        <div class="subtype-gallery-header" title="Başlıktan tutarak pencereyi sürükleyip bırakabilirsiniz">
+            <div style="display:flex;align-items:center;gap:6px;pointer-events:none;">
+                <span style="font-size:0.95rem;color:#7dd3fc;opacity:0.75;letter-spacing:-1px;">⠿</span>
                 <span style="font-size:1rem;">🎨</span>
                 <span id="subTypeGalleryTitle" style="font-weight:800;font-size:0.85rem;color:#38bdf8;">Alt Grafik Stilleri</span>
             </div>
@@ -2516,6 +2527,12 @@
         </div>
         <div class="subtype-gallery-sub">Stil seçmek için tıklayın • Tuval anlık güncellenir</div>
         <div id="subTypeGalleryGrid" class="subtype-gallery-grid"></div>
+        <div id="subTypeGalleryTogglesWrap" style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08);">
+            <div style="font-size:0.68rem;font-weight:700;color:#38bdf8;margin-bottom:5px;display:flex;align-items:center;gap:4px;">
+                <span>✨</span><span>GRAFİK GÖRSEL ÖZELLİKLERİ & ECHARTS ARAÇLARI</span>
+            </div>
+            <div id="subTypeGalleryToggles"></div>
+        </div>
     </div>
 
     <!-- 1. ÜST STUDIO BAŞLIK ÇUBUĞU -->
@@ -5237,12 +5254,89 @@
             renderFieldList();
         }
 
-        function toggleWidgetVisualFlag(propName) {
-            const w = getSelectedWidget();
+        function getWidgetDefaultVisualState(w) {
+            if (!w) return { smoothCurve: true, showLegend: false, showSplitLine: true };
+            const fam = getChartFamily(w);
+            const sub = getEffectiveChartSubType(w);
+            const metrics = getWidgetMetrics(w);
+            const hierarchy = getWidgetHierarchy(w);
+            const mode = w.multiDimMode || 'combined';
+            const defaultSmooth = sub !== 'basic' && sub !== 'step';
+            const defaultLegend = (fam === 'pie' || fam === 'funnel')
+                ? true
+                : ((mode === 'series' && hierarchy.length >= 2) || metrics.length > 1);
+            return {
+                smoothCurve: defaultSmooth,
+                showLegend: defaultLegend,
+                showSplitLine: true
+            };
+        }
+
+        function toggleWidgetVisualFlag(propName, targetWidgetId = null, ev = null) {
+            if (ev) {
+                ev.stopPropagation();
+                ev.preventDefault();
+            }
+            const w = targetWidgetId ? designerLayout.widgets.find(x => x.id === targetWidgetId) : getSelectedWidget();
             if (!w) return;
-            w[propName] = !w[propName];
+            const defs = getWidgetDefaultVisualState(w);
+            const curVal = w[propName] !== undefined ? !!w[propName] : !!defs[propName];
+            w[propName] = !curVal;
             renderDesignerCanvas();
             renderDataBindingPanel();
+            const popToggles = document.getElementById('subTypeGalleryToggles');
+            if (popToggles && document.getElementById('subTypeGalleryPopover')?.style.display === 'flex') {
+                popToggles.innerHTML = renderChartVisualTogglesHtml(w, 'toggleWidgetVisualFlag');
+            }
+        }
+
+        function renderChartVisualTogglesHtml(w, clickFnName = 'toggleWidgetVisualFlag') {
+            if (!w) return '';
+            const fam = getChartFamily(w);
+            if (fam === 'gauge' || fam === 'kpi' || fam === 'table' || fam === 'pivot') return '';
+            const cat = CHART_SUBTYPE_CATALOG[fam] || {};
+            const supportsAvg = !!cat.supportsAvgMinMax || fam === 'bar' || fam === 'line' || fam === 'area' || fam === 'scatter';
+            const supportsCurve = fam === 'line' || fam === 'area';
+            const defs = getWidgetDefaultVisualState(w);
+            const isSmoothAct = w.smoothCurve !== undefined ? !!w.smoothCurve : defs.smoothCurve;
+            const isSplitAct = w.showSplitLine !== undefined ? !!w.showSplitLine : defs.showSplitLine;
+            const isLegendAct = w.showLegend !== undefined ? !!w.showLegend : defs.showLegend;
+            const idArg = `'${w.id}'`;
+
+            const btnStyle = "height:22px;padding:0 6px;font-size:0.67rem;font-weight:700;border:1px solid rgba(56,189,248,0.35);border-radius:4px;display:inline-flex;align-items:center;gap:3px;cursor:pointer;";
+
+            return `
+                <div class="chart-visual-toggles-bar" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:4px;">
+                    <button type="button" class="align-btn ${w.showLabel ? 'active' : ''}" style="${btnStyle}"
+                            title="Grafik üzerinde formatlı değer etiketlerini (sayıları) göster/gizle"
+                            onclick="${clickFnName}('showLabel', ${idArg}, event)">123 Değerler</button>
+                    ${supportsAvg ? `
+                    <button type="button" class="align-btn ${w.showMarkLine ? 'active' : ''}" style="${btnStyle}"
+                            title="Grafik üzerinde otomatik Ortalama (AVG) referans çizgisi göster/gizle"
+                            onclick="${clickFnName}('showMarkLine', ${idArg}, event)">⎯ Ortalama</button>
+                    <button type="button" class="align-btn ${w.showMarkPoint ? 'active' : ''}" style="${btnStyle}"
+                            title="En yüksek (Maks) ve en düşük (Min) noktaları rozetle işaretle"
+                            onclick="${clickFnName}('showMarkPoint', ${idArg}, event)">📍 Min/Maks</button>
+                    <button type="button" class="align-btn ${w.showMedianLine ? 'active' : ''}" style="${btnStyle}"
+                            title="Grafik üzerinde istatistiki Medyan (Ortanca) referans çizgisi göster/gizle"
+                            onclick="${clickFnName}('showMedianLine', ${idArg}, event)">📈 Medyan</button>` : ''}
+                    <button type="button" class="align-btn ${w.showDataZoom ? 'active' : ''}" style="${btnStyle}"
+                            title="Grafik altında yatay kaydırma ve filtreleme zoom kaydırıcısını (DataZoom slider) aç/kapat"
+                            onclick="${clickFnName}('showDataZoom', ${idArg}, event)">🔍 Zoom Kaydırıcı</button>
+                    <button type="button" class="align-btn ${w.showDataView ? 'active' : ''}" style="${btnStyle}"
+                            title="Grafik altında özet veri tablosunu ve yerel ECharts veri görünümünü aç/kapat"
+                            onclick="${clickFnName}('showDataView', ${idArg}, event)">🧮 Veri Tablosu</button>
+                    ${supportsCurve ? `
+                    <button type="button" class="align-btn ${isSmoothAct ? 'active' : ''}" style="${btnStyle}"
+                            title="Çizgileri keskin köşeler yerine yumuşak spline eğri olarak çiz"
+                            onclick="${clickFnName}('smoothCurve', ${idArg}, event)">〰️ Yumuşak Çizgi</button>` : ''}
+                    <button type="button" class="align-btn ${isSplitAct ? 'active' : ''}" style="${btnStyle}"
+                            title="Arka plan ızgara ve kılavuz çizgilerini göster/gizle"
+                            onclick="${clickFnName}('showSplitLine', ${idArg}, event)">🧱 Kılavuz Çizgileri</button>
+                    <button type="button" class="align-btn ${isLegendAct ? 'active' : ''}" style="${btnStyle}"
+                            title="Seri isimleri göstergesini (Legend) zorla aç/kapat"
+                            onclick="${clickFnName}('showLegend', ${idArg}, event)">🏷️ Gösterge</button>
+                </div>`;
         }
 
         let galleryCloseTimer = null;
@@ -5425,14 +5519,17 @@
             }, 180);
         }
 
+        let isGalleryDraggedManually = false;
+
         function scheduleGalleryClose() {
+            if (isGalleryDraggedManually) return;
             if (galleryOpenTimer) {
                 clearTimeout(galleryOpenTimer);
                 galleryOpenTimer = null;
             }
             galleryCloseTimer = setTimeout(() => {
                 closeSubTypeGallery();
-            }, 260);
+            }, 300);
         }
 
         function cancelGalleryClose() {
@@ -5451,8 +5548,83 @@
                 clearTimeout(galleryCloseTimer);
                 galleryCloseTimer = null;
             }
+            isGalleryDraggedManually = false;
             const pop = document.getElementById('subTypeGalleryPopover');
             if (pop) pop.style.display = 'none';
+        }
+
+        function initDraggableGallery(popoverId = 'subTypeGalleryPopover', headerSelector = '.subtype-gallery-header') {
+            const pop = document.getElementById(popoverId);
+            if (!pop) return;
+            const header = pop.querySelector(headerSelector);
+            if (!header || header.dataset.dragInitialized) return;
+            header.dataset.dragInitialized = 'true';
+
+            let isDragging = false;
+            let startX = 0, startY = 0;
+            let startLeft = 0, startTop = 0;
+
+            header.addEventListener('mousedown', e => {
+                if (e.target.closest('.btn-gallery-close') || e.target.tagName === 'BUTTON') return;
+
+                isDragging = true;
+                isGalleryDraggedManually = true;
+                cancelGalleryClose();
+
+                const rect = pop.getBoundingClientRect();
+                startX = e.clientX;
+                startY = e.clientY;
+                startLeft = rect.left;
+                startTop = rect.top;
+
+                pop.style.left = `${startLeft}px`;
+                pop.style.top = `${startTop}px`;
+                pop.style.right = 'auto';
+                pop.style.bottom = 'auto';
+
+                const onMouseMove = ev => {
+                    if (!isDragging) return;
+                    ev.preventDefault();
+                    cancelGalleryClose();
+
+                    const dx = ev.clientX - startX;
+                    const dy = ev.clientY - startY;
+
+                    const popW = pop.offsetWidth || 390;
+                    const popH = pop.offsetHeight || 420;
+
+                    let newLeft = startLeft + dx;
+                    let newTop = startTop + dy;
+
+                    newLeft = Math.max(8, Math.min(window.innerWidth - popW - 8, newLeft));
+                    newTop = Math.max(8, Math.min(window.innerHeight - popH - 8, newTop));
+
+                    pop.style.left = `${newLeft}px`;
+                    pop.style.top = `${newTop}px`;
+                };
+
+                const onMouseUp = () => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                };
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+                e.preventDefault();
+            });
+
+            if (!pop.dataset.outsideClickBound) {
+                pop.dataset.outsideClickBound = 'true';
+                document.addEventListener('mousedown', ev => {
+                    if (pop.style.display === 'flex' && !pop.contains(ev.target)) {
+                        if (!ev.target.closest('#btnSubTypeGalleryTrigger') && !ev.target.closest('[onclick*="openWidgetGalleryFromCard"]')) {
+                            closeSubTypeGallery();
+                        }
+                    }
+                });
+            }
         }
 
         function openWidgetGalleryFromCard(event, widgetId) {
@@ -5511,28 +5683,37 @@
             pop.style.display = 'flex';
             const popW = 390;
 
-            if (event && typeof event.clientX === 'number' && typeof event.clientY === 'number' && !event.currentTarget) {
-                let left = event.clientX + 8;
-                if (left + popW > window.innerWidth - 10) left = Math.max(10, event.clientX - popW - 8);
-                let top = Math.max(50, event.clientY - 20);
-                if (top + 460 > window.innerHeight) top = Math.max(50, window.innerHeight - 475);
-                pop.style.left = `${left}px`;
-                pop.style.top = `${top}px`;
-            } else if (trigger) {
-                const rect = trigger.getBoundingClientRect();
-                let left = rect.right + 10;
-                if (left + popW > window.innerWidth - 10) {
-                    left = Math.max(10, rect.left - popW - 10);
+            const popToggles = document.getElementById('subTypeGalleryToggles');
+            if (popToggles) {
+                popToggles.innerHTML = renderChartVisualTogglesHtml(w, 'toggleWidgetVisualFlag');
+            }
+
+            initDraggableGallery();
+
+            if (!isGalleryDraggedManually) {
+                if (event && typeof event.clientX === 'number' && typeof event.clientY === 'number' && !event.currentTarget) {
+                    let left = event.clientX + 8;
+                    if (left + popW > window.innerWidth - 10) left = Math.max(10, event.clientX - popW - 8);
+                    let top = Math.max(50, event.clientY - 20);
+                    if (top + 460 > window.innerHeight) top = Math.max(50, window.innerHeight - 475);
+                    pop.style.left = `${left}px`;
+                    pop.style.top = `${top}px`;
+                } else if (trigger) {
+                    const rect = trigger.getBoundingClientRect();
+                    let left = rect.right + 10;
+                    if (left + popW > window.innerWidth - 10) {
+                        left = Math.max(10, rect.left - popW - 10);
+                    }
+                    let top = Math.max(50, rect.top - 20);
+                    if (top + 460 > window.innerHeight) {
+                        top = Math.max(50, window.innerHeight - 475);
+                    }
+                    pop.style.left = `${left}px`;
+                    pop.style.top = `${top}px`;
+                } else {
+                    pop.style.left = '280px';
+                    pop.style.top = '100px';
                 }
-                let top = Math.max(50, rect.top - 20);
-                if (top + 460 > window.innerHeight) {
-                    top = Math.max(50, window.innerHeight - 475);
-                }
-                pop.style.left = `${left}px`;
-                pop.style.top = `${top}px`;
-            } else {
-                pop.style.left = '280px';
-                pop.style.top = '100px';
             }
         }
 
@@ -5570,12 +5751,9 @@
                 `<option value="${o.value}" ${o.value === curSub ? 'selected' : ''}>${escapeHtml(o.label)}</option>`
             ).join('');
 
-            const showValueToggle = fam !== 'gauge';
-            const showAvgMinMaxToggle = !!cat.supportsAvgMinMax;
-
             return `
                 <div class="subtype-box" style="background:rgba(14,165,233,0.08);border:1px solid rgba(56,189,248,0.38);border-radius:7px;padding:6px 8px;margin-bottom:8px;">
-                    <div class="r-field" style="margin-bottom:${showValueToggle ? '5px' : '0'};">
+                    <div class="r-field" style="margin-bottom:4px;">
                         <label style="color:#38bdf8;display:flex;justify-content:space-between;align-items:center;">
                             <span>${escapeHtml(cat.title)}</span>
                             <span style="font-size:0.61rem;color:#7dd3fc;">${escapeHtml(policy.ruleBadge || `${cat.options.length} STİL`)}</span>
@@ -5584,22 +5762,7 @@
                             ${optsHtml}
                         </select>
                     </div>
-                    ${showValueToggle ? `
-                    <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
-                        <button type="button" class="align-btn ${w.showLabel ? 'active' : ''}"
-                                style="flex:1;height:22px;font-size:0.68rem;font-weight:700;border:1px solid rgba(56,189,248,0.35);border-radius:4px;gap:3px;"
-                                title="Grafik üzerinde formatlı değer etiketlerini göster/gizle"
-                                onclick="toggleWidgetVisualFlag('showLabel')">123 Değerler</button>
-                        ${showAvgMinMaxToggle ? `
-                        <button type="button" class="align-btn ${w.showMarkLine ? 'active' : ''}"
-                                style="flex:1;height:22px;font-size:0.68rem;font-weight:700;border:1px solid rgba(56,189,248,0.35);border-radius:4px;gap:3px;"
-                                title="Grafik üzerinde otomatik Ortalama (AVG) çizgisi göster/gizle"
-                                onclick="toggleWidgetVisualFlag('showMarkLine')">⎯ Ortalama</button>
-                        <button type="button" class="align-btn ${w.showMarkPoint ? 'active' : ''}"
-                                style="flex:1;height:22px;font-size:0.68rem;font-weight:700;border:1px solid rgba(56,189,248,0.35);border-radius:4px;gap:3px;"
-                                title="En yüksek (Maks) ve en düşük (Min) noktayı işaretle"
-                                onclick="toggleWidgetVisualFlag('showMarkPoint')">📍 Min/Maks</button>` : ''}
-                    </div>` : ''}
+                    ${renderChartVisualTogglesHtml(w, 'toggleWidgetVisualFlag')}
                 </div>`;
         }
 
@@ -6920,6 +7083,44 @@
             }
         }
 
+        function renderInlineChartDataView(container, w, rows) {
+            if (!container || !w || !w.showDataView) return;
+            const metrics = getWidgetMetrics(w);
+            const effectiveMetrics = metrics.length > 0 ? metrics : [{ field: w.valueField || '', agg: w.agg || 'sum' }];
+            const hierarchy = getWidgetHierarchy(w);
+            const mode = w.multiDimMode || 'combined';
+            const drillState = widgetDrillState[w.id];
+            const currentLevel = drillState ? drillState.level : 0;
+            const activeDimCols = (mode === 'combined' && hierarchy.length > 1)
+                ? hierarchy
+                : [hierarchy[Math.min(currentLevel, Math.max(0, hierarchy.length - 1))] || w.dimension || ''];
+            const dimLabel = activeDimCols.filter(Boolean).join(' / ') || 'Kategori';
+            const firstGrouped = groupAndAggregateComposite(rows, activeDimCols, effectiveMetrics[0].field, effectiveMetrics[0].agg, w.topN || 25);
+            const catKeys = firstGrouped.map(g => g.key);
+            const metricMaps = effectiveMetrics.map((m, idx) => {
+                const grp = idx === 0 ? firstGrouped : groupAndAggregateComposite(rows, activeDimCols, m.field, m.agg, null);
+                return new Map(grp.map(g => [g.key, g.value]));
+            });
+
+            const wrap = document.createElement('div');
+            wrap.className = 'chart-inline-dataview';
+            wrap.style.cssText = 'max-height:38%;min-height:72px;overflow-y:auto;border-top:1px solid rgba(56,189,248,0.28);margin-top:4px;font-size:0.71rem;';
+
+            const ths = `<th style="text-align:left;padding:3px 6px;position:sticky;top:0;background:var(--panel, #0f172a);color:#38bdf8;border-bottom:1px solid rgba(56,189,248,0.22);">${escapeHtml(dimLabel)}</th>` +
+                effectiveMetrics.map(m => `<th style="text-align:right;padding:3px 6px;position:sticky;top:0;background:var(--panel, #0f172a);color:#38bdf8;border-bottom:1px solid rgba(56,189,248,0.22);">${escapeHtml(m.field)} (${escapeHtml((m.agg || 'sum').toUpperCase())})</th>`).join('');
+
+            const trs = catKeys.map(k => {
+                const tds = effectiveMetrics.map((m, idx) => {
+                    const val = metricMaps[idx].get(k) ?? 0;
+                    return `<td style="text-align:right;padding:2px 6px;font-variant-numeric:tabular-nums;border-bottom:1px solid rgba(148,163,184,0.1);">${escapeHtml(formatValueByColumn(val, m.field, 'number'))}</td>`;
+                }).join('');
+                return `<tr><td style="text-align:left;padding:2px 6px;border-bottom:1px solid rgba(148,163,184,0.1);font-weight:600;">${escapeHtml(k)}</td>${tds}</tr>`;
+            }).join('');
+
+            wrap.innerHTML = `<table style="width:100%;border-collapse:collapse;"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+            container.appendChild(wrap);
+        }
+
         function renderChartWidget(w, baseRows, container) {
             const metrics = getWidgetMetrics(w);
             const primaryMetric = metrics[0] || { field: '', agg: w.agg || 'sum' };
@@ -6948,6 +7149,9 @@
             }
 
             const chart = createManagedChart(container);
+            if (w.showDataView && w.type !== 'gauge') {
+                renderInlineChartDataView(container, w, workingRows);
+            }
 
             const isLight = isLightTheme();
             const axisTextColor = isLight ? '#334155' : '#94a3b8';
@@ -7185,7 +7389,7 @@
                         backgroundColor: 'transparent',
                         color: palette,
                         tooltip: { trigger: 'item', confine: true, formatter: p => `${escapeHtml(p.seriesName)}<br/>${escapeHtml(p.name)}: <strong>${escapeHtml(formatValueByColumn(p.value, primaryMetric.field, 'number'))}</strong> (%${p.percent})` },
-                        legend: { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 10 } },
+                        legend: w.showLegend !== false ? { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 10 } } : { show: false },
                         series: [
                             {
                                 name: innerCol,
@@ -7228,7 +7432,7 @@
                     backgroundColor: 'transparent',
                     color: palette,
                     tooltip: { trigger: 'item', confine: true, formatter: p => `${escapeHtml(p.name)}: <strong>${escapeHtml(formatValueByColumn(p.value, primaryMetric.field, 'number'))}</strong> (%${p.percent})` },
-                    legend: { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 11 } },
+                    legend: w.showLegend !== false ? { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 11 } } : { show: false },
                     series: [{
                         type: 'pie',
                         roseType: isRose ? (sub === 'roseArea' ? 'area' : 'radius') : false,
@@ -7259,7 +7463,7 @@
                     backgroundColor: 'transparent',
                     color: palette,
                     tooltip: { trigger: 'item', confine: true, formatter: p => `${escapeHtml(p.name)}: <strong>${escapeHtml(formatValueByColumn(p.value, primaryMetric.field, 'number'))}</strong> (%${p.percent})` },
-                    legend: { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 11 } },
+                    legend: w.showLegend !== false ? { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 11 } } : { show: false },
                     series: [{
                         name: primaryMetric.field,
                         type: 'funnel',
@@ -7331,16 +7535,18 @@
                 }
 
                 const maxIndVal = Math.ceil(globalMax * 1.15) || 100;
+                const showRadarLegend = w.showLegend !== undefined ? !!w.showLegend : (radarDataItems.length > 1);
                 chart.setOption({
                     backgroundColor: 'transparent',
                     color: palette,
                     tooltip: { trigger: 'item', confine: true },
-                    legend: radarDataItems.length > 1 ? { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 11 } } : undefined,
+                    legend: showRadarLegend ? { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 11 } } : { show: false },
                     radar: {
                         shape: sub === 'circle' ? 'circle' : 'polygon',
                         radius: '64%',
                         center: ['50%', '48%'],
                         axisName: { color: axisTextColor, fontSize: 10 },
+                        splitLine: { show: w.showSplitLine !== false, lineStyle: { color: splitLineColor } },
                         indicator: (indicatorKeys.length > 0 ? indicatorKeys : ['Veri']).map(k => ({ name: k, max: maxIndVal }))
                     },
                     series: [{
@@ -7368,6 +7574,10 @@
                 const categoryKeys = firstGrouped.map(g => g.key);
                 const maxScatterVal = Math.max(...firstGrouped.map(g => Math.abs(g.value)), 1);
 
+                const scatterMarkLineData = [];
+                if (w.showMarkLine) scatterMarkLineData.push({ type: 'average', name: 'Ortalama' });
+                if (w.showMedianLine) scatterMarkLineData.push({ type: 'median', name: 'Medyan' });
+
                 const scatterSeries = effectiveMetrics.map((m, mIdx) => {
                     const grp = mIdx === 0 ? firstGrouped : groupAndAggregateComposite(workingRows, activeDimCols, m.field, m.agg, null);
                     const valMap = new Map(grp.map(g => [g.key, g.value]));
@@ -7389,9 +7599,9 @@
                             fontSize: 10,
                             formatter: p => formatValueByColumn(p.value, m.field, 'number')
                         } : undefined,
-                        markLine: w.showMarkLine ? {
-                            data: [{ type: 'average', name: 'Ortalama' }],
-                            label: { formatter: p => `Ort: ${formatValueByColumn(p.value, m.field, 'number')}`, color: legendTextColor }
+                        markLine: scatterMarkLineData.length > 0 ? {
+                            data: scatterMarkLineData,
+                            label: { formatter: p => `${p.name}: ${formatValueByColumn(p.value, m.field, 'number')}`, color: legendTextColor }
                         } : undefined,
                         markPoint: w.showMarkPoint ? {
                             data: [{ type: 'max', name: 'Maks' }, { type: 'min', name: 'Min' }],
@@ -7400,6 +7610,19 @@
                         data: dataArr
                     };
                 });
+
+                const scatterZoom = [{ type: 'inside' }];
+                if (w.showDataZoom) {
+                    scatterZoom.push({
+                        type: 'slider',
+                        height: 16,
+                        bottom: 2,
+                        borderColor: 'rgba(56,189,248,0.3)',
+                        fillerColor: 'rgba(56,189,248,0.18)',
+                        textStyle: { color: axisTextColor, fontSize: 10 }
+                    });
+                }
+                const showScatterLegend = w.showLegend !== undefined ? !!w.showLegend : (effectiveMetrics.length > 1);
 
                 chart.setOption({
                     backgroundColor: 'transparent',
@@ -7417,10 +7640,11 @@
                             return res;
                         }
                     },
-                    legend: effectiveMetrics.length > 1 ? { type: 'scroll', top: 0, left: w.align || 'auto', textStyle: { color: legendTextColor, fontSize: 11 } } : undefined,
-                    grid: { left: 12, right: 20, top: effectiveMetrics.length > 1 ? 34 : 28, bottom: 20, containLabel: true },
-                    xAxis: { type: 'category', data: categoryKeys, axisLabel: { color: axisTextColor, rotate: categoryKeys.length > 5 ? 20 : 0 }, splitLine: { show: true, lineStyle: { color: splitLineColor, type: 'dashed' } } },
-                    yAxis: { type: 'value', axisLabel: { color: axisTextColor, formatter: v => formatValueByColumn(v, effectiveMetrics[0].field, 'number') }, splitLine: { lineStyle: { color: splitLineColor } } },
+                    legend: showScatterLegend ? { type: 'scroll', top: 0, left: w.align || 'auto', textStyle: { color: legendTextColor, fontSize: 11 } } : { show: false },
+                    dataZoom: scatterZoom,
+                    grid: { left: 12, right: 20, top: showScatterLegend ? 34 : 28, bottom: w.showDataZoom ? 28 : 20, containLabel: true },
+                    xAxis: { type: 'category', data: categoryKeys, axisLabel: { color: axisTextColor, rotate: categoryKeys.length > 5 ? 20 : 0 }, splitLine: { show: w.showSplitLine !== false, lineStyle: { color: splitLineColor, type: 'dashed' } } },
+                    yAxis: { type: 'value', axisLabel: { color: axisTextColor, formatter: v => formatValueByColumn(v, effectiveMetrics[0].field, 'number') }, splitLine: { show: w.showSplitLine !== false, lineStyle: { color: splitLineColor } } },
                     series: scatterSeries
                 });
                 attachDesignerChartDrillEvents(chart, w, hierarchy);
@@ -7559,7 +7783,7 @@
                 const isPictorial = isBarFamily && barSubType === 'pictorialDotted';
                 const hasBg = isBarFamily && barSubType === 'background';
                 const isAreaFill = isLineFamily && (lineSubType === 'area' || lineSubType === 'stackedArea' || lineSubType === 'gradientArea' || w.type === 'area');
-                const isSmoothLine = !isLineFamily || (lineSubType !== 'basic' && lineSubType !== 'step');
+                const isSmoothLine = w.smoothCurve !== undefined ? !!w.smoothCurve : (!isLineFamily || (lineSubType !== 'basic' && lineSubType !== 'step'));
                 const stepMode = (isLineFamily && lineSubType === 'step') ? 'middle' : undefined;
 
                 const rawMatrix = seriesKeys.map(sk => xKeys.map(xk => {
@@ -7570,6 +7794,18 @@
                 }));
 
                 const colTotals = xKeys.map((_, xi) => rawMatrix.reduce((acc, row) => acc + (row[xi] || 0), 0));
+
+                const markLineData = [];
+                if (w.showMarkLine) markLineData.push({ type: 'average', name: 'Ortalama' });
+                if (w.showMedianLine) markLineData.push({ type: 'median', name: 'Medyan' });
+                const markLineOpt = markLineData.length > 0 ? {
+                    data: markLineData,
+                    label: { formatter: p => `${p.name}: ${formatValueByColumn(p.value, primaryMetric.field, 'number')}`, color: legendTextColor }
+                } : undefined;
+                const markPointOpt = w.showMarkPoint ? {
+                    data: [{ type: 'max', name: 'Maks' }, { type: 'min', name: 'Min' }],
+                    label: { formatter: p => formatValueByColumn(p.value, primaryMetric.field, 'number') }
+                } : undefined;
 
                 const seriesList = seriesKeys.map((sk, sIdx) => {
                     const dataArr = isPct100
@@ -7600,14 +7836,8 @@
                             fontSize: 10,
                             formatter: p => isPct100 ? `%${p.value}` : formatValueByColumn(p.value, primaryMetric.field, 'number')
                         } : undefined,
-                        markLine: (w.showMarkLine && sIdx === 0) ? {
-                            data: [{ type: 'average', name: 'Ortalama' }],
-                            label: { formatter: p => `Ort: ${formatValueByColumn(p.value, primaryMetric.field, 'number')}`, color: legendTextColor }
-                        } : undefined,
-                        markPoint: (w.showMarkPoint && sIdx === 0) ? {
-                            data: [{ type: 'max', name: 'Maks' }, { type: 'min', name: 'Min' }],
-                            label: { formatter: p => formatValueByColumn(p.value, primaryMetric.field, 'number') }
-                        } : undefined,
+                        markLine: sIdx === 0 ? markLineOpt : undefined,
+                        markPoint: sIdx === 0 ? markPointOpt : undefined,
                         data: dataArr
                     };
                 });
@@ -7621,8 +7851,30 @@
                     type: 'value',
                     max: isPct100 ? 100 : undefined,
                     axisLabel: { color: axisTextColor, formatter: v => isPct100 ? `%${v}` : formatValueByColumn(v, primaryMetric.field, 'number') },
-                    splitLine: { lineStyle: { color: splitLineColor } }
+                    splitLine: { show: w.showSplitLine !== false, lineStyle: { color: splitLineColor } }
                 };
+
+                const dataZoomList = [isHoriz ? { type: 'inside', yAxisIndex: 0 } : { type: 'inside', xAxisIndex: 0 }];
+                if (w.showDataZoom) {
+                    dataZoomList.push(isHoriz ? {
+                        type: 'slider',
+                        yAxisIndex: 0,
+                        width: 14,
+                        right: 4,
+                        borderColor: 'rgba(56,189,248,0.3)',
+                        fillerColor: 'rgba(56,189,248,0.18)',
+                        textStyle: { color: axisTextColor, fontSize: 10 }
+                    } : {
+                        type: 'slider',
+                        xAxisIndex: 0,
+                        height: 16,
+                        bottom: 2,
+                        borderColor: 'rgba(56,189,248,0.3)',
+                        fillerColor: 'rgba(56,189,248,0.18)',
+                        textStyle: { color: axisTextColor, fontSize: 10 }
+                    });
+                }
+                const showSeriesLegend = w.showLegend !== undefined ? !!w.showLegend : true;
 
                 chart.setOption({
                     backgroundColor: 'transparent',
@@ -7641,18 +7893,19 @@
                             return res;
                         }
                     },
-                    legend: { type: 'scroll', top: 0, left: w.align || 'auto', textStyle: { color: legendTextColor, fontSize: 11 } },
+                    legend: showSeriesLegend ? { type: 'scroll', top: 0, left: w.align || 'auto', textStyle: { color: legendTextColor, fontSize: 11 } } : { show: false },
                     toolbox: {
                         show: true, right: 8, top: 0,
                         iconStyle: { borderColor: axisTextColor },
                         feature: {
                             magicType: { type: ['line', 'bar', 'stack'], title: { line: 'Çizgi', bar: 'Sütun', stack: 'Yığılmış' } },
+                            ...(w.showDataView ? { dataView: { show: true, readOnly: true, title: 'Veri Tablosu', lang: ['Veri Tablosu', 'Kapat', 'Yenile'] } } : {}),
                             restore: { title: 'Sıfırla' },
                             saveAsImage: { title: 'Resim İndir' }
                         }
                     },
-                    dataZoom: [{ type: 'inside' }],
-                    grid: { left: 12, right: 20, top: 34, bottom: 20, containLabel: true },
+                    dataZoom: dataZoomList,
+                    grid: { left: 12, right: (isHoriz && w.showDataZoom) ? 28 : 20, top: showSeriesLegend ? 34 : 26, bottom: (!isHoriz && w.showDataZoom) ? 28 : 20, containLabel: true },
                     xAxis: isHoriz ? valAxis : catAxis,
                     yAxis: isHoriz ? catAxis : valAxis,
                     series: seriesList
@@ -7676,7 +7929,7 @@
             const isPictorial = isBarFamily && barSubType === 'pictorialDotted';
             const hasBg = isBarFamily && barSubType === 'background';
             const isAreaFill = isLineFamily && (lineSubType === 'area' || lineSubType === 'stackedArea' || lineSubType === 'gradientArea' || w.type === 'area');
-            const isSmoothLine = !isLineFamily || (lineSubType !== 'basic' && lineSubType !== 'step');
+            const isSmoothLine = w.smoothCurve !== undefined ? !!w.smoothCurve : (!isLineFamily || (lineSubType !== 'basic' && lineSubType !== 'step'));
             const stepMode = (isLineFamily && lineSubType === 'step') ? 'middle' : undefined;
 
             const rawMetricMatrix = effectiveMetrics.map((m, mIdx) => {
@@ -7688,6 +7941,18 @@
             });
 
             const colTotals = categoryKeys.map((_, ki) => rawMetricMatrix.reduce((acc, arr) => acc + (arr[ki] || 0), 0));
+
+            const markLineData = [];
+            if (w.showMarkLine) markLineData.push({ type: 'average', name: 'Ortalama' });
+            if (w.showMedianLine) markLineData.push({ type: 'median', name: 'Medyan' });
+            const markLineOpt = markLineData.length > 0 ? {
+                data: markLineData,
+                label: { formatter: p => `${p.name}: ${formatValueByColumn(p.value, effectiveMetrics[0].field, 'number')}`, color: legendTextColor }
+            } : undefined;
+            const markPointOpt = w.showMarkPoint ? {
+                data: [{ type: 'max', name: 'Maks' }, { type: 'min', name: 'Min' }],
+                label: { formatter: p => formatValueByColumn(p.value, effectiveMetrics[0].field, 'number') }
+            } : undefined;
 
             const seriesList = effectiveMetrics.map((m, mIdx) => {
                 const dataArr = isPct100
@@ -7720,14 +7985,8 @@
                         fontSize: 10,
                         formatter: p => isPct100 ? `%${p.value}` : formatValueByColumn(p.value, m.field, 'number')
                     } : undefined,
-                    markLine: w.showMarkLine ? {
-                        data: [{ type: 'average', name: 'Ortalama' }],
-                        label: { formatter: p => `Ort: ${formatValueByColumn(p.value, m.field, 'number')}`, color: legendTextColor }
-                    } : undefined,
-                    markPoint: w.showMarkPoint ? {
-                        data: [{ type: 'max', name: 'Maks' }, { type: 'min', name: 'Min' }],
-                        label: { formatter: p => formatValueByColumn(p.value, m.field, 'number') }
-                    } : undefined,
+                    markLine: mIdx === 0 ? markLineOpt : undefined,
+                    markPoint: mIdx === 0 ? markPointOpt : undefined,
                     itemStyle: effectiveMetrics.length === 1 && !isLine ? {
                         color: new echarts.graphic.LinearGradient(isHoriz ? 1 : 0, 0, 0, isHoriz ? 0 : 1, [
                             { offset: 0, color: '#0ea5e9' },
@@ -7747,8 +8006,30 @@
                 type: 'value',
                 max: isPct100 ? 100 : undefined,
                 axisLabel: { color: axisTextColor, formatter: v => isPct100 ? `%${v}` : formatValueByColumn(v, effectiveMetrics[0].field, 'number') },
-                splitLine: { lineStyle: { color: splitLineColor } }
+                splitLine: { show: w.showSplitLine !== false, lineStyle: { color: splitLineColor } }
             };
+
+            const dataZoomList = [isHoriz ? { type: 'inside', yAxisIndex: 0 } : { type: 'inside', xAxisIndex: 0 }];
+            if (w.showDataZoom) {
+                dataZoomList.push(isHoriz ? {
+                    type: 'slider',
+                    yAxisIndex: 0,
+                    width: 14,
+                    right: 4,
+                    borderColor: 'rgba(56,189,248,0.3)',
+                    fillerColor: 'rgba(56,189,248,0.18)',
+                    textStyle: { color: axisTextColor, fontSize: 10 }
+                } : {
+                    type: 'slider',
+                    xAxisIndex: 0,
+                    height: 16,
+                    bottom: 2,
+                    borderColor: 'rgba(56,189,248,0.3)',
+                    fillerColor: 'rgba(56,189,248,0.18)',
+                    textStyle: { color: axisTextColor, fontSize: 10 }
+                });
+            }
+            const showCombLegend = w.showLegend !== undefined ? !!w.showLegend : (effectiveMetrics.length > 1);
 
             chart.setOption({
                 backgroundColor: 'transparent',
@@ -7768,18 +8049,19 @@
                         return res;
                     }
                 },
-                legend: effectiveMetrics.length > 1 ? { type: 'scroll', top: 0, left: w.align || 'auto', textStyle: { color: legendTextColor, fontSize: 11 } } : undefined,
+                legend: showCombLegend ? { type: 'scroll', top: 0, left: w.align || 'auto', textStyle: { color: legendTextColor, fontSize: 11 } } : { show: false },
                 toolbox: {
                     show: true, right: 8, top: 0,
                     iconStyle: { borderColor: axisTextColor },
                     feature: {
                         magicType: { type: ['line', 'bar', 'stack'], title: { line: 'Çizgi', bar: 'Sütun', stack: 'Yığılmış' } },
+                        ...(w.showDataView ? { dataView: { show: true, readOnly: true, title: 'Veri Tablosu', lang: ['Veri Tablosu', 'Kapat', 'Yenile'] } } : {}),
                         restore: { title: 'Sıfırla' },
                         saveAsImage: { title: 'Resim İndir' }
                     }
                 },
-                dataZoom: [{ type: 'inside' }],
-                grid: { left: 12, right: 20, top: effectiveMetrics.length > 1 ? 34 : 28, bottom: 20, containLabel: true },
+                dataZoom: dataZoomList,
+                grid: { left: 12, right: (isHoriz && w.showDataZoom) ? 28 : 20, top: showCombLegend ? 34 : 28, bottom: (!isHoriz && w.showDataZoom) ? 28 : 20, containLabel: true },
                 xAxis: isHoriz ? valAxis : catAxis,
                 yAxis: isHoriz ? catAxis : valAxis,
                 series: seriesList

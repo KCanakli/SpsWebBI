@@ -806,6 +806,50 @@
             color: #7dd3fc;
         }
 
+        /* Buton Grubu ve ECharts Görsel Özellik Toggles */
+        .align-btn {
+            background: rgba(15, 23, 42, 0.45);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: #cbd5e1;
+            cursor: pointer;
+            padding: 3px 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.12s;
+            height: 22px;
+            border-radius: 4px;
+        }
+
+        .align-btn:hover {
+            background: rgba(56, 189, 248, 0.2);
+            color: #fff;
+            border-color: rgba(56, 189, 248, 0.6);
+        }
+
+        .align-btn.active {
+            background: var(--primary, #0ea5e9);
+            color: #fff;
+            border-color: #38bdf8;
+            box-shadow: 0 0 6px rgba(14, 165, 233, 0.4);
+        }
+
+        body.light-theme .align-btn {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            color: #334155;
+        }
+
+        body.light-theme .align-btn:hover {
+            background: #e0f2fe;
+            color: #0284c7;
+        }
+
+        body.light-theme .align-btn.active {
+            background: var(--primary, #0284c7);
+            color: #fff;
+        }
+
         /* 120 Mikro-Sütunlu ve 2 Boyutlu Yoğun (Dense) Responsive Dashboard Grid */
         .dashboard-canvas {
             padding: 16px;
@@ -1381,24 +1425,25 @@
             max-height: 480px;
             background: #0f172a;
             border: 1px solid rgba(56, 189, 248, 0.45);
+            border-top: 3.5px solid #38bdf8;
             border-radius: 12px;
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65), 0 0 16px rgba(56, 189, 248, 0.15);
+            box-shadow: 0 20px 48px rgba(0, 0, 0, 0.75), 0 0 20px rgba(56, 189, 248, 0.22);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            backdrop-filter: blur(10px);
-            animation: galleryFadeIn 0.18s ease-out;
+            backdrop-filter: blur(12px);
+            animation: formSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        @keyframes galleryFadeIn {
+        @keyframes formSlideDown {
             from {
                 opacity: 0;
-                transform: scale(0.96) translateY(-4px);
+                transform: translateY(-16px) scale(0.98);
             }
 
             to {
                 opacity: 1;
-                transform: scale(1) translateY(0);
+                transform: translateY(0) scale(1);
             }
         }
 
@@ -1409,6 +1454,13 @@
             padding: 8px 12px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             background: rgba(15, 23, 42, 0.95);
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .subtype-gallery-header:active {
+            cursor: grabbing;
         }
 
         .btn-gallery-close {
@@ -1519,8 +1571,9 @@
 
         body.light-theme .subtype-gallery-popover {
             background: #ffffff;
-            border-color: #cbd5e1;
-            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16);
+            border: 1px solid #cbd5e1;
+            border-top: 3.5px solid #0284c7;
+            box-shadow: 0 20px 42px rgba(15, 23, 42, 0.18), 0 2px 8px rgba(15, 23, 42, 0.08);
         }
 
         body.light-theme .subtype-gallery-header {
@@ -1549,7 +1602,9 @@
 
         body.spsteks-theme .subtype-gallery-popover {
             background: #edf4fc;
-            border-color: #94b8db;
+            border: 1px solid #94b8db;
+            border-top: 3.5px solid #2563eb;
+            box-shadow: 0 20px 45px rgba(16, 42, 76, 0.32), 0 0 16px rgba(37, 99, 235, 0.2);
         }
 
         body.spsteks-theme .subtype-gallery-header {
@@ -1571,19 +1626,22 @@
             z-index: 9997;
             min-width: 235px;
             max-width: 290px;
-            background: var(--card);
-            border: 1px solid rgba(56, 189, 248, 0.5);
-            border-radius: 9px;
-            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.6);
+            background: #0f172a;
+            border: 1px solid rgba(56, 189, 248, 0.45);
+            border-top: 3px solid #38bdf8;
+            border-radius: 10px;
+            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.65), 0 0 16px rgba(56, 189, 248, 0.18);
             padding: 5px;
             display: none;
             flex-direction: column;
             gap: 2px;
             user-select: none;
+            backdrop-filter: blur(10px);
         }
 
         .widget-context-menu.open {
             display: flex;
+            animation: formSlideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .ctx-menu-header {
@@ -1658,8 +1716,9 @@
 
         body.light-theme .widget-context-menu {
             background: #ffffff;
-            border-color: #cbd5e1;
-            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18);
+            border: 1px solid #cbd5e1;
+            border-top: 3px solid #0284c7;
+            box-shadow: 0 18px 38px rgba(15, 23, 42, 0.18), 0 2px 8px rgba(15, 23, 42, 0.06);
         }
 
         body.light-theme .ctx-menu-item:hover {
@@ -1669,8 +1728,9 @@
 
         body.spsteks-theme .widget-context-menu {
             background: #eef5fc;
-            border-color: #7da2ce;
-            box-shadow: 0 16px 36px rgba(16, 42, 76, 0.22);
+            border: 1px solid #7da2ce;
+            border-top: 3px solid #2563eb;
+            box-shadow: 0 18px 40px rgba(16, 42, 76, 0.28), 0 0 14px rgba(37, 99, 235, 0.2);
         }
 
         /* YENİ GRAFİKLER BİLDİRİM KARTI (TOAST) & ROZET */
@@ -1841,9 +1901,10 @@
     <div id="viewerWidgetCtxMenu" class="widget-context-menu" onclick="event.stopPropagation()"></div>
     <!-- ALT GRAFİK STİLLERİ GÖRSEL SEÇİM PANELİ (POPOVER) -->
     <div id="subTypeGalleryPopover" class="subtype-gallery-popover" style="display:none;"
-        onmouseleave="scheduleGalleryClose()" onmouseenter="cancelGalleryClose()">
-        <div class="subtype-gallery-header">
-            <div style="display:flex;align-items:center;gap:6px;">
+        onclick="event.stopPropagation()" onmouseleave="scheduleGalleryClose()" onmouseenter="cancelGalleryClose()">
+        <div class="subtype-gallery-header" title="Başlıktan tutarak pencereyi sürükleyip bırakabilirsiniz">
+            <div style="display:flex;align-items:center;gap:6px;pointer-events:none;">
+                <span style="font-size:0.95rem;color:#7dd3fc;opacity:0.75;letter-spacing:-1px;">⠿</span>
                 <span style="font-size:1rem;">🎨</span>
                 <span id="subTypeGalleryTitle" style="font-weight:800;font-size:0.85rem;color:#38bdf8;">Alt Grafik
                     Stilleri</span>
@@ -1852,6 +1913,12 @@
         </div>
         <div class="subtype-gallery-sub">Stil seçmek için tıklayın • Tuval anlık güncellenir</div>
         <div id="subTypeGalleryGrid" class="subtype-gallery-grid"></div>
+        <div id="subTypeGalleryTogglesWrap" style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.08);">
+            <div style="font-size:0.68rem;font-weight:700;color:#38bdf8;margin-bottom:5px;display:flex;align-items:center;gap:4px;">
+                <span>✨</span><span>GRAFİK GÖRSEL ÖZELLİKLERİ & ECHARTS ARAÇLARI</span>
+            </div>
+            <div id="subTypeGalleryToggles"></div>
+        </div>
     </div>
     <!-- İnce Üst Başlık + Hamburger Menü -->
     <header class="top-header">
@@ -1873,7 +1940,7 @@
                         <span>🎨</span>
                         <span>
                             Tasarımımı Özelleştir
-                            <span class="hamburger-item-sub">Kartların yerini ve boyutunu kendine göre ayarla</span>
+                            <span class="hamburger-item-sub">Kartların yerini, boyutunu ve grafik özelliklerini ayarla</span>
                         </span>
                     </button>
                     <button type="button" class="hamburger-item" id="btnSaveUserLayout" style="display:none;"
@@ -3448,14 +3515,28 @@
 
                 header.appendChild(titleWrap);
 
-                // Kişisel Tasarım Modunda 2 Boyutlu Serbest Taşıma, Köşeden Boyutlandırma ve Gizle/Kaldır Butonu
+                // Kişisel Tasarım Modunda 2 Boyutlu Serbest Taşıma, Köşeden Boyutlandırma, Stil/Özellik ve Gizle/Kaldır Butonu
                 if (isUserEditMode) {
                     header.style.cursor = 'move';
                     attachUserMoveBehavior(card, w, header);
 
+                    const fam = getChartFamily(w);
+                    const hasGallery = !!(fam && CHART_SUBTYPE_CATALOG[fam]);
+                    if (hasGallery) {
+                        const btnGal = document.createElement('button');
+                        btnGal.type = 'button';
+                        btnGal.className = 'btn-widget-gallery';
+                        btnGal.style.cssText = 'background:rgba(14,165,233,0.14);border:1px solid rgba(56,189,248,0.4);color:#38bdf8;height:24px;padding:0 7px;border-radius:5px;font-size:0.71rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;margin-left:auto;margin-right:4px;flex-shrink:0;';
+                        btnGal.title = 'Grafik Alt Stili ve Görsel Özellikleri Değiştir';
+                        btnGal.innerHTML = '<span>🎨</span><span>Stil & Özellik</span>';
+                        btnGal.onclick = e => toggleViewerWidgetGallery(e, w.id);
+                        header.appendChild(btnGal);
+                    }
+
                     const btnRemove = document.createElement('button');
                     btnRemove.type = 'button';
                     btnRemove.className = 'btn-widget-remove';
+                    if (hasGallery) btnRemove.style.marginLeft = '0';
                     btnRemove.title = 'Bu grafiği görünümden gizle / kaldır';
                     btnRemove.innerHTML = `
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -3883,11 +3964,13 @@
         };
 
         let galleryCloseTimer = null;
+        let isGalleryDraggedManually = false;
 
         function scheduleGalleryClose() {
+            if (isGalleryDraggedManually) return; // Kullanıcı pencereyi sürükleyip taşıdıysa mouse ayrılınca otomatik kapatma!
             galleryCloseTimer = setTimeout(() => {
                 closeSubTypeGallery();
-            }, 260);
+            }, 300);
         }
 
         function cancelGalleryClose() {
@@ -3899,8 +3982,84 @@
 
         function closeSubTypeGallery() {
             cancelGalleryClose();
+            isGalleryDraggedManually = false;
             const pop = document.getElementById('subTypeGalleryPopover');
             if (pop) pop.style.display = 'none';
+        }
+
+        function initDraggableGallery(popoverId = 'subTypeGalleryPopover', headerSelector = '.subtype-gallery-header') {
+            const pop = document.getElementById(popoverId);
+            if (!pop) return;
+            const header = pop.querySelector(headerSelector);
+            if (!header || header.dataset.dragInitialized) return;
+            header.dataset.dragInitialized = 'true';
+
+            let isDragging = false;
+            let startX = 0, startY = 0;
+            let startLeft = 0, startTop = 0;
+
+            header.addEventListener('mousedown', e => {
+                if (e.target.closest('.btn-gallery-close') || e.target.tagName === 'BUTTON') return;
+
+                isDragging = true;
+                isGalleryDraggedManually = true;
+                cancelGalleryClose();
+
+                const rect = pop.getBoundingClientRect();
+                startX = e.clientX;
+                startY = e.clientY;
+                startLeft = rect.left;
+                startTop = rect.top;
+
+                pop.style.left = `${startLeft}px`;
+                pop.style.top = `${startTop}px`;
+                pop.style.right = 'auto';
+                pop.style.bottom = 'auto';
+
+                const onMouseMove = ev => {
+                    if (!isDragging) return;
+                    ev.preventDefault();
+                    cancelGalleryClose();
+
+                    const dx = ev.clientX - startX;
+                    const dy = ev.clientY - startY;
+
+                    const popW = pop.offsetWidth || 390;
+                    const popH = pop.offsetHeight || 420;
+
+                    let newLeft = startLeft + dx;
+                    let newTop = startTop + dy;
+
+                    newLeft = Math.max(8, Math.min(window.innerWidth - popW - 8, newLeft));
+                    newTop = Math.max(8, Math.min(window.innerHeight - popH - 8, newTop));
+
+                    pop.style.left = `${newLeft}px`;
+                    pop.style.top = `${newTop}px`;
+                };
+
+                const onMouseUp = () => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                };
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+                e.preventDefault();
+            });
+
+            // Popover dışına tıklandığında kapat (ancak butonlara tıklanırken değil)
+            if (!pop.dataset.outsideClickBound) {
+                pop.dataset.outsideClickBound = 'true';
+                document.addEventListener('mousedown', ev => {
+                    if (pop.style.display === 'flex' && !pop.contains(ev.target)) {
+                        if (!ev.target.closest('[onclick*="toggleViewerWidgetGallery"]') && !ev.target.closest('#viewerWidgetCtxMenu')) {
+                            closeSubTypeGallery();
+                        }
+                    }
+                });
+            }
         }
 
         function applyWidgetSubTypeLogic(w, newSubType) {
@@ -3917,6 +4076,7 @@
             } else if (fam === 'line') {
                 if (newSubType === 'area' || newSubType === 'stackedArea' || newSubType === 'gradientArea') w.type = 'area';
                 else w.type = 'line';
+                w.smoothCurve = (newSubType !== 'basic' && newSubType !== 'step');
             } else if (fam === 'pie') {
                 if (newSubType === 'donut' || newSubType === 'halfDonut') w.type = 'donut';
                 else w.type = 'pie';
@@ -3927,12 +4087,148 @@
             }
         }
 
+        function getWidgetDefaultVisualState(w) {
+            if (!w) return { smoothCurve: true, showLegend: false, showSplitLine: true };
+            const fam = getChartFamily(w);
+            const sub = getEffectiveChartSubType(w);
+            const metrics = getWidgetMetrics(w);
+            const hierarchy = (Array.isArray(w.drillHierarchy) && w.drillHierarchy.length > 0)
+                ? w.drillHierarchy
+                : (w.dimension ? [w.dimension] : []);
+            const mode = w.multiDimMode || (hierarchy.length > 1 ? 'drill' : 'combined');
+            const defaultSmooth = sub !== 'basic' && sub !== 'step';
+            const defaultLegend = (fam === 'pie' || fam === 'funnel')
+                ? true
+                : ((mode === 'series' && hierarchy.length >= 2) || metrics.length > 1);
+            return {
+                smoothCurve: defaultSmooth,
+                showLegend: defaultLegend,
+                showSplitLine: true
+            };
+        }
+
+        function getEffectiveWidgetVisualFlags(w) {
+            if (!w) return {};
+            const dash = authorizedDashboards[activeDashboardIndex];
+            const dashId = dash ? dash.dashboard_id : 'default';
+            const lsKey = `sps_widget_visual_${dashId}_${w.id}`;
+            let saved = {};
+            try {
+                const raw = localStorage.getItem(lsKey);
+                if (raw) saved = JSON.parse(raw);
+            } catch (e) {}
+
+            const defs = getWidgetDefaultVisualState(w);
+
+            return {
+                showLabel: saved.showLabel !== undefined ? !!saved.showLabel : !!w.showLabel,
+                showMarkLine: saved.showMarkLine !== undefined ? !!saved.showMarkLine : !!w.showMarkLine,
+                showMarkPoint: saved.showMarkPoint !== undefined ? !!saved.showMarkPoint : !!w.showMarkPoint,
+                showMedianLine: saved.showMedianLine !== undefined ? !!saved.showMedianLine : !!w.showMedianLine,
+                showDataZoom: saved.showDataZoom !== undefined ? !!saved.showDataZoom : !!w.showDataZoom,
+                showDataView: saved.showDataView !== undefined ? !!saved.showDataView : !!w.showDataView,
+                smoothCurve: saved.smoothCurve !== undefined ? !!saved.smoothCurve : (w.smoothCurve !== undefined ? !!w.smoothCurve : defs.smoothCurve),
+                showSplitLine: saved.showSplitLine !== undefined ? !!saved.showSplitLine : (w.showSplitLine !== undefined ? !!w.showSplitLine : defs.showSplitLine),
+                showLegend: saved.showLegend !== undefined ? !!saved.showLegend : (w.showLegend !== undefined ? !!w.showLegend : defs.showLegend)
+            };
+        }
+
+        function toggleViewerWidgetVisualFlag(propName, widgetId, ev) {
+            if (ev) {
+                ev.stopPropagation();
+                ev.preventDefault();
+            }
+            const dash = authorizedDashboards[activeDashboardIndex];
+            if (!isUserEditMode || !dash || !dash.can_edit_layout) return;
+            const w = currentLayout?.widgets ? currentLayout.widgets.find(x => x.id === widgetId) : null;
+            if (!w) return;
+            const flags = getEffectiveWidgetVisualFlags(w);
+            flags[propName] = !flags[propName];
+            Object.assign(w, flags);
+
+            const dashId = dash ? dash.dashboard_id : 'default';
+            try {
+                localStorage.setItem(`sps_widget_visual_${dashId}_${w.id}`, JSON.stringify(flags));
+            } catch (e) {}
+
+            // Popover butonlarını güncelle
+            const togglesEl = document.getElementById('subTypeGalleryToggles');
+            if (togglesEl) {
+                togglesEl.innerHTML = renderChartVisualTogglesHtml(Object.assign({}, w, flags), 'toggleViewerWidgetVisualFlag');
+            }
+
+            // İlgili kartı canlı olarak yeniden çiz
+            const cardEl = document.querySelector(`.widget-card[data-widget-id="${CSS.escape(w.id)}"]`);
+            const bodyEl = cardEl ? cardEl.querySelector('.widget-body') : null;
+            if (bodyEl) {
+                if (widgetChartMap[w.id]) {
+                    try { widgetChartMap[w.id].dispose(); } catch (_) {}
+                    delete widgetChartMap[w.id];
+                }
+                bodyEl.innerHTML = '';
+                renderSingleWidget(w, bodyEl);
+            } else {
+                renderAllWidgets();
+            }
+        }
+
+        function renderChartVisualTogglesHtml(w, clickFnName = 'toggleViewerWidgetVisualFlag') {
+            if (!w) return '';
+            const fam = getChartFamily(w);
+            if (fam === 'gauge' || fam === 'kpi' || fam === 'table' || fam === 'pivot') return '';
+            const cat = CHART_SUBTYPE_CATALOG[fam] || {};
+            const supportsAvg = !!cat.supportsAvgMinMax || fam === 'bar' || fam === 'line' || fam === 'area' || fam === 'scatter';
+            const supportsCurve = fam === 'line' || fam === 'area';
+            const defs = getWidgetDefaultVisualState(w);
+            const isSmoothAct = w.smoothCurve !== undefined ? !!w.smoothCurve : defs.smoothCurve;
+            const isSplitAct = w.showSplitLine !== undefined ? !!w.showSplitLine : defs.showSplitLine;
+            const isLegendAct = w.showLegend !== undefined ? !!w.showLegend : defs.showLegend;
+            const idArg = `'${w.id}'`;
+
+            const btnStyle = "height:22px;padding:0 6px;font-size:0.67rem;font-weight:700;border:1px solid rgba(56,189,248,0.35);border-radius:4px;display:inline-flex;align-items:center;gap:3px;cursor:pointer;";
+
+            return `
+                <div class="chart-visual-toggles-bar" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:4px;">
+                    <button type="button" class="align-btn ${w.showLabel ? 'active' : ''}" style="${btnStyle}"
+                            title="Grafik üzerinde formatlı değer etiketlerini (sayıları) göster/gizle"
+                            onclick="${clickFnName}('showLabel', ${idArg}, event)">123 Değerler</button>
+                    ${supportsAvg ? `
+                    <button type="button" class="align-btn ${w.showMarkLine ? 'active' : ''}" style="${btnStyle}"
+                            title="Grafik üzerinde otomatik Ortalama (AVG) referans çizgisi göster/gizle"
+                            onclick="${clickFnName}('showMarkLine', ${idArg}, event)">⎯ Ortalama</button>
+                    <button type="button" class="align-btn ${w.showMarkPoint ? 'active' : ''}" style="${btnStyle}"
+                            title="En yüksek (Maks) ve en düşük (Min) noktaları rozetle işaretle"
+                            onclick="${clickFnName}('showMarkPoint', ${idArg}, event)">📍 Min/Maks</button>
+                    <button type="button" class="align-btn ${w.showMedianLine ? 'active' : ''}" style="${btnStyle}"
+                            title="Grafik üzerinde istatistiki Medyan (Ortanca) referans çizgisi göster/gizle"
+                            onclick="${clickFnName}('showMedianLine', ${idArg}, event)">📈 Medyan</button>` : ''}
+                    <button type="button" class="align-btn ${w.showDataZoom ? 'active' : ''}" style="${btnStyle}"
+                            title="Grafik altında yatay kaydırma ve filtreleme zoom kaydırıcısını (DataZoom slider) aç/kapat"
+                            onclick="${clickFnName}('showDataZoom', ${idArg}, event)">🔍 Zoom Kaydırıcı</button>
+                    <button type="button" class="align-btn ${w.showDataView ? 'active' : ''}" style="${btnStyle}"
+                            title="Grafik altında özet veri tablosunu ve yerel ECharts veri görünümünü aç/kapat"
+                            onclick="${clickFnName}('showDataView', ${idArg}, event)">🧮 Veri Tablosu</button>
+                    ${supportsCurve ? `
+                    <button type="button" class="align-btn ${isSmoothAct ? 'active' : ''}" style="${btnStyle}"
+                            title="Çizgileri keskin köşeler yerine yumuşak spline eğri olarak çiz"
+                            onclick="${clickFnName}('smoothCurve', ${idArg}, event)">〰️ Yumuşak Çizgi</button>` : ''}
+                    <button type="button" class="align-btn ${isSplitAct ? 'active' : ''}" style="${btnStyle}"
+                            title="Arka plan ızgara ve kılavuz çizgilerini göster/gizle"
+                            onclick="${clickFnName}('showSplitLine', ${idArg}, event)">🧱 Kılavuz Çizgileri</button>
+                    <button type="button" class="align-btn ${isLegendAct ? 'active' : ''}" style="${btnStyle}"
+                            title="Seri isimleri göstergesini (Legend) zorla aç/kapat"
+                            onclick="${clickFnName}('showLegend', ${idArg}, event)">🏷️ Gösterge</button>
+                </div>`;
+        }
+
         function toggleViewerWidgetGallery(event, widgetId) {
             cancelGalleryClose();
             if (event) {
                 event.stopPropagation();
                 event.preventDefault();
             }
+            const dash = authorizedDashboards[activeDashboardIndex];
+            if (!isUserEditMode || !dash || !dash.can_edit_layout) return;
             const pop = document.getElementById('subTypeGalleryPopover');
             if (pop && pop.style.display === 'flex' && pop.getAttribute('data-widget-id') === widgetId) {
                 closeSubTypeGallery();
@@ -3943,6 +4239,8 @@
 
         function openViewerSubTypeGallery(event, widgetId) {
             cancelGalleryClose();
+            const dash = authorizedDashboards[activeDashboardIndex];
+            if (!isUserEditMode || !dash || !dash.can_edit_layout) return;
             const w = currentLayout?.widgets ? currentLayout.widgets.find(x => x.id === widgetId) : null;
             if (!w) return;
             const fam = getChartFamily(w);
@@ -3983,28 +4281,38 @@
             pop.style.display = 'flex';
             const popW = 390;
 
-            if (event && typeof event.clientX === 'number' && typeof event.clientY === 'number' && !trigger) {
-                let left = event.clientX + 8;
-                if (left + popW > window.innerWidth - 10) left = Math.max(10, event.clientX - popW - 8);
-                let top = Math.max(50, event.clientY - 20);
-                if (top + 460 > window.innerHeight) top = Math.max(50, window.innerHeight - 475);
-                pop.style.left = `${left}px`;
-                pop.style.top = `${top}px`;
-            } else if (trigger) {
-                const rect = trigger.getBoundingClientRect();
-                let left = rect.right + 10;
-                if (left + popW > window.innerWidth - 10) {
-                    left = Math.max(10, rect.left - popW - 10);
+            const effVisual = getEffectiveWidgetVisualFlags(w);
+            const popToggles = document.getElementById('subTypeGalleryToggles');
+            if (popToggles) {
+                popToggles.innerHTML = renderChartVisualTogglesHtml(Object.assign({}, w, effVisual), 'toggleViewerWidgetVisualFlag');
+            }
+
+            initDraggableGallery();
+
+            if (!isGalleryDraggedManually) {
+                if (event && typeof event.clientX === 'number' && typeof event.clientY === 'number' && !trigger) {
+                    let left = event.clientX + 8;
+                    if (left + popW > window.innerWidth - 10) left = Math.max(10, event.clientX - popW - 8);
+                    let top = Math.max(50, event.clientY - 20);
+                    if (top + 460 > window.innerHeight) top = Math.max(50, window.innerHeight - 475);
+                    pop.style.left = `${left}px`;
+                    pop.style.top = `${top}px`;
+                } else if (trigger) {
+                    const rect = trigger.getBoundingClientRect();
+                    let left = rect.right + 10;
+                    if (left + popW > window.innerWidth - 10) {
+                        left = Math.max(10, rect.left - popW - 10);
+                    }
+                    let top = Math.max(50, rect.top - 20);
+                    if (top + 460 > window.innerHeight) {
+                        top = Math.max(50, window.innerHeight - 475);
+                    }
+                    pop.style.left = `${left}px`;
+                    pop.style.top = `${top}px`;
+                } else {
+                    pop.style.left = '280px';
+                    pop.style.top = '100px';
                 }
-                let top = Math.max(50, rect.top - 20);
-                if (top + 460 > window.innerHeight) {
-                    top = Math.max(50, window.innerHeight - 475);
-                }
-                pop.style.left = `${left}px`;
-                pop.style.top = `${top}px`;
-            } else {
-                pop.style.left = '280px';
-                pop.style.top = '100px';
             }
         }
 
@@ -4059,15 +4367,14 @@
             const clickY = e.clientY;
             const summaryText = getWidgetCtxSummaryText(w);
 
+            const dash = authorizedDashboards[activeDashboardIndex];
+            const canEditCurrent = Boolean(isUserEditMode && dash && dash.can_edit_layout);
+
             menu.innerHTML = `
                 <div class="ctx-menu-header" title="${escapeHtml(w.title || 'Bileşen')}">
                     <div style="overflow:hidden;text-overflow:ellipsis;">${escapeHtml(w.title || 'Bileşen')}</div>
                     <div class="ctx-menu-sub" title="${escapeHtml(summaryText)}">${escapeHtml(summaryText)}</div>
                 </div>
-                ${hasSubType ? `
-                <button type="button" class="ctx-menu-item" onclick="closeViewerWidgetCtxMenu(); openViewerSubTypeGallery({ clientX: ${clickX}, clientY: ${clickY} }, '${w.id}');">
-                    <span>🎨</span><span>Grafik Alt Stili Değiştir</span>
-                </button>` : ''}
                 ${hasDrillBack ? `
                 <button type="button" class="ctx-menu-item" onclick="closeViewerWidgetCtxMenu(); stepUpDrillDown('${w.id}');">
                     <span>⬅</span><span>Üst Kırılıma Dön</span>
@@ -4086,8 +4393,12 @@
                 <button type="button" class="ctx-menu-item" onclick="closeViewerWidgetCtxMenu(); clearAllCrossFilters();">
                     <span>🧹</span><span>Aktif Filtreleri Temizle</span>
                 </button>` : ''}
-                ${isUserEditMode ? `
+                ${canEditCurrent ? `
                 <div class="ctx-menu-sep"></div>
+                ${hasSubType ? `
+                <button type="button" class="ctx-menu-item" onclick="closeViewerWidgetCtxMenu(); openViewerSubTypeGallery({ clientX: ${clickX}, clientY: ${clickY} }, '${w.id}');">
+                    <span>🎨</span><span>Grafik Alt Stili & Görsel Özellikler</span>
+                </button>` : ''}
                 <button type="button" class="ctx-menu-item" onclick="closeViewerWidgetCtxMenu(); openEditWidgetModal(${idx});">
                     <span>✏️</span><span>Kişisel Görünümü Düzenle</span>
                 </button>
@@ -4160,16 +4471,29 @@
             const pop = document.getElementById('subTypeGalleryPopover');
             const targetId = pop?.getAttribute('data-widget-id');
             const dash = authorizedDashboards[activeDashboardIndex];
+            if (!isUserEditMode || !dash || !dash.can_edit_layout) return;
             if (!targetId || !currentLayout?.widgets) return;
 
             const w = currentLayout.widgets.find(x => x.id === targetId);
             if (!w) return;
 
+            const fam = getChartFamily(w);
             applyWidgetSubTypeLogic(w, val);
 
             // Kalıcılık: Tarayıcı hafızasına (localStorage) kaydet
             if (dash) {
                 localStorage.setItem(`sps_widget_subtype_${dash.dashboard_id}_${w.id}`, val);
+                if (fam === 'line') {
+                    const lsKey = `sps_widget_visual_${dash.dashboard_id}_${w.id}`;
+                    try {
+                        const raw = localStorage.getItem(lsKey);
+                        if (raw) {
+                            const saved = JSON.parse(raw);
+                            saved.smoothCurve = (val !== 'basic' && val !== 'step');
+                            localStorage.setItem(lsKey, JSON.stringify(saved));
+                        }
+                    } catch (e) {}
+                }
             }
 
             const grid = document.getElementById('subTypeGalleryGrid');
@@ -4177,6 +4501,12 @@
                 grid.querySelectorAll('.subtype-gallery-card').forEach(c => c.classList.remove('active'));
                 const sel = grid.querySelector(`[onclick*="'${val}'"]`);
                 if (sel) sel.classList.add('active');
+            }
+
+            const effVisual = getEffectiveWidgetVisualFlags(w);
+            const popToggles = document.getElementById('subTypeGalleryToggles');
+            if (popToggles) {
+                popToggles.innerHTML = renderChartVisualTogglesHtml(Object.assign({}, w, effVisual), 'toggleViewerWidgetVisualFlag');
             }
 
             // Canlı olarak tuvali yeniden çiz
@@ -4399,11 +4729,52 @@
             });
         }
 
+        function renderInlineChartDataView(container, w, rows, activeDimension) {
+            if (!container || !w || !w.showDataView) return;
+            const metrics = getWidgetMetrics(w);
+            const effectiveMetrics = metrics.length > 0 ? metrics : [{ field: w.valueField || '', agg: w.agg || 'sum' }];
+            const hierarchy = (Array.isArray(w.drillHierarchy) && w.drillHierarchy.length > 0)
+                ? w.drillHierarchy
+                : (w.dimension ? [w.dimension] : []);
+            const mode = w.multiDimMode || (hierarchy.length > 1 ? 'drill' : 'combined');
+            const activeDimCols = (mode === 'combined' && hierarchy.length > 1)
+                ? hierarchy
+                : [activeDimension || hierarchy[0] || w.dimension || ''];
+            const dimLabel = activeDimCols.filter(Boolean).join(' / ') || 'Kategori';
+            const firstGrouped = groupAndAggregateComposite(rows, activeDimCols, effectiveMetrics[0].field, effectiveMetrics[0].agg, w.topN || 25);
+            const catKeys = firstGrouped.map(g => g.key);
+            const metricMaps = effectiveMetrics.map((m, idx) => {
+                const grp = idx === 0 ? firstGrouped : groupAndAggregateComposite(rows, activeDimCols, m.field, m.agg, null);
+                return new Map(grp.map(g => [g.key, g.value]));
+            });
+
+            const wrap = document.createElement('div');
+            wrap.className = 'chart-inline-dataview';
+            wrap.style.cssText = 'max-height:38%;min-height:72px;overflow-y:auto;border-top:1px solid rgba(56,189,248,0.28);margin-top:4px;font-size:0.71rem;';
+
+            const ths = `<th style="text-align:left;padding:3px 6px;position:sticky;top:0;background:var(--card, #0f172a);color:#38bdf8;border-bottom:1px solid rgba(56,189,248,0.22);">${escapeHtml(dimLabel)}</th>` +
+                effectiveMetrics.map(m => `<th style="text-align:right;padding:3px 6px;position:sticky;top:0;background:var(--card, #0f172a);color:#38bdf8;border-bottom:1px solid rgba(56,189,248,0.22);">${escapeHtml(m.field)} (${escapeHtml((m.agg || 'sum').toUpperCase())})</th>`).join('');
+
+            const trs = catKeys.map(k => {
+                const tds = effectiveMetrics.map((m, idx) => {
+                    const val = metricMaps[idx].get(k) ?? 0;
+                    return `<td style="text-align:right;padding:2px 6px;font-variant-numeric:tabular-nums;border-bottom:1px solid rgba(148,163,184,0.1);">${escapeHtml(formatValueByColumn(val, m.field, 'number'))}</td>`;
+                }).join('');
+                return `<tr><td style="text-align:left;padding:2px 6px;border-bottom:1px solid rgba(148,163,184,0.1);font-weight:600;">${escapeHtml(k)}</td>${tds}</tr>`;
+            }).join('');
+
+            wrap.innerHTML = `<table style="width:100%;border-collapse:collapse;"><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`;
+            container.appendChild(wrap);
+        }
+
         function renderChartWidget(w, rows, activeDimension, container) {
             if (typeof echarts === 'undefined') {
                 container.innerHTML = '<div style="color:#94a3b8;padding:12px;">Grafik kütüphanesi yüklenemedi.</div>';
                 return;
             }
+
+            const effVisual = getEffectiveWidgetVisualFlags(w);
+            Object.assign(w, effVisual);
 
             const metrics = getWidgetMetrics(w);
             const primaryMetric = metrics[0] || { field: w.valueField || '', agg: w.agg || 'sum' };
@@ -4414,6 +4785,9 @@
 
             const chart = createManagedChart(container);
             widgetChartMap[w.id] = chart;
+            if (w.showDataView && w.type !== 'gauge') {
+                renderInlineChartDataView(container, w, rows, activeDimension);
+            }
 
             const isLight = isLightTheme();
             const axisTextColor = isLight ? '#334155' : '#94a3b8';
@@ -4651,7 +5025,7 @@
                         backgroundColor: 'transparent',
                         color: palette,
                         tooltip: { trigger: 'item', confine: true, formatter: p => `${escapeHtml(p.seriesName)}<br/>${escapeHtml(p.name)}: <strong>${escapeHtml(formatValueByColumn(p.value, primaryMetric.field, 'number'))}</strong> (%${p.percent})` },
-                        legend: { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 10 } },
+                        legend: w.showLegend !== false ? { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 10 } } : { show: false },
                         series: [
                             {
                                 name: innerCol,
@@ -4708,7 +5082,7 @@
                     backgroundColor: 'transparent',
                     color: palette,
                     tooltip: { trigger: 'item', confine: true, formatter: p => `${escapeHtml(p.name)}: <strong>${escapeHtml(formatValueByColumn(p.value, primaryMetric.field, 'number'))}</strong> (%${p.percent})` },
-                    legend: { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 11 } },
+                    legend: w.showLegend !== false ? { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 11 } } : { show: false },
                     series: [{
                         type: 'pie',
                         roseType: isRose ? (sub === 'roseArea' ? 'area' : 'radius') : false,
@@ -4737,7 +5111,7 @@
                     backgroundColor: 'transparent',
                     color: palette,
                     tooltip: { trigger: 'item', confine: true, formatter: p => `${escapeHtml(p.name)}: <strong>${escapeHtml(formatValueByColumn(p.value, primaryMetric.field, 'number'))}</strong> (%${p.percent})` },
-                    legend: { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 11 } },
+                    legend: w.showLegend !== false ? { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 11 } } : { show: false },
                     series: [{
                         name: primaryMetric.field,
                         type: 'funnel',
@@ -4806,16 +5180,18 @@
                 }
 
                 const maxIndVal = Math.ceil(globalMax * 1.15) || 100;
+                const showRadarLegend = w.showLegend !== undefined ? !!w.showLegend : (radarDataItems.length > 1);
                 chart.setOption({
                     backgroundColor: 'transparent',
                     color: palette,
                     tooltip: { trigger: 'item', confine: true },
-                    legend: radarDataItems.length > 1 ? { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 11 } } : undefined,
+                    legend: showRadarLegend ? { type: 'scroll', bottom: 0, left: w.align || 'center', textStyle: { color: legendTextColor, fontSize: 11 } } : { show: false },
                     radar: {
                         shape: sub === 'circle' ? 'circle' : 'polygon',
                         radius: '64%',
                         center: ['50%', '48%'],
                         axisName: { color: axisTextColor, fontSize: 10 },
+                        splitLine: { show: w.showSplitLine !== false, lineStyle: { color: splitLineColor } },
                         indicator: (indicatorKeys.length > 0 ? indicatorKeys : ['Veri']).map(k => ({ name: k, max: maxIndVal }))
                     },
                     series: [{
@@ -4841,6 +5217,10 @@
                 const categoryKeys = firstGrouped.map(g => g.key);
                 const maxScatterVal = Math.max(...firstGrouped.map(g => Math.abs(g.value)), 1);
 
+                const scatterMarkLineData = [];
+                if (w.showMarkLine) scatterMarkLineData.push({ type: 'average', name: 'Ortalama' });
+                if (w.showMedianLine) scatterMarkLineData.push({ type: 'median', name: 'Medyan' });
+
                 const scatterSeries = effectiveMetrics.map((m, mIdx) => {
                     const grp = mIdx === 0 ? firstGrouped : groupAndAggregateComposite(rows, activeDimCols, m.field, m.agg, null);
                     const valMap = new Map(grp.map(g => [g.key, g.value]));
@@ -4862,9 +5242,9 @@
                             fontSize: 10,
                             formatter: p => formatValueByColumn(p.value, m.field, 'number')
                         } : undefined,
-                        markLine: w.showMarkLine ? {
-                            data: [{ type: 'average', name: 'Ortalama' }],
-                            label: { formatter: p => `Ort: ${formatValueByColumn(p.value, m.field, 'number')}`, color: legendTextColor }
+                        markLine: scatterMarkLineData.length > 0 ? {
+                            data: scatterMarkLineData,
+                            label: { formatter: p => `${p.name}: ${formatValueByColumn(p.value, m.field, 'number')}`, color: legendTextColor }
                         } : undefined,
                         markPoint: w.showMarkPoint ? {
                             data: [{ type: 'max', name: 'Maks' }, { type: 'min', name: 'Min' }],
@@ -4873,6 +5253,19 @@
                         data: dataArr
                     };
                 });
+
+                const scatterZoom = [{ type: 'inside' }];
+                if (w.showDataZoom) {
+                    scatterZoom.push({
+                        type: 'slider',
+                        height: 16,
+                        bottom: 2,
+                        borderColor: 'rgba(56,189,248,0.3)',
+                        fillerColor: 'rgba(56,189,248,0.18)',
+                        textStyle: { color: axisTextColor, fontSize: 10 }
+                    });
+                }
+                const showScatterLegend = w.showLegend !== undefined ? !!w.showLegend : (effectiveMetrics.length > 1);
 
                 chart.setOption({
                     backgroundColor: 'transparent',
@@ -4890,10 +5283,11 @@
                             return res;
                         }
                     },
-                    legend: effectiveMetrics.length > 1 ? { type: 'scroll', top: 0, left: w.align || 'auto', textStyle: { color: legendTextColor, fontSize: 11 } } : undefined,
-                    grid: { left: 12, right: 20, top: effectiveMetrics.length > 1 ? 34 : 28, bottom: 20, containLabel: true },
-                    xAxis: { type: 'category', data: categoryKeys, axisLabel: { color: axisTextColor, rotate: categoryKeys.length > 5 ? 20 : 0 }, splitLine: { show: true, lineStyle: { color: splitLineColor, type: 'dashed' } } },
-                    yAxis: { type: 'value', axisLabel: { color: axisTextColor, formatter: v => formatValueByColumn(v, effectiveMetrics[0].field, 'number') }, splitLine: { lineStyle: { color: splitLineColor } } },
+                    legend: showScatterLegend ? { type: 'scroll', top: 0, left: w.align || 'auto', textStyle: { color: legendTextColor, fontSize: 11 } } : { show: false },
+                    dataZoom: scatterZoom,
+                    grid: { left: 12, right: 20, top: showScatterLegend ? 34 : 28, bottom: w.showDataZoom ? 28 : 20, containLabel: true },
+                    xAxis: { type: 'category', data: categoryKeys, axisLabel: { color: axisTextColor, rotate: categoryKeys.length > 5 ? 20 : 0 }, splitLine: { show: w.showSplitLine !== false, lineStyle: { color: splitLineColor, type: 'dashed' } } },
+                    yAxis: { type: 'value', axisLabel: { color: axisTextColor, formatter: v => formatValueByColumn(v, effectiveMetrics[0].field, 'number') }, splitLine: { show: w.showSplitLine !== false, lineStyle: { color: splitLineColor } } },
                     series: scatterSeries
                 });
                 attachAppChartInteractions(chart, w, mode, hierarchy, activeDimension, rows);
@@ -4925,6 +5319,21 @@
                     baseArr.push(0);
                     valArr.push(running);
 
+                    const wfMarkLineData = [];
+                    if (w.showMarkLine) wfMarkLineData.push({ type: 'average', name: 'Ortalama' });
+                    if (w.showMedianLine) wfMarkLineData.push({ type: 'median', name: 'Medyan' });
+                    const wfZoom = [{ type: 'inside' }];
+                    if (w.showDataZoom) {
+                        wfZoom.push({
+                            type: 'slider',
+                            height: 16,
+                            bottom: 2,
+                            borderColor: 'rgba(56,189,248,0.3)',
+                            fillerColor: 'rgba(56,189,248,0.18)',
+                            textStyle: { color: axisTextColor, fontSize: 10 }
+                        });
+                    }
+
                     chart.setOption({
                         backgroundColor: 'transparent',
                         tooltip: {
@@ -4937,9 +5346,11 @@
                                 return `<strong>${escapeHtml(valParam.name)}</strong><br/>${escapeHtml(primaryMetric.field)}: <strong>${escapeHtml(formatValueByColumn(valParam.value, primaryMetric.field, 'number'))}</strong>`;
                             }
                         },
-                        grid: { left: 12, right: 20, top: 28, bottom: 20, containLabel: true },
+                        legend: w.showLegend ? { type: 'scroll', top: 0, left: w.align || 'auto', data: [primaryMetric.field], textStyle: { color: legendTextColor, fontSize: 11 } } : { show: false },
+                        dataZoom: wfZoom,
+                        grid: { left: 12, right: 20, top: w.showLegend ? 34 : 28, bottom: w.showDataZoom ? 28 : 20, containLabel: true },
                         xAxis: { type: 'category', data: wfCats, axisLabel: { color: axisTextColor, rotate: wfCats.length > 5 ? 20 : 0 } },
-                        yAxis: { type: 'value', axisLabel: { color: axisTextColor, formatter: v => formatValueByColumn(v, primaryMetric.field, 'number') }, splitLine: { lineStyle: { color: splitLineColor } } },
+                        yAxis: { type: 'value', axisLabel: { color: axisTextColor, formatter: v => formatValueByColumn(v, primaryMetric.field, 'number') }, splitLine: { show: w.showSplitLine !== false, lineStyle: { color: splitLineColor } } },
                         series: [
                             {
                                 name: 'Taban',
@@ -4961,6 +5372,14 @@
                                     fontSize: 10,
                                     formatter: p => formatValueByColumn(p.value, primaryMetric.field, 'number')
                                 },
+                                markLine: wfMarkLineData.length > 0 ? {
+                                    data: wfMarkLineData,
+                                    label: { formatter: p => `${p.name}: ${formatValueByColumn(p.value, primaryMetric.field, 'number')}`, color: legendTextColor }
+                                } : undefined,
+                                markPoint: w.showMarkPoint ? {
+                                    data: [{ type: 'max', name: 'Maks' }, { type: 'min', name: 'Min' }],
+                                    label: { formatter: p => formatValueByColumn(p.value, primaryMetric.field, 'number') }
+                                } : undefined,
                                 itemStyle: {
                                     color: p => p.dataIndex === wfCats.length - 1 ? '#10b981' : '#0ea5e9',
                                     borderRadius: [4, 4, 0, 0]
@@ -5015,6 +5434,7 @@
 
             if (mode === 'series' && hierarchy.length >= 2) {
                 // 8B. SERİ / RENK GRUPLAMA MODU
+                const effVisual = getEffectiveWidgetVisualFlags(w);
                 const xDim = hierarchy[0];
                 const seriesDim = hierarchy[1];
                 const xKeys = [...new Set(rows.map(r => formatDimensionValue(getRowValue(r, xDim), xDim)))];
@@ -5029,7 +5449,7 @@
                 const isPictorial = isBarFamily && barSubType === 'pictorialDotted';
                 const hasBg = isBarFamily && barSubType === 'background';
                 const isAreaFill = isLineFamily && (lineSubType === 'area' || lineSubType === 'stackedArea' || lineSubType === 'gradientArea' || w.type === 'area');
-                const isSmoothLine = !isLineFamily || (lineSubType !== 'basic' && lineSubType !== 'step');
+                const isSmoothLine = effVisual.smoothCurve !== undefined ? !!effVisual.smoothCurve : (!isLineFamily || (lineSubType !== 'basic' && lineSubType !== 'step'));
                 const stepMode = (isLineFamily && lineSubType === 'step') ? 'middle' : undefined;
 
                 const rawMatrix = seriesKeys.map(sk => xKeys.map(xk => {
@@ -5043,6 +5463,18 @@
 
                 const activeFilterVal = activeCrossFilters[xDim];
                 const hasActiveFilterOnThisDim = activeFilterVal !== undefined && activeFilterVal !== null;
+
+                const markLineData = [];
+                if (effVisual.showMarkLine) markLineData.push({ type: 'average', name: 'Ortalama' });
+                if (effVisual.showMedianLine) markLineData.push({ type: 'median', name: 'Medyan' });
+                const markLineOpt = markLineData.length > 0 ? {
+                    data: markLineData,
+                    label: { formatter: p => `${p.name}: ${formatValueByColumn(p.value, primaryMetric.field, 'number')}`, color: legendTextColor }
+                } : undefined;
+                const markPointOpt = effVisual.showMarkPoint ? {
+                    data: [{ type: 'max', name: 'Maks' }, { type: 'min', name: 'Min' }],
+                    label: { formatter: p => formatValueByColumn(p.value, primaryMetric.field, 'number') }
+                } : undefined;
 
                 const seriesList = seriesKeys.map((sk, sIdx) => {
                     const dataArr = isPct100
@@ -5078,21 +5510,18 @@
                             ])
                         } : { opacity: 0.26 }) : undefined,
                         smooth: isSmoothLine,
-                        label: w.showLabel ? {
+                        label: effVisual.showLabel ? {
                             show: true,
                             position: isStacked ? 'inside' : (isHoriz ? 'right' : 'top'),
                             color: legendTextColor,
                             fontSize: 10,
-                            formatter: p => isPct100 ? `%${p.value}` : formatValueByColumn(p.value, primaryMetric.field, 'number')
+                            formatter: p => {
+                                const val = (p && typeof p.value === 'object' && p.value !== null) ? p.value.value : p.value;
+                                return isPct100 ? `%${val}` : formatValueByColumn(val, primaryMetric.field, 'number');
+                            }
                         } : undefined,
-                        markLine: (w.showMarkLine && sIdx === 0) ? {
-                            data: [{ type: 'average', name: 'Ortalama' }],
-                            label: { formatter: p => `Ort: ${formatValueByColumn(p.value, primaryMetric.field, 'number')}`, color: legendTextColor }
-                        } : undefined,
-                        markPoint: (w.showMarkPoint && sIdx === 0) ? {
-                            data: [{ type: 'max', name: 'Maks' }, { type: 'min', name: 'Min' }],
-                            label: { formatter: p => formatValueByColumn(p.value, primaryMetric.field, 'number') }
-                        } : undefined,
+                        markLine: sIdx === 0 ? markLineOpt : undefined,
+                        markPoint: sIdx === 0 ? markPointOpt : undefined,
                         data: styledDataArr
                     };
                 });
@@ -5102,8 +5531,30 @@
                     type: 'value',
                     max: isPct100 ? 100 : undefined,
                     axisLabel: { color: axisTextColor, formatter: v => isPct100 ? `%${v}` : formatValueByColumn(v, primaryMetric.field, 'number') },
-                    splitLine: { lineStyle: { color: splitLineColor } }
+                    splitLine: { show: effVisual.showSplitLine !== false, lineStyle: { color: splitLineColor } }
                 };
+
+                const dataZoomList = [isHoriz ? { type: 'inside', yAxisIndex: 0 } : { type: 'inside', xAxisIndex: 0 }];
+                if (effVisual.showDataZoom) {
+                    dataZoomList.push(isHoriz ? {
+                        type: 'slider',
+                        yAxisIndex: 0,
+                        width: 14,
+                        right: 4,
+                        borderColor: 'rgba(56,189,248,0.3)',
+                        fillerColor: 'rgba(56,189,248,0.18)',
+                        textStyle: { color: axisTextColor, fontSize: 10 }
+                    } : {
+                        type: 'slider',
+                        xAxisIndex: 0,
+                        height: 16,
+                        bottom: 2,
+                        borderColor: 'rgba(56,189,248,0.3)',
+                        fillerColor: 'rgba(56,189,248,0.18)',
+                        textStyle: { color: axisTextColor, fontSize: 10 }
+                    });
+                }
+                const showSeriesLegend = effVisual.showLegend !== undefined ? !!effVisual.showLegend : true;
 
                 chart.setOption({
                     backgroundColor: 'transparent',
@@ -5122,23 +5573,25 @@
                             return res;
                         }
                     },
-                    legend: { type: 'scroll', top: 0, left: w.align || 'auto', textStyle: { color: legendTextColor, fontSize: 11 } },
-                    toolbox: {
+                    legend: showSeriesLegend ? { type: 'scroll', top: 0, left: w.align || 'auto', textStyle: { color: legendTextColor, fontSize: 11 } } : { show: false },
+                    toolbox: isUserEditMode ? {
                         show: true, right: 8, top: 0, iconStyle: { borderColor: axisTextColor },
                         feature: {
                             magicType: { type: ['line', 'bar', 'stack'], title: { line: 'Çizgi', bar: 'Sütun', stack: 'Yığılmış' } },
+                            ...(effVisual.showDataView ? { dataView: { show: true, readOnly: true, title: 'Veri Tablosu', lang: ['Veri Tablosu', 'Kapat', 'Yenile'] } } : {}),
                             restore: { title: 'Sıfırla' },
                             saveAsImage: { title: 'Resim İndir' }
                         }
-                    },
-                    dataZoom: [{ type: 'inside' }],
-                    grid: { left: 12, right: 20, top: 34, bottom: 20, containLabel: true },
+                    } : undefined,
+                    dataZoom: dataZoomList,
+                    grid: { left: 12, right: (isHoriz && effVisual.showDataZoom) ? 28 : 20, top: showSeriesLegend ? 34 : 26, bottom: (!isHoriz && effVisual.showDataZoom) ? 28 : 20, containLabel: true },
                     xAxis: isHoriz ? valAxis : catAxis,
                     yAxis: isHoriz ? catAxis : valAxis,
                     series: seriesList
                 });
             } else {
                 // 8C. BİRLEŞİK EKSEN (YIL / AY YAN YANA) VEYA ÇOKLU DEĞER (MULTI-MEASURE)
+                const effVisual = getEffectiveWidgetVisualFlags(w);
                 const activeDimCols = (mode === 'combined' && hierarchy.length > 1)
                     ? hierarchy
                     : [activeDimension || ''];
@@ -5153,7 +5606,7 @@
                 const isPictorial = isBarFamily && barSubType === 'pictorialDotted';
                 const hasBg = isBarFamily && barSubType === 'background';
                 const isAreaFill = isLineFamily && (lineSubType === 'area' || lineSubType === 'stackedArea' || lineSubType === 'gradientArea' || w.type === 'area');
-                const isSmoothLine = !isLineFamily || (lineSubType !== 'basic' && lineSubType !== 'step');
+                const isSmoothLine = effVisual.smoothCurve !== undefined ? !!effVisual.smoothCurve : (!isLineFamily || (lineSubType !== 'basic' && lineSubType !== 'step'));
                 const stepMode = (isLineFamily && lineSubType === 'step') ? 'middle' : undefined;
 
                 const rawMetricMatrix = effectiveMetrics.map((m, mIdx) => {
@@ -5169,6 +5622,18 @@
                 const filterDim = (mode === 'combined' && hierarchy.length > 1) ? hierarchy[0] : activeDimension;
                 const activeFilterVal = activeCrossFilters[filterDim];
                 const hasActiveFilterOnThisDim = activeFilterVal !== undefined && activeFilterVal !== null;
+
+                const markLineData = [];
+                if (effVisual.showMarkLine) markLineData.push({ type: 'average', name: 'Ortalama' });
+                if (effVisual.showMedianLine) markLineData.push({ type: 'median', name: 'Medyan' });
+                const markLineOpt = markLineData.length > 0 ? {
+                    data: markLineData,
+                    label: { formatter: p => `${p.name}: ${formatValueByColumn(p.value, effectiveMetrics[0].field, 'number')}`, color: legendTextColor }
+                } : undefined;
+                const markPointOpt = effVisual.showMarkPoint ? {
+                    data: [{ type: 'max', name: 'Maks' }, { type: 'min', name: 'Min' }],
+                    label: { formatter: p => formatValueByColumn(p.value, effectiveMetrics[0].field, 'number') }
+                } : undefined;
 
                 const seriesList = effectiveMetrics.map((m, mIdx) => {
                     const dataArr = isPct100
@@ -5207,18 +5672,21 @@
                         } : { opacity: 0.26 }) : undefined,
                         smooth: isSmoothLine,
                         data: styledDataArr,
-                        label: w.showLabel ? {
+                        label: effVisual.showLabel ? {
                             show: true,
                             position: (isStacked && effectiveMetrics.length > 1) ? 'inside' : (isHoriz ? 'right' : 'top'),
                             color: legendTextColor,
                             fontSize: 10,
-                            formatter: p => isPct100 ? `%${p.value}` : formatValueByColumn(p.value, m.field, 'number')
+                            formatter: p => {
+                                const val = (p && typeof p.value === 'object' && p.value !== null) ? p.value.value : p.value;
+                                return isPct100 ? `%${val}` : formatValueByColumn(val, m.field, 'number');
+                            }
                         } : undefined,
-                        markLine: w.showMarkLine ? {
-                            data: [{ type: 'average', name: 'Ortalama' }],
-                            label: { formatter: p => `Ort: ${formatValueByColumn(p.value, m.field, 'number')}`, color: legendTextColor }
+                        markLine: markLineData.length > 0 ? {
+                            data: markLineData,
+                            label: { formatter: p => `${p.name}: ${formatValueByColumn(p.value, m.field, 'number')}`, color: legendTextColor }
                         } : undefined,
-                        markPoint: w.showMarkPoint ? {
+                        markPoint: effVisual.showMarkPoint ? {
                             data: [{ type: 'max', name: 'Maks' }, { type: 'min', name: 'Min' }],
                             label: { formatter: p => formatValueByColumn(p.value, m.field, 'number') }
                         } : undefined,
@@ -5237,8 +5705,30 @@
                     type: 'value',
                     max: isPct100 ? 100 : undefined,
                     axisLabel: { color: axisTextColor, formatter: v => isPct100 ? `%${v}` : formatValueByColumn(v, effectiveMetrics[0].field, 'number') },
-                    splitLine: { lineStyle: { color: splitLineColor } }
+                    splitLine: { show: effVisual.showSplitLine !== false, lineStyle: { color: splitLineColor } }
                 };
+
+                const dataZoomList = [isHoriz ? { type: 'inside', yAxisIndex: 0 } : { type: 'inside', xAxisIndex: 0 }];
+                if (effVisual.showDataZoom) {
+                    dataZoomList.push(isHoriz ? {
+                        type: 'slider',
+                        yAxisIndex: 0,
+                        width: 14,
+                        right: 4,
+                        borderColor: 'rgba(56,189,248,0.3)',
+                        fillerColor: 'rgba(56,189,248,0.18)',
+                        textStyle: { color: axisTextColor, fontSize: 10 }
+                    } : {
+                        type: 'slider',
+                        xAxisIndex: 0,
+                        height: 16,
+                        bottom: 2,
+                        borderColor: 'rgba(56,189,248,0.3)',
+                        fillerColor: 'rgba(56,189,248,0.18)',
+                        textStyle: { color: axisTextColor, fontSize: 10 }
+                    });
+                }
+                const showCombLegend = effVisual.showLegend !== undefined ? !!effVisual.showLegend : (effectiveMetrics.length > 1);
 
                 chart.setOption({
                     backgroundColor: 'transparent',
@@ -5258,17 +5748,18 @@
                             return res;
                         }
                     },
-                    legend: effectiveMetrics.length > 1 ? { type: 'scroll', top: 0, left: w.align || 'auto', textStyle: { color: legendTextColor, fontSize: 11 } } : undefined,
-                    toolbox: {
+                    legend: showCombLegend ? { type: 'scroll', top: 0, left: w.align || 'auto', textStyle: { color: legendTextColor, fontSize: 11 } } : { show: false },
+                    toolbox: isUserEditMode ? {
                         show: true, right: 8, top: 0, iconStyle: { borderColor: axisTextColor },
                         feature: {
                             magicType: { type: ['line', 'bar', 'stack'], title: { line: 'Çizgi', bar: 'Sütun', stack: 'Yığılmış' } },
+                            ...(effVisual.showDataView ? { dataView: { show: true, readOnly: true, title: 'Veri Tablosu', lang: ['Veri Tablosu', 'Kapat', 'Yenile'] } } : {}),
                             restore: { title: 'Sıfırla' },
                             saveAsImage: { title: 'Resim İndir' }
                         }
-                    },
-                    dataZoom: [{ type: 'inside' }],
-                    grid: { left: 12, right: 20, top: effectiveMetrics.length > 1 ? 34 : 26, bottom: 20, containLabel: true },
+                    } : undefined,
+                    dataZoom: dataZoomList,
+                    grid: { left: 12, right: (isHoriz && effVisual.showDataZoom) ? 28 : 20, top: showCombLegend ? 34 : 26, bottom: (!isHoriz && effVisual.showDataZoom) ? 28 : 20, containLabel: true },
                     xAxis: isHoriz ? valAxis : catAxis,
                     yAxis: isHoriz ? catAxis : valAxis,
                     series: seriesList
@@ -5484,6 +5975,7 @@
             const dash = authorizedDashboards[activeDashboardIndex];
             const canEdit = Boolean(dash && dash.can_edit_layout);
             if (!canEdit) isUserEditMode = false;
+            if (!isUserEditMode) closeSubTypeGallery();
 
             const badge = document.getElementById('designModeBadge');
             const topActions = document.getElementById('userEditTopActions');
@@ -5626,6 +6118,40 @@
                         <label>Yükseklik (2 - 10 Birim)</label>
                         <input type="number" id="cfgH" min="2" max="10" value="${w.h || 5}">
                     </div>
+                    <div class="ctrl-group" style="grid-column:span 2;background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.25);border-radius:6px;padding:10px;margin-top:2px;">
+                        <label style="color:#38bdf8;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:5px;">
+                            <span>✨</span><span>Görsel Grafik Özellikleri (Apache ECharts)</span>
+                        </label>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(135px, 1fr));gap:8px;">
+                            <label style="display:flex;align-items:center;gap:6px;font-size:0.75rem;cursor:pointer;">
+                                <input type="checkbox" id="cfgShowLabel" ${w.showLabel ? 'checked' : ''}> 123 Değerler
+                            </label>
+                            <label style="display:flex;align-items:center;gap:6px;font-size:0.75rem;cursor:pointer;">
+                                <input type="checkbox" id="cfgShowMarkLine" ${w.showMarkLine ? 'checked' : ''}> ⎯ Ortalama
+                            </label>
+                            <label style="display:flex;align-items:center;gap:6px;font-size:0.75rem;cursor:pointer;">
+                                <input type="checkbox" id="cfgShowMarkPoint" ${w.showMarkPoint ? 'checked' : ''}> 📍 Min/Maks
+                            </label>
+                            <label style="display:flex;align-items:center;gap:6px;font-size:0.75rem;cursor:pointer;">
+                                <input type="checkbox" id="cfgShowMedianLine" ${w.showMedianLine ? 'checked' : ''}> 📈 Medyan
+                            </label>
+                            <label style="display:flex;align-items:center;gap:6px;font-size:0.75rem;cursor:pointer;">
+                                <input type="checkbox" id="cfgShowDataZoom" ${w.showDataZoom ? 'checked' : ''}> 🔍 Zoom Kaydırıcı
+                            </label>
+                            <label style="display:flex;align-items:center;gap:6px;font-size:0.75rem;cursor:pointer;">
+                                <input type="checkbox" id="cfgShowDataView" ${w.showDataView ? 'checked' : ''}> 🧮 Veri Tablosu
+                            </label>
+                            <label style="display:flex;align-items:center;gap:6px;font-size:0.75rem;cursor:pointer;">
+                                <input type="checkbox" id="cfgSmoothCurve" ${w.smoothCurve ? 'checked' : ''}> 〰️ Yumuşak Çizgi
+                            </label>
+                            <label style="display:flex;align-items:center;gap:6px;font-size:0.75rem;cursor:pointer;">
+                                <input type="checkbox" id="cfgShowSplitLine" ${w.showSplitLine !== false ? 'checked' : ''}> 🧱 Kılavuz Çizgileri
+                            </label>
+                            <label style="display:flex;align-items:center;gap:6px;font-size:0.75rem;cursor:pointer;">
+                                <input type="checkbox" id="cfgShowLegend" ${w.showLegend ? 'checked' : ''}> 🏷️ Gösterge
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 <div style="margin-top:18px;display:flex;justify-content:flex-end;gap:10px;">
                     <button type="button" class="btn btn-primary" onclick="applyWidgetConfig(${index})">Uygula</button>
@@ -5654,8 +6180,35 @@
                 valueMetrics: valField ? [{ field: valField, agg: aggVal }] : [],
                 drillHierarchy: drillArr,
                 w: parseInt(document.getElementById('cfgW').value || '4', 10),
-                h: parseInt(document.getElementById('cfgH').value || '5', 10)
+                h: parseInt(document.getElementById('cfgH').value || '5', 10),
+                showLabel: !!document.getElementById('cfgShowLabel')?.checked,
+                showMarkLine: !!document.getElementById('cfgShowMarkLine')?.checked,
+                showMarkPoint: !!document.getElementById('cfgShowMarkPoint')?.checked,
+                showMedianLine: !!document.getElementById('cfgShowMedianLine')?.checked,
+                showDataZoom: !!document.getElementById('cfgShowDataZoom')?.checked,
+                showDataView: !!document.getElementById('cfgShowDataView')?.checked,
+                smoothCurve: !!document.getElementById('cfgSmoothCurve')?.checked,
+                showSplitLine: !!document.getElementById('cfgShowSplitLine')?.checked,
+                showLegend: !!document.getElementById('cfgShowLegend')?.checked
             };
+
+            const dash = authorizedDashboards[activeDashboardIndex];
+            if (dash) {
+                const flags = {
+                    showLabel: updated.showLabel,
+                    showMarkLine: updated.showMarkLine,
+                    showMarkPoint: updated.showMarkPoint,
+                    showMedianLine: updated.showMedianLine,
+                    showDataZoom: updated.showDataZoom,
+                    showDataView: updated.showDataView,
+                    smoothCurve: updated.smoothCurve,
+                    showSplitLine: updated.showSplitLine,
+                    showLegend: updated.showLegend
+                };
+                try {
+                    localStorage.setItem(`sps_widget_visual_${dash.dashboard_id}_${updated.id}`, JSON.stringify(flags));
+                } catch (e) {}
+            }
 
             if (index >= 0) {
                 currentLayout.widgets[index] = Object.assign({}, currentLayout.widgets[index], updated);
