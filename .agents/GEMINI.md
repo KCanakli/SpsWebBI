@@ -37,3 +37,22 @@ Bu dosya, `c:\Projeler\SpsWebBI` projesinde alınan tüm mimari, siber güvenlik
 ## 5. Referans Dosyalar
 - Detaylı adım özeti: `c:\Projeler\SpsWebBI\PROJE_DURUMU.md`
 - Tam sohbet geçmişi: `c:\Projeler\SpsWebBI\Sohbet_Gecmisi_2026-11-05.txt` ve `c:\Projeler\SpsWebBI\Sohbet_Gecmisi_2026-11-05.pdf`
+
+## 6. EnglishWords Projesi (`c:\Projeler\SebnemCalisma\EnglishWords`) Kuralları ve Mimarisi
+- **Klasör Yapısı ve GitHub:**
+  - `c:\Projeler\SebnemCalisma\EnglishWords\mobil`: .NET 9.0 MAUI Android (`net9.0-android`) mobil uygulaması.
+  - `c:\Projeler\SebnemCalisma\EnglishWords\www`: Vercel üzerinde çalışan statik Web uygulaması (`vercel.json` içinde `"outputDirectory": "."`, `package.json` olmadan doğrudan statik deploy).
+  - GitHub Reposu: `https://github.com/KCanakli/EnglishWords.git` (`main` branch).
+- **Mobil APK Derleme Kuralı:**
+  - Paket kimliği (`<ApplicationId>`) `com.englishwords` olarak sabitlenmiştir (`sebnem` ibaresi kullanılmaz).
+  - Derleme çıktısı: `c:\Projeler\SebnemCalisma\EnglishWords\mobil\bin\Debug\net9.0-android\com.englishwords-Signed.apk`.
+  - Derleme yapılırken `mobil\global.json` (`9.0.321` SDK) kullanılması için mutlaka `Set-Location "c:\Projeler\SebnemCalisma\EnglishWords\mobil"; dotnet build -c Debug` komutu çalıştırılır.
+- **Supabase Bağlantısı (Mobil & Web Ortak Veritabanı):**
+  - `SupabaseUrl`: `https://ofhvpucudqdfhawijggl.supabase.co`
+  - `SupabaseAnonKey`: `sb_publishable_1xLl1t1ZGfLzQSd-ukU3qA_YNhPaCHD`
+  - Tablolar: `public.users` ve `public.answer_logs` (`mobil/supabase_schema.sql`). Hem mobil APK hem de Vercel web sürümü aynı tabloları ve ortak Liderlik Tablosunu (`Leaderboard`) kullanır.
+- **Oyun Modları, Süre Limitleri ve Kuyruk Kuralları (Mobil ve Web Senkron):**
+  - **40 Kart:** `ing sebo.pdf` dosyasından `mobil/extract_cards.py` ile yalnız resimleri kırpılmış 40 aktivite kartı (`card_01.png`..`card_40.png`) ve `cards.json`.
+  - **Mod 1 (Çoktan Seçmeli):** Soru başına **30 saniye** geri sayım süresi (`⏱️ 30 sn`), İngilizce sesli okuma (`TextToSpeech` / Web Speech API), 4 Türkçe şık, doğru cevap **+10 puan**.
+  - **Mod 2 (Harf Tahmin / Hangman):** Soru başına **90 saniye** geri sayım süresi (`⏱️ 90 sn`), **6 Kalp (`❤️`)**, A-Z klavye, ekranı/klavyeyi kilitlemeyen **4 saniyelik sınırsız İpucu bandı** ve `Math.Max(1, 10 - hintCount)` dinamik puanlama.
+  - **8 / 4 Tekrar Kuyruğu:** Doğru cevaplanan kart **8 soru sonrasına** (oturum başına en fazla 1 tekrar), yanlış veya süresi dolan kart **0 puan** ile **4 soru sonrasına** (kalan < 4 ise kuyruk sonuna) eklenir.
