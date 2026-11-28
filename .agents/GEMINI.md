@@ -51,8 +51,9 @@ Bu dosya, `c:\Projeler\SpsWebBI` projesinde alınan tüm mimari, siber güvenlik
   - `SupabaseUrl`: `https://ofhvpucudqdfhawijggl.supabase.co`
   - `SupabaseAnonKey`: `sb_publishable_1xLl1t1ZGfLzQSd-ukU3qA_YNhPaCHD`
   - Tablolar: `public.users` ve `public.answer_logs` (`mobil/supabase_schema.sql`). Hem mobil APK hem de Vercel web sürümü aynı tabloları ve ortak Liderlik Tablosunu (`Leaderboard`) kullanır.
-- **Oyun Modları, Süre Limitleri ve Kuyruk Kuralları (Mobil ve Web Senkron):**
+- **Oyun Modları, Süre Limitleri ve 5-Level Şampiyonluk Kuralları (Mobil ve Web Senkron):**
   - **40 Kart:** `ing sebo.pdf` dosyasından `mobil/extract_cards.py` ile yalnız resimleri kırpılmış 40 aktivite kartı (`card_01.png`..`card_40.png`) ve `cards.json`.
   - **Mod 1 (Çoktan Seçmeli):** Soru başına **30 saniye** geri sayım süresi (`⏱️ 30 sn`), İngilizce sesli okuma (`TextToSpeech` / Web Speech API), 4 Türkçe şık, doğru cevap **+10 puan**.
   - **Mod 2 (Harf Tahmin / Hangman):** Soru başına **90 saniye** geri sayım süresi (`⏱️ 90 sn`), **6 Kalp (`❤️`)**, A-Z klavye, ekranı/klavyeyi kilitlemeyen **4 saniyelik sınırsız İpucu bandı** ve `Math.Max(1, 10 - hintCount)` dinamik puanlama.
-  - **8 / 4 Tekrar Kuyruğu:** Doğru cevaplanan kart **8 soru sonrasına** (oturum başına en fazla 1 tekrar), yanlış veya süresi dolan kart **0 puan** ile **4 soru sonrasına** (kalan < 4 ise kuyruk sonuna) eklenir.
+  - **5-Level İlerleme Mimarisi:** 40 soru 10'ar adetlik 4 havuza bölünür (L1: 1..10, L2: 11..20, L3: 21..30, L4: 31..40). Level 1'deki 10 sorunun tamamı doğru cevaplanana kadar Level 2'ye geçilmez. Level 2 (20 soru: `2xL2 + 2xL1`), Level 3 (30 soru: `2xL3 + 2xL2 + 1xL1`), Level 4 (40 soru: `2xL4 + 2xL3 + 1xL2 + 1xL1`) arka arkaya hatasız tamamlanmalıdır; her yanlışta ilgili level en baştan başlar. 5. Level (Süper Level) 40 soruyu karışık sorar.
+  - **Şampiyonluk Sıralaması:** En kısa zamanda en çok doğru soru çözen (`CorrectCount DESC`, `ElapsedSeconds ASC`) öğrenci Şampiyon olur.
